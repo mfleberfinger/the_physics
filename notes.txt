@@ -1,0 +1,36 @@
+V0 Goals:
+	- Write a minimal, single-threaded, 2d physics engine.
+	- Simulate an arbitary number of particles.
+		+ Forces
+		+ Position
+		+ Velocity
+		+ Fields
+
+
+Particle Struct
+	- Tracks all information pertaining to an individual particle.
+	- Mass
+	- Position
+	- Velocity
+	- Acceleration during the current or next tick?
+	- Fields produced by the particle
+	- Unique particle ID
+
+Interactions
+	- Particles will only interact with each other via fields. There will be no
+		explicit collision detection.
+	- Particles are point objects: they have no length, height, or area. Fields
+		will have radii.
+
+Fields
+	- Each particle can have an arbitrary number of fields attached.
+	- A field consists of a radius and an effect.
+		+ Any particle, other than the particle to which the field is attached,
+			will trigger the field's effect when it is within the field during a
+			given tick.
+		+ A field's effect is determined by an arbitrary function (maybe a
+			method of a field struct).
+			-> Rust does appear to support function pointers, so a field struct
+				containing a function pointer may be viable, but it might be
+				better (at least for v0) to define different types of field
+				struct with specific methods defined at compile time.
