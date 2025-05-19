@@ -1,24 +1,56 @@
-V0 Goals:
-	- Write a minimal, single-threaded, 2d physics engine and create a realtime
-		graphical demo of it in action.
+V0 Goals
+	- Write a minimal, single-threaded, 2d physics engine and create a realtime,
+		interactive, graphical demo.
 	- Simulate an arbitary number of particles.
 		+ Forces
 		+ Position
 		+ Velocity
 		+ Fields
+	- For the demo, use the library to allow creation of particles and
+		application of forces.
+
+Development process
+	- Design the library.
+		+ Design the interface.
+		+ Design the structs.
+		+ Design the struct methods.
+		+ Design the simulation logic (how to keep track of particles, how to
+			apply the effects of fields, etc.).
+	- Write skeleton functions based on the interface design.
+	- Write failing tests.
+	- Implement the library.
+	- Write the demo.
 
 Testing
 	- The physics engine should be a library with unit (and integration?) tests.
-	- A useful category of tests might be tests that apply known forces or
-		velocities to particles and compare the results to the predictions of
-		classical mechanics formulas for position, velocity, kinetic energy,
-		etc. Due to the tick-based, discrete nature of the simulation, these
-		tests will need to allow for some margin of error, based on the tick
-		length and other precision settings.
+	- Tests:
+		+ A useful category of tests might be tests that apply known forces or
+			velocities to particles and compare the results to the predictions
+			of classical mechanics formulas for position, velocity, kinetic
+			energy, etc. Due to the tick-based, discrete nature of the
+			simulation, these tests will need to allow for some margin of error,
+			based on the tick length and other precision settings.
+		+ Test all of the basic building blocks of the library (e.g., the vector
+			math structs and methods).
 
-Vector2 Struct (not to be confused with Vec):
+Interface (things to make available to users of the library)
+	- Create particles and set particle mass.
+	- Delete particles?
+	- Create fields and attach them to particles
+		+ Users of the library will need to be able to write functions that the
+			library can call when it's processing field effects. This could
+			probably be accomplished by providing a Field trait or using
+			function pointers.
+	- Apply forces to particles
+	- Set velocity and acceleration directly?
+	- Start and pause the simulation?
+	- Set simulation parameters (simulation speed, tick length, other precision
+		parameters)
+
+
+Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
-	- Possible a tuple struct.
+	- Possibly a tuple struct.
 	- Provides methods for 2d vector math.
 	- May be wrapped by structs used for describing specific vector quantities
 		(e.g. Force, Position, Velocity, Acceleration), if useful. Each of these
@@ -51,6 +83,9 @@ Fields
 		+ Any particle, other than the particle to which the field is attached,
 			will trigger the field's effect when it is within the field during a
 			given tick.
+			-> Maybe include two Boolean variables to determine whether the
+				field affects the owning particle and whether the field affects
+				other particles.
 		+ A field's effect is determined by an arbitrary function (maybe a
 			method of a Field struct).
 			-> Rust does appear to support function pointers, so a field struct
@@ -64,6 +99,11 @@ Gravity
 			particle, or a floor made up of multiple particles, in place by
 			giving it infinite (or very high) mass. I could add a gravity field
 			to that particle or floor.
+		+ I could make all (or a subset) of particles experience a gravitational
+			force in a set direction if I provide the option for fields to
+			affect the particles to which they are attached. Then any particle
+			that should be affected by gravity would just have a self-affecting
+			gravity field attached.
 
 Ticks
 	- Each tick represents some amount of time.
