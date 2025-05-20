@@ -1,4 +1,5 @@
 V0 Goals
+	- Get more Rust practice/knowledge.
 	- Write a minimal, single-threaded, 2d physics engine and create a realtime,
 		interactive, graphical demo.
 	- Simulate an arbitary number of particles.
@@ -7,16 +8,23 @@ V0 Goals
 		+ Velocity
 		+ Fields
 	- For the demo, use the library to allow creation of particles and
-		application of forces.
+		application of forces in a running simulation.
 
-Development process
+Development process (not necessarily in order)
 	- Design the library.
 		+ Design the interface.
+			********************************************************************
+			TODO: Design functions to provide all of the interface functionality
+				described in the "Interface" section below. Decide how much
+				access to structs a user of the library will have.
+			********************************************************************
 		+ Design the structs.
-		+ Design the struct methods.
+		 	-> Design the struct methods.
 		+ Design the simulation logic (how to keep track of particles, how to
 			apply the effects of fields, etc.).
-	- Write skeleton functions based on the interface design.
+			-> Make a simulation struct or scene struct to store everything that
+				belongs to the active simulation?
+	- Write structs and skeleton functions/methods based on the interface design.
 	- Write failing tests.
 	- Implement the library.
 	- Write the demo.
@@ -34,19 +42,24 @@ Testing
 			math structs and methods).
 
 Interface (things to make available to users of the library)
-	- Create particles and set particle mass.
+	- Create particles.
 	- Delete particles?
-	- Create fields and attach them to particles
+	- Set particle properties.
+		+ mass
+		+ position
+		+ fields
+	- Set velocity and acceleration directly?
+	- Create fields and attach them to particles.
 		+ Users of the library will need to be able to write functions that the
 			library can call when it's processing field effects. This could
 			probably be accomplished by providing a Field trait or using
 			function pointers.
-	- Apply forces to particles
-	- Set velocity and acceleration directly?
+	- Remove fields?
+	- View existing fields, check for the existence of a field of a given type.
+	- Apply forces to particles.
 	- Start and pause the simulation?
 	- Set simulation parameters (simulation speed, tick length, other precision
-		parameters)
-
+		parameters).
 
 Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
@@ -143,6 +156,11 @@ Graphics
 
 
 ________________________________________________________________________________
+
+Custom screensaver?
+	- There are xscreensaver rust bindings, apparently. I might be able to make
+		a custom screensaver that generates and simulates random arrangements of
+		particles with random properties and field parameters.
 
 To remember for future iterations:
 	- To eliminate floating point errors, do all calculations in integer
