@@ -15,16 +15,15 @@ Development process (not necessarily in order)
 		+ Design the interface. [done]
 		+ Design the structs.
 		 	-> Design the struct methods.
-		+ Design the simulation logic (how to keep track of particles, how to
+		+ Design the simulation logic (how to keep track of particles, how to ************* TODO: See "Simulation Logic" below. *******************
 			apply the effects of fields, etc.).
-			-> Make a simulation struct or scene struct to store everything that
-				belongs to the active simulation?
+			-> Make a Simulation struct to store everything that belongs to the
+				active simulation.
 	- Write structs and skeleton functions/methods based on the interface design.
 	- Write failing tests.
-		*********************************************************************************
-		TODO: Starting to write these based on the methods under the "Interface"
-			section, below, might help with coming up with more of the design.
-		*********************************************************************************
+		+ Starting to write these while working on the design, based on the
+			methods under the "Interface", section, below, might be helpful for
+			coming up with more of the design.
 	- Implement the library.
 	- Write the demo.
 
@@ -98,6 +97,27 @@ Interface (things to make available to users of the library)
 					prevent some types of logic errors.
 		+ fields for a given particle (type and diameter)
 			-> get_fields(particle_id: Uuid) -> Vec<FieldInfo>;
+
+Simulation Logic
+	- Write a method that will run on each tick to update the state of
+		everything in the simulation.
+		+ fn tick();
+		+ Apply field effects.
+			-> For each field on each particle, get a list of particles inside
+				the field radius (if the field affects other particles),
+				including the particle that owns the field (if the field affects
+				the owning particle) and call the field's apply_effect() method,
+				passing in references to (or particle_ids of?) the affected
+				particles.
+				- This logic requires O(n^2) function calls, where n is the
+					number of particles within the radii of each other's fields.
+					This is probably something to attempt to optimize in the
+					future (but not for v0).
+		+ Apply forces, setting acceleration.
+			-> Iterate through all particles, calculating a = (f / m) for each.
+		+ Apply acceleration, changing velocity.
+			-> Iterate through all particles, calculating
+				v = v + (a * tick_duration) for each.
 
 Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
@@ -208,3 +228,7 @@ To remember for future iterations:
 		the simulation scale and precision dynamically when useful (based on
 		speed or maybe distance between particles? other factors?).
 	- See notes in Joplin and paper notes in the black folder.
+	- Optimize the algorithm for finding neighboring particles and applying
+		field effects in the "Apply field effects" step described under
+		"Simulation Logic", above. As described currently (2025-05-22), it will
+		probably be a significant bottleneck.
