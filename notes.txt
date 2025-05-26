@@ -15,7 +15,7 @@ Development process (not necessarily in order)
 		+ Design the interface. [done]
 		+ Design the structs.
 		 	-> Design the struct methods.
-		+ Design the simulation logic (how to keep track of particles, how to ************* TODO: See "Simulation Logic" below. *******************
+		+ Design the simulation logic (how to keep track of particles, how to ************* TODO: See "Simulation Struct" below. *******************
 			apply the effects of fields, etc.).
 			-> Make a Simulation struct to store everything that belongs to the
 				active simulation.
@@ -111,13 +111,44 @@ Simulation Logic
 				particles.
 				- This logic requires O(n^2) function calls, where n is the
 					number of particles within the radii of each other's fields.
-					This is probably something to attempt to optimize in the
-					future (but not for v0).
+					In the worst case, n is all of the particles in the
+					simulation. This is probably something to attempt to
+					optimize in the future (but not for v0).
+					-> Determining which particles are within each field,
+						before even calling the field effect functions, will
+						also be O(n^2) (really O(mn), where m is the number of
+						fields and n is the number of particles in the
+						simulation).
 		+ Apply forces, setting acceleration.
 			-> Iterate through all particles, calculating a = (f / m) for each.
+			-> a = (sum(f0, f1, f2...)/m)
 		+ Apply acceleration, changing velocity.
 			-> Iterate through all particles, calculating
 				v = v + (a * tick_duration) for each.
+			-> Remember to do this for each component of the velocity vector.
+		+ Move the particles, as dictated by their velocities.
+			-> Multiply each component of the velocity vector by the tick
+				duration to get a displacement vector.
+			-> Add each component of the displacement vector to each component
+				of the position.
+
+Simulation Struct
+	- Represents the state of the entire simulation.
+	- Provides most (all?) of the methods/logic mentioned in the "Interface"
+		section above.
+	- Data
+		+ tick duration
+		+ collection owning all particles
+		+ elapsed ticks
+		+ elapsed simulated time
+		+ TODO: Read/skim the rest of this file and read the code from the ****************************
+			trajectory program to come up with what needs to go here.
+	- Methods
+		+ See "Interface" above. Other Simulation methods may be here, but don't
+			duplicate the notes from that section. Don't want to end up with
+			confusion over two different sets of method designs.
+		+ TODO: Read/skim the rest of this file and read the code from the ****************************
+			trajectory program to come up with what needs to go here.
 
 Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
@@ -134,7 +165,7 @@ Vector2 Struct (not to be confused with Vec)
 		would result in a compiler error instead of a confusing bug).
 
 Particle Struct
-	- Tracks all information pertaining to an individual particle.
+	- Tracks (and owns) all information pertaining to an individual particle.
 	- Mass
 	- Position
 	- Velocity
@@ -194,18 +225,6 @@ Ticks
 			-> Probably use an Option<some_unsigned_type> and use None for max
 				speed.
 
-Applying a force (per tick):
-	- Calculate the acceleration: a = (sum(f0, f1, f2...)/m)
-		+ Remember to do this for each component of the acceleration vector.
-	- Calculate the new velocity: v = a * tick_duration
-		+ Remember to do this for each component of the velocity vector.
-
-Moving a particle (per tick):
-	- Multiply each component of the velocity vector by the tick duration to get
-		a displacement vector.
-	- Add each component of the displacement vector to each component of the
-		position.
-
 Graphics
 	- Research rust graphics/animation/visualization libraries. Simpler is
 		better.
@@ -231,4 +250,9 @@ To remember for future iterations:
 	- Optimize the algorithm for finding neighboring particles and applying
 		field effects in the "Apply field effects" step described under
 		"Simulation Logic", above. As described currently (2025-05-22), it will
-		probably be a significant bottleneck.
+		probably be a significant bottleneck. Without any optimization, in
+		addition to the n^2 (m * n) function calls each of the m fields may need
+		to make, each field will need to iterate through all n particles in the
+		simulation to determine whether each of those particles falls within the
+		field's radius. This will need to be done for each of the fields in the
+		simulation.
