@@ -12,14 +12,14 @@ V0 Goals
 
 Development process (not necessarily in order)
 	- Design the library.
-		+ Design the interface. [done]
+		+ Design the interface. 													[done]
 		+ Design the structs.
 		 	-> Design the struct methods.
-		+ Design the simulation logic (how to keep track of particles, how to ************* TODO: See "Simulation Struct" below. *******************
+		+ Design the simulation logic (how to keep track of particles, how to		[done?]
 			apply the effects of fields, etc.).
 			-> Make a Simulation struct to store everything that belongs to the
 				active simulation.
-	- Write structs and skeleton functions/methods based on the interface design.
+	- Write structs and skeleton functions/methods based on the interface design. *******************
 	- Write failing tests.
 		+ Starting to write these while working on the design, based on the
 			methods under the "Interface", section, below, might be helpful for
@@ -40,6 +40,14 @@ Testing
 			math structs and methods).
 
 Interface (things to make available to users of the library)
+	- The interface will probably mostly be methods of the Simulation struct.
+	- Create a new simulation (new Simulation struct).
+	- Set simulation parameters (simulation speed, tick length, other precision
+		parameters).
+		+ Define a Simulation struct to store everything involved in the
+			simulation. Set all parameters through a constructor.
+		+ Simulation::new(speed: /* number */, tick_length: /* number */)
+			-> Simulation;
 	- Create particles.
 		+ fn create_particle(position: Vector2 /* or Position */,
 			mass: /* number */, fields: Vec<Field>)
@@ -69,12 +77,6 @@ Interface (things to make available to users of the library)
 	- Start and pause the simulation?
 		+ start();
 		+ pause();
-	- Set simulation parameters (simulation speed, tick length, other precision
-		parameters).
-		+ Define a Simulation struct to store everything involved in the
-			simulation. Set all parameters through a constructor.
-		+ Simulation::new(speed: /* number */, tick_length: /* number */)
-			-> Simulation;
 	- Elapsed ticks
 		+ get_tick() -> /* number or Tick */;
 			-> Possibly useful to alias a numeric type as Tick. Allows all
@@ -136,11 +138,24 @@ Simulation Struct
 	- Represents the state of the entire simulation.
 	- Provides most (all?) of the methods/logic mentioned in the "Interface"
 		section above.
-	- Data ******************** Done reading this file for data. Read trajectory program. *********************
+	- Data
+		+ It probably makes sense to use custom types (the "newtype" pattern
+			mentioned later in these notes) for everything. Eventually, I will
+			want to change the types that I use for all operations in ways that
+			will likely require changes to the math used, but not to the logic
+			of the physics simulation. For example, a change from floating point
+			numbers to fixed point numbers or "Planck lengths" wouldn't change
+			the simulation logic, but will change the details of the math. It's
+			probably not bad to have the compiler enforce rules about which
+			physical quantities can be used together either (e.g. prevent time
+			from being added to mass, force multiplication of velocity by time
+			to take place via a method that returns displacement).
 		+ tick duration
 		+ collection owning all particles
 		+ elapsed ticks
 		+ elapsed simulated time
+			-> Calculated from elapsed ticks and tick duration. Probably a
+				method, not a variable.
 		+ simulation speed (realtime, faster than realtime, slower than realtime)
 			-> 1 second/second for realtime simulation
 			-> Greater than 1 second/second for fast-forward
@@ -148,7 +163,32 @@ Simulation Struct
 			-> Negative or None to simulate as quickly as possible.
 				- Probably use an Option<some_unsigned_type> and use None for
 					max speed.
-	- Methods ******************** Done reading this file for data. Read trajectory program. *********************
+	- Methods
+		+ fn tick()
+			-> Apply field effects.
+				- For each field on each particle, get a list of particles
+					inside the field radius (if the field affects other
+					particles), including the particle that owns the field (if
+					the field affects the owning particle) and call the field's
+					apply_effect() method, passing in references to (or
+					particle_ids of?) the affected particles.
+			-> Apply forces, setting acceleration, possibly by calling a method
+				of Particle.
+				- Iterate through all particles, calculating a = (f / m) for
+					each.
+				- a = (sum(f0, f1, f2...)/m)
+			-> Apply acceleration, changing velocity, possibly by calling a
+				method of Particle.
+				- Iterate through all particles, calculating
+					v = v + (a * tick_duration) for each.
+				- Remember to do this for each component of the velocity
+					vector.
+			-> Move the particles, as dictated by their velocities, possibly by
+				calling a method of Particle.
+				- Multiply each component of the velocity vector by the tick
+					duration to get a displacement vector.
+				- Add each component of the displacement vector to each
+					component of the position.
 		+ To support the needs listed under "Interface", above:
 			-> Create particles.
 				+ fn create_particle(position: Vector2 /* or Position */,
@@ -312,5 +352,5 @@ To remember for future iterations:
 		simulation to determine whether each of those particles falls within the
 		field's radius. This will need to be done for each of the fields in the
 		simulation.
-		+ There are definitely algorithms for finding items withing a radius or
+		+ There are definitely algorithms for finding items within a radius or
 			within a grid cell. Do some research to find something useful.
