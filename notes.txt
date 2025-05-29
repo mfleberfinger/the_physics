@@ -136,15 +136,19 @@ Simulation Struct
 	- Represents the state of the entire simulation.
 	- Provides most (all?) of the methods/logic mentioned in the "Interface"
 		section above.
-	- Data
+	- Data ******************** Done reading this file for data. Read trajectory program. *********************
 		+ tick duration
 		+ collection owning all particles
 		+ elapsed ticks
 		+ elapsed simulated time
 		+ simulation speed (realtime, faster than realtime, slower than realtime)
-		+ TODO: Read/skim the rest of this file and read the code from the ****************************
-			trajectory program to come up with what needs to go here.
-	- Methods
+			-> 1 second/second for realtime simulation
+			-> Greater than 1 second/second for fast-forward
+			-> Less than 1 second for slow motion
+			-> Negative or None to simulate as quickly as possible.
+				- Probably use an Option<some_unsigned_type> and use None for
+					max speed.
+	- Methods ******************** Done reading this file for data. Read trajectory program. *********************
 		+ To support the needs listed under "Interface", above:
 			-> Create particles.
 				+ fn create_particle(position: Vector2 /* or Position */,
@@ -201,8 +205,6 @@ Simulation Struct
 							logic errors.
 				+ fields for a given particle (type and diameter)
 					-> get_fields(particle_id: Uuid) -> Vec<FieldInfo>;
-		+ TODO: Read/skim the rest of this file and read the code from the ****************************
-			trajectory program to come up with what needs to go here.
 
 Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
@@ -310,3 +312,5 @@ To remember for future iterations:
 		simulation to determine whether each of those particles falls within the
 		field's radius. This will need to be done for each of the fields in the
 		simulation.
+		+ There are definitely algorithms for finding items withing a radius or
+			within a grid cell. Do some research to find something useful.
