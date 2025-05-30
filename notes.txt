@@ -140,7 +140,7 @@ Simulation Struct
 		section above.
 	- Data
 		+ It probably makes sense to use custom types (the "newtype" pattern
-			mentioned later in these notes) for everything. Eventually, I will
+			mentioned later in these notes) for most things. Eventually, I will
 			want to change the types that I use for all operations in ways that
 			will likely require changes to the math used, but not to the logic
 			of the physics simulation. For example, a change from floating point
@@ -151,7 +151,11 @@ Simulation Struct
 			from being added to mass, force multiplication of velocity by time
 			to take place via a method that returns displacement).
 		+ tick duration
+			-> Seconds type
 		+ collection owning all particles
+			-> A HashMap. We will want to access particles by ID and Rust's
+				HashMap type provides iter() and iter_mut() methods for
+				iteration over the entire map.
 		+ elapsed ticks
 		+ elapsed simulated time
 			-> Calculated from elapsed ticks and tick duration. Probably a
@@ -354,3 +358,12 @@ To remember for future iterations:
 		simulation.
 		+ There are definitely algorithms for finding items within a radius or
 			within a grid cell. Do some research to find something useful.
+	- It may be necessary to shrink HashMaps from time to time to avoid wasting
+		memory and unnecessarily slowing down operations that need to iterate
+		over all particles. When items are added to a HashMap, it eventually
+		needs to increase its capacity to hold them. It's not clear to me if the
+		capacity is ever reduced automatically when items are removed. Iterating
+		over all elements of a HashMap takes linear time in the map's capacity,
+		not in the number of elements it holds. See the HashMap.shrink_to_fit()
+		method's documentation if considering shrinking the map after a number
+		of deletions.
