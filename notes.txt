@@ -167,6 +167,11 @@ Simulation Struct
 			-> Negative or None to simulate as quickly as possible.
 				- Probably use an Option<some_unsigned_type> and use None for
 					max speed.
+			-> Should this just be a floating point value, or should it have a
+				special type? Maybe I could create some unitless "Coefficient"
+				type for values like this. Maybe implement a "NonNeg" type to
+				represent float values that must be 0 or greater. Is it best to
+				just use an f64 for v0?
 	- Methods
 		+ fn tick()
 			-> Apply field effects.
