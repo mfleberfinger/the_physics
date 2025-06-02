@@ -22,21 +22,35 @@ mod tests {
 pub struct Seconds(f64);
 
 /// A two-dimensional vector (not to be confused with Vec<T>).
+/// Supports basic vector math.
 pub struct Vector2 {
-	// TODO: Add members.
+	x: f64,
+	y: f64,
 }
 
 /// Mass.
 pub struct Mass(f64);
 
 /// Position in space.
+/// Wraps Vector2 and provides functionality specific to position.
 pub struct Position(Vector2);
+// TODO: Implement getters for the underlying x and y values? This would allow
+//	me to do my_position.x() and my_position.y() instead of my_position.0.x and
+//	my_position.0.y.
 
 /// Velocity.
+/// Wraps Vector2 and provides functionality specific to velocity.
 pub struct Velocity(Vector2);
 
-pub struct Field {
-	// TODO: Add members.
+/// Force.
+/// Wraps Vector2 and provides functionality specific to forces.
+pub struct Force(Vector2);
+
+/// Defines a field. A field is a struct implementing a method that is called by
+/// the physics engine on each tick in which a particle is within a radius
+/// specified by the field, centered on a particle to which the field is
+/// attached.
+pub trait Field {
 }
 
 pub struct Particle {
@@ -47,7 +61,9 @@ pub struct Particle {
 	/// The particle's velocity.
 	velocity: Velocity,
 	/// Fields attached to the particle.
-	fields: Vec<Field>,
+	// Vec<Box<dyn Field>> is a "trait object". This is apparently necessary to
+	//	make a Vec store an unknown type that implements a trait.
+	fields: Vec<Box<dyn Field>>,
 	/// Uniquely identifies this particle.
 	id: Uuid,
 }

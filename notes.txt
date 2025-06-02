@@ -299,6 +299,9 @@ Fields
 				containing a function pointer may be viable, but it might be
 				better (at least for v0) to define different types of field
 				struct with specific methods defined at compile time.
+				- For v0, define a Field trait as part of the library and allow
+					callers to define individual fields. Maybe define a few
+					preset field structs within the library if convenient.
 
 Gravity
 	- Gravity, if it exists, will be a field.
