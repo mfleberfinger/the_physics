@@ -172,8 +172,21 @@ Simulation Struct
 				type for values like this. Maybe implement a "NonNeg" type to
 				represent float values that must be 0 or greater. Is it best to
 				just use an f64 for v0?
+		+ on_tick *************************************************************************************************************
+			-> A user-defined callback function, called by the simulation on
+				each tick.
+			-> Option</*function pointer*/>
 	- Methods
 		+ fn tick()
+			-> I probably need some way to either make the physics engine call
+				code written by the user (other than field methods) or to make
+				user code responsible for driving the physics engine (e.g., by
+				calling step() or tick() repeatedly with the correct frequency).
+				- Making the physics engine call user code is probably a better
+					choice than making the user code responsible for driving the
+					simulation. I can probably add a function pointer to the
+					Simulation struct to be populated by the user.
+				- See "on_tick" above.
 			-> Apply field effects.
 				- For each field on each particle, get a list of particles
 					inside the field radius (if the field affects other
@@ -205,27 +218,22 @@ Simulation Struct
 					-> /* particle ID: */ Uuid;
 			-> Delete particles.
 				+ fn delete_particle(particle_id: Uuid);
-			- Create fields and attach them to particles.
-				+ Users of the library will need to be able to write functions
-					that the library can call when it's processing field
-					effects. This could probably be accomplished by providing a
-					Field trait or using function pointers.
-			- Apply forces to particles.
+			-> Apply forces to particles.
 				+ apply_force(particle_id: Uuid, force: Vector2 /* or Force */)
-			- Start, pause, and advance the simulation by a single step.
+			-> Start, pause, and advance the simulation by a single step.
 				+ start();
 				+ pause();
 				+ step();
-			- Constructor
+			-> Constructor
 				+ Simulation::new(speed: /* number */, tick_length: /* number */)
 					-> Simulation;
-			- Return the number of elapsed ticks since simulation start.
-				+ get_tick() -> /* number or Tick */;
-					-> Possibly useful to alias a numeric type as Tick. Allows
+			-> Return the number of elapsed ticks since simulation start.
+				- get_tick() -> /* number or Tick */;
+					+ Possibly useful to alias a numeric type as Tick. Allows
 						all references to Tick to be changed to a different
 						underlying type if desired and might make the compiler
 						catch some logic errors.
-						- Don't actually create a type alias if having the
+						-> Don't actually create a type alias if having the
 							compiler enforce typing based on that name is
 							desired. When a type alias is used, the compiler
 							still treats the alias as the underlying type. For
@@ -235,25 +243,25 @@ Simulation Struct
 							the type, is referred to as the "newtype" pattern,
 							as described in this section of the book:
 							https://doc.rust-lang.org/book/ch20-02-advanced-traits.html#default-generic-type-parameters-and-operator-overloading
-			- Return the elapsed time (simulated seconds) since simulation
+			-> Return the elapsed time (simulated seconds) since simulation
 				start.
-				+ get_time() -> /* number or SimTime */:
-					-> Possibly useful to alias a numeric type as SimTime.
+				- get_time() -> /* number or SimTime */:
+					+ Possibly useful to alias a numeric type as SimTime.
 						Allows all references to SimTime to be changed to a
 						different underlying type if desired and might make the
 						compiler catch some logic errors.
-			- Read information necessary/useful to render the simulation.
-				+ particle position
-					-> get_position(particle_id: Uuid) -> Vector2 /* or Position */;
-				+ particle mass
-					-> get_mass(particle_id: Uuid) -> /* number or Mass */;
-						- It's probably a good idea to alias a numeric type as
-							Mass. Then, it should be possible to change the
-							underlying type in just one place if desired. This
-							also makes the type system prevent some types of
-							logic errors.
-				+ fields for a given particle (type and diameter)
-					-> get_fields(particle_id: Uuid) -> Vec<FieldInfo>;
+			-> Read information necessary/useful to render the simulation.
+				- particle position
+					+ get_position(particle_id: Uuid) -> Vector2 /* or Position */;
+				- particle mass
+					+ get_mass(particle_id: Uuid) -> /* number or Mass */;
+						-> It's probably a good idea to alias (actually, use the
+							"newtype" pattern) a numeric type as Mass. Then, it
+							should be possible to change the underlying type in
+							just one place if desired. This also makes the type
+							system prevent some types of logic errors.
+				- fields for a given particle (type and diameter)
+					+ get_fields(particle_id: Uuid) -> Vec<FieldInfo>;
 
 Vector2 Struct (not to be confused with Vec)
 	- Stores a 2d vector.
