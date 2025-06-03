@@ -78,12 +78,12 @@ Interface (things to make available to users of the library)
 		+ start();
 		+ pause();
 	- Elapsed ticks
-		+ get_tick() -> /* number or Tick */;
+		+ get_elapsed_ticks() -> /* number or Tick */;
 			-> Possibly useful to alias a numeric type as Tick. Allows all
 				references to Tick to be changed to a different underlying type
 				if desired and might make the compiler catch some logic errors.
 	- Elapsed time (simulated seconds since start of simulation)
-		+ get_time() -> /* number or SimTime */:
+		+ get_elapsed_time() -> /* number or SimTime */:
 			-> Possibly useful to alias a numeric type as SimTime. Allows all
 				references to SimTime to be changed to a different underlying
 				type if desired and might make the compiler catch some logic
@@ -211,7 +211,7 @@ Simulation Struct
 					duration to get a displacement vector.
 				- Add each component of the displacement vector to each
 					component of the position.
-		+ To support the needs listed under "Interface", above:
+		+ To support the requirements listed under "Interface", above:
 			-> Create particles.
 				+ fn create_particle(position: Vector2 /* or Position */,
 					mass: /* number */, fields: Vec<Field>)
@@ -228,7 +228,7 @@ Simulation Struct
 				+ Simulation::new(speed: /* number */, tick_length: /* number */)
 					-> Simulation;
 			-> Return the number of elapsed ticks since simulation start.
-				- get_tick() -> /* number or Tick */;
+				- get_elapsed_ticks() -> /* number or Tick */;
 					+ Possibly useful to alias a numeric type as Tick. Allows
 						all references to Tick to be changed to a different
 						underlying type if desired and might make the compiler
@@ -238,14 +238,14 @@ Simulation Struct
 							desired. When a type alias is used, the compiler
 							still treats the alias as the underlying type. For
 							example, if u64 was aliased to "Mass", the compiler
-							would still allow u64 to be added to Mass. When I
+							would still allow u64 to be added to Mass. What I
 							might want to do, to get the compiler to enforce
 							the type, is referred to as the "newtype" pattern,
 							as described in this section of the book:
 							https://doc.rust-lang.org/book/ch20-02-advanced-traits.html#default-generic-type-parameters-and-operator-overloading
 			-> Return the elapsed time (simulated seconds) since simulation
 				start.
-				- get_time() -> /* number or SimTime */:
+				- get_elapsed_time() -> /* number or SimTime */:
 					+ Possibly useful to alias a numeric type as SimTime.
 						Allows all references to SimTime to be changed to a
 						different underlying type if desired and might make the

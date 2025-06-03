@@ -46,6 +46,9 @@ pub struct Velocity(Vector2);
 /// Wraps `Vector2` and provides functionality specific to forces.
 pub struct Force(Vector2);
 
+/// A type representing a number of ticks.
+pub struct Ticks(u64);
+
 /// Defines a field. A field is a struct implementing a method that is called by
 /// the physics engine on each tick in which a particle is within a radius
 /// specified by the field, centered on a particle to which the field is
@@ -75,7 +78,7 @@ pub struct Simulation {
 	// A collection that owns all particles in the simulation.
 	particles: HashMap<Uuid, Particle>,
 	// The number of ticks that have passed so far.
-	elapsed_ticks: u64,
+	elapsed_ticks: Ticks,
 	// The number of simulated seconds that have passed so far.
 	elapsed_time: Seconds,
 	// Speed at which the simulation will run, resources permitting. Units are
@@ -105,7 +108,7 @@ impl Simulation {
 		Self {
 			tick_duration: tick_duration,
 			particles: HashMap::new(),
-			elapsed_ticks: 0,
+			elapsed_ticks: Ticks(0),
 			elapsed_time: Seconds(0.0),
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
@@ -116,7 +119,13 @@ impl Simulation {
 
 	}
 
-	/// Add a new particle to the simulation.
+	/// Creates a new particle and adds it to the simulation. Returns that
+	/// particle's unique ID.
+	///
+	/// # Arguments
+	/// * `position` - The particle's coordinates.
+	/// * `mass` - The particle's mass.
+	/// * `fields` - Fields to attach to the particle.
 	pub fn create_particle(
 		&self,
 		position: Position,
@@ -126,12 +135,29 @@ impl Simulation {
 		Uuid::new_v4()
 	}
 
-	/// Remove a particle from the simulation.
+	/// Removes a particle from the simulation.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle to delete.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
 	pub fn delete_particle(&self, particle_id: Uuid) {
 
 	}
 
-	/// Apply a force to a specific particle for the duration of the next tick.
+	/// Applies a force to a specific particle for the duration of the next
+	/// tick.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle to which to apply a
+	/// 	force.
+	/// * `force` - The force vector to apply to the particle.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
 	pub fn apply_force(
 		&self,
 		particle_id: Uuid,
@@ -140,20 +166,24 @@ impl Simulation {
 
 	}
 
-	/// Start the simulation.
+	/// Starts the simulation.
 	pub fn start(&self) {
 
 	}
 
-	/// Pause the simulation.
+	/// Pauses the simulation.
 	pub fn pause(&self) {
 
 	}
 
-	/// While the simulation is paused, execute a single tick.
+	/// While the simulation is paused, executes a single tick.
 	pub fn step(&self) {
-
+		// TODO: If not paused, panic.
 	}
 
+	/// Returns the number of elapsed ticks since the start of the simulation.
+	pub fn get_elapsted_ticks(&self) -> Ticks {
+		Ticks(0)
+	}
 
 }
