@@ -51,6 +51,9 @@ pub struct Force(Vector2);
 /// specified by the field, centered on a particle to which the field is
 /// attached.
 pub trait Field {
+	// TODO: Define a function signature that takes a Vec<Particle>, which will
+	//	hold all particles within the field's radius, as determined by the
+	//	physics engine.
 }
 
 pub struct Particle {
@@ -78,15 +81,26 @@ pub struct Simulation {
 	// Speed at which the simulation will run, resources permitting. Units are
 	//	(simulated seconds) / (real world second).
 	simulation_speed: f64,
-	// TODO: Add the on_tick function pointer. See notes.
+	// A function called on each tick. Allows user-defined logic to be driven
+	//	by the simulation.
+	on_tick: Option<fn()>,
 }
 
 impl Simulation {
-	/// Create an instance of `Simulation`.
+	/// Creates an instance of `Simulation`.
+	///
+	/// # Arguments
+	/// * `tick_duration` - The number of simulated seconds that elapse in a
+	///		single tick. Effectively the resolution of the simulation.
+	/// * `simulation_speed` - The speed at which the simulation will run,
+	///		resources permitting.
+	///		Units are (simulated seconds) / (real world second).
+	/// * `on_tick` - A function that will be called by the simulation on each
+	///		tick.
 	pub fn new(
 		tick_duration: Seconds,
 		simulation_speed: f64,
-		// TODO: Add the on_tick function pointer. See notes.
+		on_tick: Option<fn()>,
 	) -> Self {
 		Self {
 			tick_duration: tick_duration,
@@ -94,6 +108,7 @@ impl Simulation {
 			elapsed_ticks: 0,
 			elapsed_time: Seconds(0.0),
 			simulation_speed: simulation_speed,
+			on_tick: on_tick,
 		}
 	}
 
@@ -139,4 +154,6 @@ impl Simulation {
 	pub fn step(&self) {
 
 	}
+
+
 }

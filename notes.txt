@@ -172,7 +172,7 @@ Simulation Struct
 				type for values like this. Maybe implement a "NonNeg" type to
 				represent float values that must be 0 or greater. Is it best to
 				just use an f64 for v0?
-		+ on_tick *************************************************************************************************************
+		+ on_tick
 			-> A user-defined callback function, called by the simulation on
 				each tick.
 			-> Option</*function pointer*/>
