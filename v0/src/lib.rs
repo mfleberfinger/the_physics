@@ -177,6 +177,9 @@ impl Simulation {
 	}
 
 	/// While the simulation is paused, executes a single tick.
+	///
+	/// # Panics
+	/// This method will panic if the simulation is not paused.
 	pub fn step(&self) {
 		// TODO: If not paused, panic.
 	}
@@ -186,4 +189,9 @@ impl Simulation {
 		Ticks(0)
 	}
 
+	/// Returns the number of elapsed simulated seconds since the start of the
+	/// simulation.
+	pub fn get_elapsed_time(&self) -> Seconds {
+		Seconds(0)
+	}
 }

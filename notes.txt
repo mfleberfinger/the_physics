@@ -19,8 +19,8 @@ Development process (not necessarily in order)
 			apply the effects of fields, etc.).
 			-> Make a Simulation struct to store everything that belongs to the
 				active simulation.
-	- Write structs and skeleton functions/methods based on the interface design. *******************
-	- Write failing tests.
+	- Write structs and skeleton functions/methods based on the interface design.	[done]
+	- Write failing tests.	******************************************************************************
 		+ Starting to write these while working on the design, based on the
 			methods under the "Interface", section, below, might be helpful for
 			coming up with more of the design.
