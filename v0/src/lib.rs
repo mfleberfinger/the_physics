@@ -1,19 +1,84 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
+	/********************* Seconds ********************/
+	#[test]
+	fn seconds_supports_partialEq() {
+		assert!(
+			Seconds(-1.0) == Seconds(-1.0),
+			"Seconds(-1.0) did not equal Seconds(-1.0)."
+		);
+		assert!(
+			Seconds(0.0) == Seconds(0.0),
+			"Seconds(0.0) did not equal Seconds(0.0)."
+		);
+		assert!(
+			Seconds(1.0) == Seconds(1.0),
+			"Seconds(1.0) did not equal Seconds(1.0)."
+		);
+
+		assert!(
+			Seconds(-1.0) != Seconds(0.0),
+			"Seconds(-1.0) was equal Seconds(0.0)."
+		);
+		assert!(
+			Seconds(0.0) != Seconds(1.0),
+			"Seconds(0.0) was equal to Seconds(1.0)."
+		);
+		assert!(
+			Seconds(1.0) != Seconds(-1.0),
+			"Seconds(1.0) was equal to Seconds(-1.0)."
+		);
+	}
+	
+	/********************* Vector2 ********************/
+
+	/********************* Mass ********************/
+
+	/********************* Position ********************/
+
+	/********************* Velocity ********************/
+
+	/********************* Force ********************/
+
+	/********************* Ticks ********************/
+
+	/********************* Field ********************/
+
+	/********************* Particle ********************/
+
+	/********************* Simulation ********************/
+
+	// Test the constructor.
+	
+	// Verifies that the constructor creates a simulation with the correct
+	//	parameters.
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn new_creates_simulation() {
+        let simulation = Simulation::new(Seconds(1), None, None);
+		assert_eq!(simulation.tick_duration, Seconds(1));
     }
+
+
+	// Test create_particle().
+
+	// Test delete_particle().
+
+	// Test apply_force().
+
+	// Test start().
+
+	// Test pause().
+
+	// Test step().
+
+	// Test get_elapsed_ticks().
+
+	// Test get_elapsed_time().
 }
 
 // Using a tuple struct to wrap an f64 so the compiler treats Seconds as a
@@ -82,14 +147,19 @@ pub struct Simulation {
 	// The number of simulated seconds that have passed so far.
 	elapsed_time: Seconds,
 	// Speed at which the simulation will run, resources permitting. Units are
-	//	(simulated seconds) / (real world second).
-	simulation_speed: f64,
+	//	(simulated seconds) / (real world second). If None, run as fast as
+	//	possible.
+	simulation_speed: Option<f64>,
 	// A function called on each tick. Allows user-defined logic to be driven
 	//	by the simulation.
 	on_tick: Option<fn()>,
 }
 
 impl Simulation {
+	fn tick(&self) {
+
+	}
+
 	/// Creates an instance of `Simulation`.
 	///
 	/// # Arguments
@@ -98,13 +168,19 @@ impl Simulation {
 	/// * `simulation_speed` - The speed at which the simulation will run,
 	///		resources permitting.
 	///		Units are (simulated seconds) / (real world second).
+	///		If None is specified, the simulation will run as fast as possible.
 	/// * `on_tick` - A function that will be called by the simulation on each
 	///		tick.
+	///
+	///	# Panics
+	/// Panics if `tick_duration` or `simulation_speed` is less than or equal to
+	/// zero.
 	pub fn new(
 		tick_duration: Seconds,
-		simulation_speed: f64,
+		simulation_speed: Option<f64>,
 		on_tick: Option<fn()>,
 	) -> Self {
+	/* TODO: Uncomment this and delete the incorrect code below this.
 		Self {
 			tick_duration: tick_duration,
 			particles: HashMap::new(),
@@ -113,11 +189,17 @@ impl Simulation {
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
 		}
+	*/
+		Self {
+			tick_duration: Seconds(-1.0),
+			particles: HashMap::new(),
+			elapsed_ticks: Ticks(11234124),
+			elapsed_time: Seconds(-40.0),
+			simulation_speed: Some(-1.0),
+			on_tick: None,
+		}
 	}
 
-	fn tick(&self) {
-
-	}
 
 	/// Creates a new particle and adds it to the simulation. Returns that
 	/// particle's unique ID.
@@ -192,6 +274,6 @@ impl Simulation {
 	/// Returns the number of elapsed simulated seconds since the start of the
 	/// simulation.
 	pub fn get_elapsed_time(&self) -> Seconds {
-		Seconds(0)
+		Seconds(0.0)
 	}
 }
