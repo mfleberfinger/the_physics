@@ -60,7 +60,59 @@ mod tests {
     #[test]
     fn new_creates_simulation() {
         let simulation = Simulation::new(Seconds(1), None, None);
-		assert_eq!(simulation.tick_duration, Seconds(1));
+		assert_eq!(
+			simulation.tick_duration,
+			Seconds(1),
+			"Incorrect tick_duration."
+		);
+		assert_eq!(
+			simulation.elapsed_ticks,
+			Ticks(0),
+			"Incorrect elapsed_ticks."
+		);
+		assert_eq!(
+			simulation.elapsed_time,
+			Seconds(0.0),
+			"Incorrect elapsed_time."
+		);
+		assert!(
+			simulation.simulation_speed.is_none(),
+			"Incorrect simulation_speed."
+		);
+		assert!(
+			simulation.on_tick.is_none(),
+			"Incorrect on_tick."
+		);
+
+		let simulation = Simulation::new(
+			Seconds(1),
+			Some(1.0),
+			Some(|| -> bool { true }
+		);
+		assert_eq!(
+			simulation.tick_duration,
+			Seconds(1),
+			"Incorrect tick_duration."
+		);
+		assert_eq!(
+			simulation.elapsed_ticks,
+			Ticks(0),
+			"Incorrect elapsed_ticks."
+		);
+		assert_eq!(
+			simulation.elapsed_time,
+			Seconds(0.0),
+			"Incorrect elapsed_time."
+		);
+		assert_eq!(
+			simulation.simulation_speed.expect("Should have simulation speed."),
+			1.0
+			"Incorrect simulation_speed."
+		);
+		assert!(
+			(simulation.on_tick)(),
+			"The on_tick function pointer did not return the expected result."
+		);
     }
 
 
