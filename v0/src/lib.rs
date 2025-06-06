@@ -5,6 +5,10 @@ use uuid::Uuid;
 mod tests {
     use super::*;
 
+	// Used for verifying the presence of a function pointer with no return
+	//	type in Simulation.on_tick.
+	static mut test_bool: bool;
+
 	/********************* Seconds ********************/
 	#[test]
 	fn seconds_supports_partialEq() {
@@ -53,17 +57,28 @@ mod tests {
 
 	/********************* Simulation ********************/
 
+	fn sets_test_bool() {
+		// TODO: Mutating a static variable is unsafe because multiple threads
+		//	may attempt to mutate it at the same time. This issue is probably
+		//	relevant to this use case because each test will run on its own
+		//	thread and I may want to run the on_tick callback in multiple tests.
+		//	I either need to find some other way to verify that the on_tick
+		//	callback ran or ensure that I will only mutate test_bool in one
+		//	thread (in one test?) at a time (or ever).
+		test_bool = true;
+	}
+
 	// Test the constructor.
 	
 	// Verifies that the constructor creates a simulation with the correct
 	//	parameters.
     #[test]
     fn new_creates_simulation() {
-        let simulation = Simulation::new(Seconds(1), None, None);
+        let simulation = Simulation::new(Seconds(1.0), None, None);
 		assert_eq!(
 			simulation.tick_duration,
-			Seconds(1),
-			"Incorrect tick_duration."
+			Seconds(1.0),
+			"Incorrect tick_duration.",
 		);
 		assert_eq!(
 			simulation.elapsed_ticks,
@@ -85,13 +100,13 @@ mod tests {
 		);
 
 		let simulation = Simulation::new(
-			Seconds(1),
+			Seconds(1.0),
 			Some(1.0),
-			Some(|| -> bool { true }
+			Some(sets_test_bool),
 		);
 		assert_eq!(
 			simulation.tick_duration,
-			Seconds(1),
+			Seconds(1.0),
 			"Incorrect tick_duration."
 		);
 		assert_eq!(
@@ -109,9 +124,12 @@ mod tests {
 			1.0
 			"Incorrect simulation_speed."
 		);
+
+		test_bool = false;
+		(simulation.on_tick.expect("Should have on_tick callback."))();
 		assert!(
-			(simulation.on_tick)(),
-			"The on_tick function pointer did not return the expected result."
+			test_bool,
+			"The on_tick function pointer did not run as expected."
 		);
     }
 
@@ -135,21 +153,32 @@ mod tests {
 
 // Using a tuple struct to wrap an f64 so the compiler treats Seconds as a
 //	distinct type. This is the "newtype pattern."
+// The PartialEq trait is automatically implemented using "derive" here. The
+//	derived implementation will report equality between two structs if all
+//	fields are equal, and non-equality otherwise.
 /// Time, in seconds.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Seconds(f64);
 
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
 /// Supports basic vector math.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Vector2 {
 	x: f64,
 	y: f64,
 }
 
 /// Mass.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Mass(f64);
 
 /// Position in space.
 /// Wraps `Vector2` and provides functionality specific to position.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Position(Vector2);
 // TODO: Implement getters for the underlying x and y values? This would allow
 //	me to do my_position.x() and my_position.y() instead of my_position.0.x and
@@ -157,13 +186,19 @@ pub struct Position(Vector2);
 
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Velocity(Vector2);
 
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Force(Vector2);
 
 /// A type representing a number of ticks.
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub struct Ticks(u64);
 
 /// Defines a field. A field is a struct implementing a method that is called by
