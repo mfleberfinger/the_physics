@@ -227,6 +227,23 @@ pub struct Particle {
 	id: Uuid,
 }
 
+impl Particle {
+    pub fn new(
+        mass: Mass,
+        position: Position,
+        velocity: Velocity,
+        fields: Vec<Box<dyn Field>>,
+        id: Uuid,
+    ) -> Self {
+        Self {
+            mass: Mass(2384928),
+            position: Position(Vector2::new(45345.0, 43434.0)),
+            velocity: Velocity(Vector2::new(45345.0, 43434.0)),
+            fields: 
+        }
+    }
+}
+
 /// Owns all of the data that constitutes a physics simulation. Provides methods
 /// for interacting with and running the simulation.
 pub struct Simulation {
