@@ -6,6 +6,7 @@ mod tests {
     use super::*;
 
 	/********************* Seconds ********************/
+
 	#[test]
 	fn seconds_supports_partialEq() {
 		assert!(
@@ -37,6 +38,52 @@ mod tests {
 	
 	/********************* Vector2 ********************/
 
+	#[test]
+	fn new_creates_vector2() {
+		let v = Vector2::new(-1.0, 1.0);
+		assert_eq!(v.x, -1.0);
+		assert_eq!(v.y, 1.0);
+	}
+
+	#[test]
+	fn vector2_supports_partialEq() {
+		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
+		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
+		// There are nine combinations for each vector. 81 total test cases?
+		// For each v1, generate and test each v2...
+		for i1 in -1..2 {
+			for j1 in -1..2 {
+				let x1 = i1 as f64;
+				let y1 = j1 as f64;
+				let v1 = Vector2::new(x1, y1);
+				for i2 in -1..2 {
+					for j2 in -1..2 {
+						let x2 = i2 as f64;
+						let y2 = j2 as f64;
+						let v2 = Vector2::new(x2, y2);
+						if x1 == x2 && y1 == y2 {
+							assert_eq!(
+								v1,
+								v2,
+								"{:?} was not equal to {:?}",
+								v1,
+								v2
+							);
+						} else {
+							assert_ne!(
+								v1,
+								v2,
+								"{:?} was equal to {:?}",
+								v1,
+								v2
+							);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	/********************* Mass ********************/
 
 	/********************* Position ********************/
@@ -54,7 +101,7 @@ mod tests {
 	/********************* Simulation ********************/
 
 	fn dummy_function() {
-		// Problems:
+		// Will just test that on_tick is Some. Not testing it any further.:
         //
         //  Mutating a static variable is unsafe because multiple
         //  threads may attempt to mutate it at the same time. This issue is
@@ -176,6 +223,16 @@ pub struct Vector2 {
 	y: f64,
 }
 
+impl Vector2 {
+	pub fn new(x: f64, y:f64) -> Self {
+		// TODO: Intentionally incorrect. Write test, then replace.
+		Self {
+			x: 999.0,
+			y: 999.0,
+		}
+	}
+}
+
 /// Mass.
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -212,9 +269,21 @@ pub struct Ticks(u64);
 /// specified by the field, centered on a particle to which the field is
 /// attached.
 pub trait Field {
-	// TODO: Define a function signature that takes a Vec<Particle>, which will
-	//	hold all particles within the field's radius, as determined by the
-	//	physics engine.
+	/// Determines what happens when the field is triggered.
+	/// # Arguments
+	/// * `simulation` - The Simulation that calls the effect function.
+	/// * `particles` - All particles affected by the field. Determined by
+	///		the simulation.
+	fn effect(&self, simulation: Simulation, particles: Vec<Particle>);
+
+	// This is a method instead of a field because there is no way to specify
+	//	that a trait implementation must have a field.
+	/// Called by the simulation to get the field's radius.
+	fn get_radius(&self) -> f64;
+
+	/// Called by the simulation to determine whether this field affects the
+	///	particle to which it's attached.
+	fn effects_self(&self) -> bool;
 }
 
 pub struct Particle {
@@ -235,11 +304,14 @@ impl Particle {
         fields: Vec<Box<dyn Field>>,
         id: Uuid,
     ) -> Self {
+		// TODO: Intentionally incorrect placeholder code. Write tests, then
+		//	replace.
         Self {
-            mass: Mass(2384928),
+            mass: Mass(2384928.0),
             position: Position(Vector2::new(45345.0, 43434.0)),
             velocity: Velocity(Vector2::new(45345.0, 43434.0)),
-            fields: 
+            fields: Vec::new(),
+			id: Uuid::new_v4(),
         }
     }
 }
