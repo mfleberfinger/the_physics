@@ -1,3 +1,14 @@
+TODO:
+	
+	See asterisks below.
+
+	When convenient, split the library into multiple files. Each struct should
+		probably get its own file. Need to figure out how to organize files and
+		ensure that tests still have access to private methods and fields.
+	
+	When done, search the code for any remaining "TODO" comments.
+
+
 V0 Goals
 	- Get more Rust practice/knowledge.
 	- Write a minimal, single-threaded, 2d physics engine and create a realtime,

@@ -5,6 +5,29 @@ use uuid::Uuid;
 mod tests {
     use super::*;
 
+	struct DummyField {
+		radius: f64,
+		affects_self: bool,
+		affects_others: bool,
+	}
+
+	impl Field for DummyField {
+		fn effect(&self, simulation: Simulation, particles: Vec<Particle>) {
+			// Does nothing.
+		}
+
+		fn get_radius(&self) -> f64 {
+			self.radius
+		}
+
+		fn affects_self(&self) -> bool {
+			self.affects_self
+		}
+		fn affects_others(&self) -> bool {
+			self.affects_others
+		}
+	}
+
 	/********************* Seconds ********************/
 
 	#[test]
@@ -62,21 +85,9 @@ mod tests {
 						let y2 = j2 as f64;
 						let v2 = Vector2::new(x2, y2);
 						if x1 == x2 && y1 == y2 {
-							assert_eq!(
-								v1,
-								v2,
-								"{:?} was not equal to {:?}",
-								v1,
-								v2
-							);
+							assert_eq!(v1, v2);
 						} else {
-							assert_ne!(
-								v1,
-								v2,
-								"{:?} was equal to {:?}",
-								v1,
-								v2
-							);
+							assert_ne!(v1, v2);
 						}
 					}
 				}
@@ -86,17 +97,183 @@ mod tests {
 
 	/********************* Mass ********************/
 
+	#[test]
+	fn mass_supports_partialEq() {
+		assert_eq!(Mass(0.0), Mass(0.0));
+		assert_eq!(Mass(1.0), Mass(1.0));
+		assert_eq!(Mass(-1.0), Mass(-1.0));
+
+		assert_ne!(Mass(-1.0), Mass(0.0));
+		assert_ne!(Mass(1.0), Mass(0.0));
+		assert_ne!(Mass(-1.0), Mass(1.0));
+		assert_ne!(Mass(0.0), Mass(-1.0));
+		assert_ne!(Mass(0.0), Mass(1.0));
+		assert_ne!(Mass(1.0), Mass(-1.0));
+	}
+
+
 	/********************* Position ********************/
+
+	#[test]
+	fn new_creates_position() {
+		let position = Position::new(-1.0, 1.0);
+		assert_eq!(position.0.x, -1.0);
+		assert_eq!(position.0.y, 1.0);
+	}
+
+	#[test]
+	fn position_gets_x_and_y() {
+		let position = Position::new(-1.0, 1.0);
+		assert_eq!(position.x(), position.0.x);
+		assert_eq!(position.y(), position.0.y);
+	}
+
+	#[test]
+	fn position_supports_partialEq() {
+		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
+		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
+		// There are nine combinations for each vector. 81 total test cases?
+		// For each p1, generate and test each p2...
+		for i1 in -1..2 {
+			for j1 in -1..2 {
+				let x1 = i1 as f64;
+				let y1 = j1 as f64;
+				let p1 = Position::new(x1, y1);
+				for i2 in -1..2 {
+					for j2 in -1..2 {
+						let x2 = i2 as f64;
+						let y2 = j2 as f64;
+						let p2 = Position::new(x2, y2);
+						if x1 == x2 && y1 == y2 {
+							assert_eq!(p1, p2);
+						} else {
+							assert_ne!(p1, p2);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	/********************* Velocity ********************/
 
+	#[test]
+	fn new_creates_velocity() {
+		let velocity = Velocity::new(-1.0, 1.0);
+		assert_eq!(velocity.0.x, -1.0);
+		assert_eq!(velocity.0.y, 1.0);
+	}
+
+	#[test]
+	fn velocity_gets_x_and_y() {
+		let velocity = Velocity::new(-1.0, 1.0);
+		assert_eq!(velocity.x(), velocity.0.x);
+		assert_eq!(velocity.y(), velocity.0.y);
+	}
+
+	#[test]
+	fn velocity_supports_partialEq() {
+		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
+		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
+		// There are nine combinations for each vector. 81 total test cases?
+		// For each p1, generate and test each p2...
+		for i1 in -1..2 {
+			for j1 in -1..2 {
+				let x1 = i1 as f64;
+				let y1 = j1 as f64;
+				let v1 = Velocity::new(x1, y1);
+				for i2 in -1..2 {
+					for j2 in -1..2 {
+						let x2 = i2 as f64;
+						let y2 = j2 as f64;
+						let v2 = Velocity::new(x2, y2);
+						if x1 == x2 && y1 == y2 {
+							assert_eq!(v1, v2);
+						} else {
+							assert_ne!(v1, v2);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	/********************* Force ********************/
+
+	#[test]
+	fn new_creates_force() {
+		let force = Force::new(-1.0, 1.0);
+		assert_eq!(force.0.x, -1.0);
+		assert_eq!(force.0.y, 1.0);
+	}
+
+	#[test]
+	fn force_gets_x_and_y() {
+		let force = Force::new(-1.0, 1.0);
+		assert_eq!(force.x(), force.0.x);
+		assert_eq!(force.y(), force.0.y);
+	}
+
+	#[test]
+	fn force_supports_partialEq() {
+		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
+		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
+		// There are nine combinations for each vector. 81 total test cases?
+		// For each p1, generate and test each p2...
+		for i1 in -1..2 {
+			for j1 in -1..2 {
+				let x1 = i1 as f64;
+				let y1 = j1 as f64;
+				let f1 = Force::new(x1, y1);
+				for i2 in -1..2 {
+					for j2 in -1..2 {
+						let x2 = i2 as f64;
+						let y2 = j2 as f64;
+						let f2 = Force::new(x2, y2);
+						if x1 == x2 && y1 == y2 {
+							assert_eq!(f1, f2);
+						} else {
+							assert_ne!(f1, f2);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	/********************* Ticks ********************/
 
-	/********************* Field ********************/
+	#[test]
+	fn ticks_supports_partialEq() {
+		assert_eq!(Ticks(0), Ticks(0));
+		assert_eq!(Ticks(1), Ticks(1));
+
+		assert_ne!(Ticks(1), Ticks(0));
+		assert_ne!(Ticks(0), Ticks(1));
+	}
 
 	/********************* Particle ********************/
+
+	#[test]
+	fn new_creates_particle() {
+		let particle = Particle::new(
+			Mass(1.0),
+			Position::new(0.0, 0.0),
+			Velocity::new(0.0, 0.0),
+			vec!(Box::new(
+				DummyField {
+					radius: 1.0,
+					affects_self: false,
+					affects_others: false,
+				}
+			)),
+		);
+		assert_eq!(particle.mass, Mass(1.0));
+		assert_eq!(particle.position, Position::new(0.0, 0.0));
+		assert_eq!(particle.velocity, Velocity::new(0.0, 0.0));
+		assert_eq!(particle.fields.len(), 1);
+	}
+
 
 	/********************* Simulation ********************/
 
@@ -124,13 +301,15 @@ mod tests {
         println!("This is a dummy function for testing Simulation.on_tick.");
 	}
 
-	// Test the constructor.
-	
 	// Verifies that the constructor creates a simulation with the correct
 	//	parameters.
     #[test]
     fn new_creates_simulation() {
-        let simulation = Simulation::new(Seconds(1.0), None, None);
+        let simulation = Simulation::new(
+			Seconds(1.0),
+			None,
+			None,
+		);
 		assert_eq!(
 			simulation.tick_duration,
 			Seconds(1.0),
@@ -140,11 +319,6 @@ mod tests {
 			simulation.elapsed_ticks,
 			Ticks(0),
 			"Incorrect elapsed_ticks."
-		);
-		assert_eq!(
-			simulation.elapsed_time,
-			Seconds(0.0),
-			"Incorrect elapsed_time."
 		);
 		assert!(
 			simulation.simulation_speed.is_none(),
@@ -171,11 +345,6 @@ mod tests {
 			"Incorrect elapsed_ticks."
 		);
 		assert_eq!(
-			simulation.elapsed_time,
-			Seconds(0.0),
-			"Incorrect elapsed_time."
-		);
-		assert_eq!(
 			simulation.simulation_speed.expect("Should have simulation speed."),
 			1.0,
 			"Incorrect simulation_speed."
@@ -186,8 +355,57 @@ mod tests {
         );
     }
 
+	// Verifies that create_particle() creates a particle with the correct
+	//	parameters and that it is added to the particles collection.
+	#[test]
+	fn simulation_creates_particle() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id_1 = simulation.create_particle(
+			Position::new(0.0, 0.0),
+			Mass(1.0),
+			Vec::new(),
+		);
+		let particle_id_2 = simulation.create_particle(
+			Position::new(0.0, 0.0),
+			Mass(1.0),
+			vec!(Box::new(
+				DummyField {
+					radius: 1.0,
+					affects_self: false,
+					affects_others: false,
+				}
+			)),
+		);
 
-	// Test create_particle().
+		assert!(
+			simulation.particles.contains_key(&particle_id_1),
+			"particle_id_1 is not in the particles collection."
+		);
+		assert!(
+			simulation.particles.contains_key(&particle_id_2),
+			"particle_id_2 is not in the particles collection."
+		);
+
+		let particle_1 = simulation.particles.get(&particle_id_1)
+			.expect("simulation.particles should contain particle_id_1");
+		let particle_2 = simulation.particles.get(&particle_id_2)
+			.expect("simulation.particles should contain particle_id_2");
+
+		assert_eq!(particle_1.position, Position::new(0.0, 0.0));
+		assert_eq!(particle_1.mass, Mass(1.0));
+		assert!(
+			particle_1.fields.is_empty(),
+			"particle_1 should have no fields"
+		);
+
+		assert_eq!(particle_2.position, Position::new(0.0, 0.0));
+		assert_eq!(particle_2.mass, Mass(1.0));
+		assert_eq!(
+			particle_2.fields.len(),
+			1,
+			"particle_2 should have a field"
+		);
+	}
 
 	// Test delete_particle().
 
@@ -243,9 +461,20 @@ pub struct Mass(f64);
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Position(Vector2);
-// TODO: Implement getters for the underlying x and y values? This would allow
-//	me to do my_position.x() and my_position.y() instead of my_position.0.x and
-//	my_position.0.y.
+
+impl Position {
+	pub fn new(x: f64, y: f64) -> Self {
+		Self(Vector2::new(x, y))
+	}
+
+	pub fn x(&self) -> f64 {
+		self.0.x
+	}
+
+	pub fn y(&self) -> f64 {
+		self.0.y
+	}
+}
 
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
@@ -253,11 +482,39 @@ pub struct Position(Vector2);
 #[derive(Debug)]
 pub struct Velocity(Vector2);
 
+impl Velocity {
+	pub fn new(x: f64, y: f64) -> Self {
+		Self(Vector2::new(x, y))
+	}
+
+	pub fn x(&self) -> f64 {
+		self.0.x
+	}
+
+	pub fn y(&self) -> f64 {
+		self.0.y
+	}
+}
+
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Force(Vector2);
+
+impl Force {
+	pub fn new(x: f64, y: f64) -> Self {
+		Self(Vector2::new(x, y))
+	}
+
+	pub fn x(&self) -> f64 {
+		self.0.x
+	}
+
+	pub fn y(&self) -> f64 {
+		self.0.y
+	}
+}
 
 /// A type representing a number of ticks.
 #[derive(PartialEq)]
@@ -283,7 +540,11 @@ pub trait Field {
 
 	/// Called by the simulation to determine whether this field affects the
 	///	particle to which it's attached.
-	fn effects_self(&self) -> bool;
+	fn affects_self(&self) -> bool;
+
+	/// Called by the simulation to determine whether this field affects
+	/// particles other than the particle to which it's attached.
+	fn affects_others(&self) -> bool;
 }
 
 pub struct Particle {
@@ -302,7 +563,6 @@ impl Particle {
         position: Position,
         velocity: Velocity,
         fields: Vec<Box<dyn Field>>,
-        id: Uuid,
     ) -> Self {
 		// TODO: Intentionally incorrect placeholder code. Write tests, then
 		//	replace.
@@ -327,7 +587,8 @@ pub struct Simulation {
 	// The number of ticks that have passed so far.
 	elapsed_ticks: Ticks,
 	// The number of simulated seconds that have passed so far.
-	elapsed_time: Seconds,
+	// TODO: This should be calculated, not stored in a field.
+	// elapsed_time: Seconds,
 	// Speed at which the simulation will run, resources permitting. Units are
 	//	(simulated seconds) / (real world second). If None, run as fast as
 	//	possible.
@@ -376,7 +637,6 @@ impl Simulation {
 			tick_duration: Seconds(-1.0),
 			particles: HashMap::new(),
 			elapsed_ticks: Ticks(11234124),
-			elapsed_time: Seconds(-40.0),
 			simulation_speed: Some(-1.0),
 			on_tick: None,
 		}
@@ -387,7 +647,7 @@ impl Simulation {
 	/// particle's unique ID.
 	///
 	/// # Arguments
-	/// * `position` - The particle's coordinates.
+	/// * `position` - The particle's coordinates in space.
 	/// * `mass` - The particle's mass.
 	/// * `fields` - Fields to attach to the particle.
 	pub fn create_particle(
