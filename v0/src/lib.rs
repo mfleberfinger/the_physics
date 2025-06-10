@@ -407,9 +407,51 @@ mod tests {
 		);
 	}
 
-	// Test delete_particle().
+	#[test]
+	fn simulation_deletes_particle() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Position::new(0.0, 0.0),
+			Mass(1.0),
+			Vec::new(),
+		);
 
-	// Test apply_force().
+		assert!(
+			simulation.particles.contains_key(&particle_id),
+			"Cannot test particle deletion if the particle was not created.",
+		);
+
+		simulation.delete_particle(particle_id);
+
+		assert!(
+			!simulation.particles.contains_key(&particle_id),
+			"The particles collection should not contain a deleted particle.",
+		);
+	}
+
+	// Verifies that the Simulation.apply_force() method adds a force to the
+	//	collection of forces to apply on the next tick.
+	#[test]
+	fn simulation_applies_force() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Position::new(0.0, 0.0),
+			Mass(1.0),
+			Vec::new(),
+		);
+
+		simulation.apply_force(particle_id, Force::new(1.0, 1.0));
+		assert!(
+			simulation.applied_forces.contains_key(&particle_id),
+			"Applied forces should appear in the applied_forces collection.",
+		);
+
+		assert_eq!(
+			simulation.applied_forces[&particle_id][0],
+			Force::new(1.0, 1.0),
+			"The force in applied_forces is incorrect.",
+		);
+	}
 
 	// Test start().
 
@@ -596,6 +638,8 @@ pub struct Simulation {
 	// A function called on each tick. Allows user-defined logic to be driven
 	//	by the simulation.
 	on_tick: Option<fn()>,
+	// Holds forces, keyed by particle_id, to calculate on the next tick.
+	applied_forces: HashMap<Uuid, Vec<Force>>,
 }
 
 impl Simulation {
@@ -628,9 +672,9 @@ impl Simulation {
 			tick_duration: tick_duration,
 			particles: HashMap::new(),
 			elapsed_ticks: Ticks(0),
-			elapsed_time: Seconds(0.0),
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
+			applied_forces: HashMap::new(),
 		}
 	*/
 		Self {
@@ -639,6 +683,7 @@ impl Simulation {
 			elapsed_ticks: Ticks(11234124),
 			simulation_speed: Some(-1.0),
 			on_tick: None,
+			applied_forces: HashMap::new(),
 		}
 	}
 
@@ -668,7 +713,8 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn delete_particle(&self, particle_id: Uuid) {
-
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic.
 	}
 
 	/// Applies a force to a specific particle for the duration of the next
@@ -687,7 +733,8 @@ impl Simulation {
 		particle_id: Uuid,
 		force: Force,
 	) {
-
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic.
 	}
 
 	/// Starts the simulation.
