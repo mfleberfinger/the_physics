@@ -9,6 +9,7 @@ mod tests {
 		radius: f64,
 		affects_self: bool,
 		affects_others: bool,
+		name: String,
 	}
 
 	impl Field for DummyField {
@@ -23,8 +24,13 @@ mod tests {
 		fn affects_self(&self) -> bool {
 			self.affects_self
 		}
+
 		fn affects_others(&self) -> bool {
 			self.affects_others
+		}
+
+		fn get_name(&self) -> String {
+			self.name
 		}
 	}
 
@@ -112,24 +118,24 @@ mod tests {
 	}
 
 
-	/********************* Position ********************/
+	/********************* Displacement ********************/
 
 	#[test]
-	fn new_creates_position() {
-		let position = Position::new(-1.0, 1.0);
-		assert_eq!(position.0.x, -1.0);
-		assert_eq!(position.0.y, 1.0);
+	fn new_creates_displacement() {
+		let displacement = Displacement::new(-1.0, 1.0);
+		assert_eq!(displacement.0.x, -1.0);
+		assert_eq!(displacement.0.y, 1.0);
 	}
 
 	#[test]
-	fn position_gets_x_and_y() {
-		let position = Position::new(-1.0, 1.0);
-		assert_eq!(position.x(), position.0.x);
-		assert_eq!(position.y(), position.0.y);
+	fn displacement_gets_x_and_y() {
+		let displacement = Displacement::new(-1.0, 1.0);
+		assert_eq!(displacement.x(), displacement.0.x);
+		assert_eq!(displacement.y(), displacement.0.y);
 	}
 
 	#[test]
-	fn position_supports_partialEq() {
+	fn displacement_supports_partialEq() {
 		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
 		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
 		// There are nine combinations for each vector. 81 total test cases?
@@ -138,16 +144,16 @@ mod tests {
 			for j1 in -1..2 {
 				let x1 = i1 as f64;
 				let y1 = j1 as f64;
-				let p1 = Position::new(x1, y1);
+				let d1 = Displacement::new(x1, y1);
 				for i2 in -1..2 {
 					for j2 in -1..2 {
 						let x2 = i2 as f64;
 						let y2 = j2 as f64;
-						let p2 = Position::new(x2, y2);
+						let d2 = Displacement::new(x2, y2);
 						if x1 == x2 && y1 == y2 {
-							assert_eq!(p1, p2);
+							assert_eq!(d1, d2);
 						} else {
-							assert_ne!(p1, p2);
+							assert_ne!(d1, d2);
 						}
 					}
 				}
@@ -258,7 +264,7 @@ mod tests {
 	fn new_creates_particle() {
 		let particle = Particle::new(
 			Mass(1.0),
-			Position::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0),
 			Velocity::new(0.0, 0.0),
 			vec!(Box::new(
 				DummyField {
@@ -269,7 +275,7 @@ mod tests {
 			)),
 		);
 		assert_eq!(particle.mass, Mass(1.0));
-		assert_eq!(particle.position, Position::new(0.0, 0.0));
+		assert_eq!(particle.position, Displacement::new(0.0, 0.0));
 		assert_eq!(particle.velocity, Velocity::new(0.0, 0.0));
 		assert_eq!(particle.fields.len(), 1);
 	}
@@ -361,12 +367,12 @@ mod tests {
 	fn simulation_creates_particle() {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
-			Position::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0),
 			Mass(1.0),
 			Vec::new(),
 		);
 		let particle_id_2 = simulation.create_particle(
-			Position::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0),
 			Mass(1.0),
 			vec!(Box::new(
 				DummyField {
@@ -391,14 +397,14 @@ mod tests {
 		let particle_2 = simulation.particles.get(&particle_id_2)
 			.expect("simulation.particles should contain particle_id_2");
 
-		assert_eq!(particle_1.position, Position::new(0.0, 0.0));
+		assert_eq!(particle_1.position, Displacement::new(0.0, 0.0));
 		assert_eq!(particle_1.mass, Mass(1.0));
 		assert!(
 			particle_1.fields.is_empty(),
 			"particle_1 should have no fields"
 		);
 
-		assert_eq!(particle_2.position, Position::new(0.0, 0.0));
+		assert_eq!(particle_2.position, Displacement::new(0.0, 0.0));
 		assert_eq!(particle_2.mass, Mass(1.0));
 		assert_eq!(
 			particle_2.fields.len(),
@@ -411,7 +417,7 @@ mod tests {
 	fn simulation_deletes_particle() {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Position::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0),
 			Mass(1.0),
 			Vec::new(),
 		);
@@ -435,7 +441,7 @@ mod tests {
 	fn simulation_applies_force() {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Position::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0),
 			Mass(1.0),
 			Vec::new(),
 		);
@@ -453,6 +459,14 @@ mod tests {
 		);
 	}
 
+	// Test get_mass().
+
+	// Test get_position().
+
+	// Test get_velocity().
+
+	// Test get_field_info.
+
 	// Test start().
 
 	// Test pause().
@@ -462,6 +476,13 @@ mod tests {
 	// Test get_elapsed_ticks().
 
 	// Test get_elapsed_time().
+
+
+	/************** Simulation: functional tests ********************/
+
+	#[test]
+	fn simulation_calculates_velocity {
+	}
 }
 
 // Using a tuple struct to wrap an f64 so the compiler treats Seconds as a
@@ -498,13 +519,14 @@ impl Vector2 {
 #[derive(Debug)]
 pub struct Mass(f64);
 
-/// Position in space.
-/// Wraps `Vector2` and provides functionality specific to position.
+/// Position in space (displacement from the origin), displacement relative to
+/// some starting location, or distance from some arbitrary position.
+/// Wraps `Vector2` and provides functionality specific to displacement.
 #[derive(PartialEq)]
 #[derive(Debug)]
-pub struct Position(Vector2);
+pub struct Displacement(Vector2);
 
-impl Position {
+impl Displacement {
 	pub fn new(x: f64, y: f64) -> Self {
 		Self(Vector2::new(x, y))
 	}
@@ -587,11 +609,21 @@ pub trait Field {
 	/// Called by the simulation to determine whether this field affects
 	/// particles other than the particle to which it's attached.
 	fn affects_others(&self) -> bool;
+
+	/// Called by the simulation to get a name that identifies this field, which
+	/// it will then make available to user-defined code through
+	/// `simulation.get_field_info()`. One application of this may be to have
+	/// fields affect particles differently if those particles have a field
+	/// with the same name. For example, a water particle may have a "water"
+	/// field that uses certain rules to apply  a cohesion force to other
+	/// particles with a water field and uses different rules to apply an
+	/// adhesion force to particles without the water field.
+	fn get_name(&self) -> String;
 }
 
 pub struct Particle {
 	mass: Mass,
-	position: Position,
+	position: Displacement,
 	velocity: Velocity,
 	// Vec<Box<dyn Field>> is a "trait object". This is apparently necessary to
 	//	make a Vec store an unknown type that implements a trait.
@@ -602,7 +634,7 @@ pub struct Particle {
 impl Particle {
     pub fn new(
         mass: Mass,
-        position: Position,
+        position: Displacement,
         velocity: Velocity,
         fields: Vec<Box<dyn Field>>,
     ) -> Self {
@@ -610,7 +642,7 @@ impl Particle {
 		//	replace.
         Self {
             mass: Mass(2384928.0),
-            position: Position(Vector2::new(45345.0, 43434.0)),
+            position: Displacement(Vector2::new(45345.0, 43434.0)),
             velocity: Velocity(Vector2::new(45345.0, 43434.0)),
             fields: Vec::new(),
 			id: Uuid::new_v4(),
@@ -697,7 +729,7 @@ impl Simulation {
 	/// * `fields` - Fields to attach to the particle.
 	pub fn create_particle(
 		&self,
-		position: Position,
+		position: Displacement,
 		mass: Mass,
 		fields: Vec<Box<dyn Field>>,
 	) -> Uuid {
@@ -714,7 +746,8 @@ impl Simulation {
 	/// 	`particle_id`.
 	pub fn delete_particle(&self, particle_id: Uuid) {
 		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic.
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
 	}
 
 	/// Applies a force to a specific particle for the duration of the next
@@ -734,7 +767,73 @@ impl Simulation {
 		force: Force,
 	) {
 		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic.
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
+	}
+
+	/// Gets the mass of a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		mass.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_mass(&self, particle_id: Uuid) -> Mass {
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
+		Mass(234234.0)
+	}
+
+	/// Gets the position (i.e., displacement from the origin) of a specific
+	/// particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		position.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_position(&self, particle_id: Uuid) -> Displacement {
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
+		Displacement::new(234.0, 2342.0)
+	}
+
+	/// Gets the velocity of a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		mass.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_velocity(&self, particle_id) -> Velocity {
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
+		Velocity::new(23423.4, 234234.4)
+	}
+
+	/// Gets a collection containing information about all `Field`s attached to
+	///	a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		field information.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_field_info(&self, particle_id) -> Vec<FieldInfo> {
+		// TODO: Remember to panic with a helpful message if particle_id doesn't
+		//	exist. Don't just let the HashMap panic. Write "should panic" tests
+		//	before implementing.
 	}
 
 	/// Starts the simulation.
@@ -752,7 +851,8 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
 	pub fn step(&self) {
-		// TODO: If not paused, panic.
+		// TODO: If not paused, panic. Write "should panic" tests before
+		//	implementing.
 	}
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
