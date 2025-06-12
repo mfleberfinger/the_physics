@@ -13,7 +13,12 @@ mod tests {
 	}
 
 	impl Field for DummyField {
-		fn effect(&self, simulation: Simulation, particles: Vec<Particle>) {
+		fn effect(
+			&self,
+			simulation: Simulation,
+			position: Displacement,
+			particles: Vec<Particle>
+		) {
 			// Does nothing.
 		}
 
@@ -29,8 +34,8 @@ mod tests {
 			self.affects_others
 		}
 
-		fn get_name(&self) -> String {
-			self.name
+		fn get_name(&self) -> &String {
+			&self.name
 		}
 	}
 
@@ -271,6 +276,7 @@ mod tests {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,
+					name: String::from("dummy"),
 				}
 			)),
 		);
@@ -379,6 +385,7 @@ mod tests {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,
+					name: String::from("dummy"),
 				}
 			)),
 		);
@@ -459,15 +466,84 @@ mod tests {
 		);
 	}
 
-	// Test get_mass().
+	#[test]
+	fn simulation_gets_mass() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass(1.0),
+			Vec::new(),
+		);
 
-	// Test get_position().
+		let mass = simulation.get_mass(particle_id);
 
-	// Test get_velocity().
+		assert_eq!(Mass(1.0), mass);
+	}
+	
+	#[test]
+	fn simulation_gets_position() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(-1.23, 123.0),
+			Mass(1.0),
+			Vec::new(),
+		);
 
-	// Test get_field_info.
+		let position = simulation.get_position(particle_id);
+
+		assert_eq!(Displacement::new(-1.23, 123.0), position);
+	}
+
+	#[test]
+	fn simulation_gets_velocity() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass(1.0),
+			Vec::new(),
+		);
+
+		// We have access to the simulation here, so just set the velocity. The
+		//	get_velocity method should just return Particle.velocity.
+		match simulation.particles.get_mut(&particle_id) {
+			Some(p) => p.velocity = Velocity::new(1.0, 1.0),
+			None => panic!("The created particle was not found!"),
+		};
+		let velocity = simulation.get_velocity(particle_id);
+
+		assert_eq!(Velocity::new(1.0, 1.0), velocity);
+	}
+
+	#[test]
+	fn simulation_gets_field_info() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass(1.0),
+			vec!(Box::new(
+				DummyField {
+					radius: 1.0,
+					affects_self: true,
+					affects_others: true,
+					name: String::from("dummy"),
+				}
+			)),
+		);
+
+		let field_info = simulation.get_field_info(particle_id);
+
+		assert_eq!(field_info[0].radius, 1.0);
+		assert!(field_info[0].affects_self);
+		assert!(field_info[0].affects_others);
+		assert_eq!(field_info[0].name, String::from("dummy"));
+	}
 
 	// Test start().
+	// TODO: Decide what start() and pause() should actually do. Maybe just add
+	//	a "paused" bool to Simulation. Set it to true when instantiating
+	//	Simulation, have start() set it to false, and have pause() set it to
+	//	true. The tick() method (or the code that calls tick (some timer event?)
+	//	could just not do anything when paused is true).
 
 	// Test pause().
 
@@ -480,8 +556,27 @@ mod tests {
 
 	/************** Simulation: functional tests ********************/
 
+	// Verifies that the velocity of a particle is set correctly when a force
+	//	is applied. Should test multiple edge cases (positive values, negative
+	//	values, 0 mass (if this is allowed), multiple directions, particle with
+	//	and without velocity, multiple forces, others?).
+	// Resulting velocity may not be precisely the same as calculated velocity
+	//	due to the tick-based nature of the simulation. Need to decide what
+	//	level of error is acceptable for a given tick length and number of
+	//	ticks.
 	#[test]
-	fn simulation_calculates_velocity {
+	fn simulation_calculates_velocity() {
+	}
+
+	// Creates a particle with a self-affecting gravity field and launches it
+	//	with a known force. Uses equations of motion to calculate the expected
+	//	position, velocity, energy, etc. of the particle at different times.
+	// Resulting values may not be precisely the same as calculated values
+	//	due to the tick-based nature of the simulation. Need to decide what
+	//	level of error is acceptable for a given tick length and number of
+	//	ticks.
+	#[test]
+	fn trajectory_test() {
 	}
 }
 
@@ -593,9 +688,16 @@ pub trait Field {
 	/// Determines what happens when the field is triggered.
 	/// # Arguments
 	/// * `simulation` - The Simulation that calls the effect function.
+	/// # `position` - The position of the particle to which this field is
+	///		attached. The center of the field.
 	/// * `particles` - All particles affected by the field. Determined by
 	///		the simulation.
-	fn effect(&self, simulation: Simulation, particles: Vec<Particle>);
+	fn effect(
+		&self,
+		simulation: Simulation,
+		position: Displacement,
+		particles: Vec<Particle>
+	);
 
 	// This is a method instead of a field because there is no way to specify
 	//	that a trait implementation must have a field.
@@ -618,9 +720,22 @@ pub trait Field {
 	/// field that uses certain rules to apply  a cohesion force to other
 	/// particles with a water field and uses different rules to apply an
 	/// adhesion force to particles without the water field.
-	fn get_name(&self) -> String;
+	fn get_name(&self) -> &String;
 }
 
+#[derive(Debug)]
+pub struct FieldInfo {
+	radius: f64,
+	affects_self: bool,
+	affects_others: bool,
+	name: String,
+}
+
+// TODO: Shoud this (and probably other structs) actually be public? The
+//	Simulation's interface is written in a way that assumes none of this
+//	struct's fields will be directly accessible by the user.
+/// Represents an infinitesimal massive particle. Stores the particle's mass,
+/// position, velocity, and attached `Field`s.
 pub struct Particle {
 	mass: Mass,
 	position: Displacement,
@@ -813,7 +928,7 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
-	pub fn get_velocity(&self, particle_id) -> Velocity {
+	pub fn get_velocity(&self, particle_id: Uuid) -> Velocity {
 		// TODO: Remember to panic with a helpful message if particle_id doesn't
 		//	exist. Don't just let the HashMap panic. Write "should panic" tests
 		//	before implementing.
@@ -830,10 +945,17 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
-	pub fn get_field_info(&self, particle_id) -> Vec<FieldInfo> {
+	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<FieldInfo> {
 		// TODO: Remember to panic with a helpful message if particle_id doesn't
 		//	exist. Don't just let the HashMap panic. Write "should panic" tests
 		//	before implementing.
+
+		vec!(FieldInfo {
+			radius: 0.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("William Beauregard Jefferschmidt IV"),
+		})
 	}
 
 	/// Starts the simulation.
