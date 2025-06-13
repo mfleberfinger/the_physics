@@ -340,6 +340,10 @@ mod tests {
 			simulation.on_tick.is_none(),
 			"Incorrect on_tick."
 		);
+		assert!(
+			simulation.is_paused,
+			"The simulation should be paused when instantiated."
+		);
 
 		let simulation = Simulation::new(
 			Seconds(1.0),
@@ -365,7 +369,23 @@ mod tests {
             simulation.on_tick.is_some(),
             "The on_tick function pointer should be set."
         );
+		assert!(
+			simulation.is_paused,
+			"The simulation should be paused when instantiated."
+		);
     }
+
+	#[test]
+	#[should_panic(expected = "tick_duration must be positive")]
+	fn simulation_new_panics_on_negative_tick_duration() {
+		let simulation = Simulation::new(Seconds(-1.0), None, None);
+	}
+
+	#[test]
+	#[should_panic(expected = "simulation_speed must be positive")]
+	fn simulation_new_panics_on_negative_simulation_speed() {
+		let simulation = Simulation::new(Seconds(1.0), Some(-1.0), None);
+	}
 
 	// Verifies that create_particle() creates a particle with the correct
 	//	parameters and that it is added to the particles collection.
@@ -442,8 +462,15 @@ mod tests {
 		);
 	}
 
+	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_delete_particle_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.delete_particle(Uuid::new_v4());
+	}
+
 	// Verifies that the Simulation.apply_force() method adds a force to the
-	//	collection of forces to apply on the next tick.
+	//	collection of forces to simulate on the next tick.
 	#[test]
 	fn simulation_applies_force() {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
@@ -467,6 +494,13 @@ mod tests {
 	}
 
 	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_apply_foce_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.apply_force(Uuid::new_v4(), Force::new(1.0, 1.0));
+	}
+
+	#[test]
 	fn simulation_gets_mass() {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
@@ -478,6 +512,13 @@ mod tests {
 		let mass = simulation.get_mass(particle_id);
 
 		assert_eq!(Mass(1.0), mass);
+	}
+
+	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_get_mass_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.get_mass(Uuid::new_v4());
 	}
 	
 	#[test]
@@ -492,6 +533,13 @@ mod tests {
 		let position = simulation.get_position(particle_id);
 
 		assert_eq!(Displacement::new(-1.23, 123.0), position);
+	}
+
+	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_get_position_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.get_position(Uuid::new_v4());
 	}
 
 	#[test]
@@ -512,6 +560,13 @@ mod tests {
 		let velocity = simulation.get_velocity(particle_id);
 
 		assert_eq!(Velocity::new(1.0, 1.0), velocity);
+	}
+
+	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_get_velocity_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.get_velocity(Uuid::new_v4());
 	}
 
 	#[test]
@@ -538,20 +593,80 @@ mod tests {
 		assert_eq!(field_info[0].name, String::from("dummy"));
 	}
 
-	// Test start().
-	// TODO: Decide what start() and pause() should actually do. Maybe just add
-	//	a "paused" bool to Simulation. Set it to true when instantiating
-	//	Simulation, have start() set it to false, and have pause() set it to
-	//	true. The tick() method (or the code that calls tick (some timer event?)
-	//	could just not do anything when paused is true).
+	#[test]
+	#[should_panic(expected = "the provided particle ID was not found: ")]
+	fn simulation_get_field_info_panics_on_missing_id() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.get_field_info(Uuid::new_v4());
+	}
 
-	// Test pause().
+	#[test]
+	fn simulation_starts() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
 
-	// Test step().
+		// Force the simulation to be paused, in case the constructor is broken.
+		simulation.is_paused = true;
+		
+		simulation.start();
 
-	// Test get_elapsed_ticks().
+		assert!(!simulation.is_paused, "The simulation should have unpaused.");
+	}
 
-	// Test get_elapsed_time().
+	#[test]
+	fn simulation_pauses() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+
+		// Force the simulation to be unpaused.
+		simulation.is_paused = false;
+		
+		simulation.pause();
+
+		assert!(simulation.is_paused, "The simulation should have paused.");
+	}
+
+	#[test]
+	fn simulation_steps() {
+		// TODO: Implement this test (test simulation.step()).
+
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+
+		// Verify that the step count increases by one (without calling
+		//	get_elapsed_ticks().
+
+		// Verify that the simulation actually advances (that an applied force
+		//	actually causes the expected increase in velocity and that a
+		//	velocity actually causes the expected displacement).
+
+	}
+
+	#[test]
+	#[should_panic(expected = "The simulation must be paused to call step().")]
+	fn simulation_step_panics_if_not_paused() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.is_paused = false;
+		simulation.step();
+	}
+
+	#[test]
+	fn simulation_gets_elapsed_ticks() {
+		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		simulation.elapsed_ticks = Ticks(1);
+
+		let elapsed_ticks = simulation.get_elapsed_ticks();
+
+		assert_eq!(Ticks(1), elapsed_ticks);
+	}
+
+	#[test]
+	fn simulation_gets_elapsed_time() {
+		let mut simulation = Simulation::new(Seconds(0.001), None, None);
+		simulation.elapsed_ticks = Ticks(1000);
+
+		let elapsed_time = simulation.get_elapsed_time();
+
+		// elapsed time = (elapsed ticks) * (ticks duration)
+		assert_eq!(Seconds(1.0), elapsed_time);
+	}
 
 
 	/************** Simulation: functional tests ********************/
@@ -775,9 +890,6 @@ pub struct Simulation {
 	particles: HashMap<Uuid, Particle>,
 	// The number of ticks that have passed so far.
 	elapsed_ticks: Ticks,
-	// The number of simulated seconds that have passed so far.
-	// TODO: This should be calculated, not stored in a field.
-	// elapsed_time: Seconds,
 	// Speed at which the simulation will run, resources permitting. Units are
 	//	(simulated seconds) / (real world second). If None, run as fast as
 	//	possible.
@@ -787,11 +899,14 @@ pub struct Simulation {
 	on_tick: Option<fn()>,
 	// Holds forces, keyed by particle_id, to calculate on the next tick.
 	applied_forces: HashMap<Uuid, Vec<Force>>,
+	is_paused: bool,
 }
 
 impl Simulation {
 	fn tick(&self) {
-
+		if !self.is_paused {
+			// Do stuff.
+		}
 	}
 
 	/// Creates an instance of `Simulation`.
@@ -815,6 +930,7 @@ impl Simulation {
 		on_tick: Option<fn()>,
 	) -> Self {
 	/* TODO: Uncomment this and delete the incorrect code below this.
+		// TODO: Remember to panic as described in the documentation comment.
 		Self {
 			tick_duration: tick_duration,
 			particles: HashMap::new(),
@@ -822,6 +938,7 @@ impl Simulation {
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
 			applied_forces: HashMap::new(),
+			is_paused: true,
 		}
 	*/
 		Self {
@@ -831,6 +948,7 @@ impl Simulation {
 			simulation_speed: Some(-1.0),
 			on_tick: None,
 			applied_forces: HashMap::new(),
+			is_paused: false,
 		}
 	}
 
@@ -860,9 +978,6 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn delete_particle(&self, particle_id: Uuid) {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
 	}
 
 	/// Applies a force to a specific particle for the duration of the next
@@ -881,9 +996,6 @@ impl Simulation {
 		particle_id: Uuid,
 		force: Force,
 	) {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
 	}
 
 	/// Gets the mass of a specific particle.
@@ -896,9 +1008,6 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_mass(&self, particle_id: Uuid) -> Mass {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
 		Mass(234234.0)
 	}
 
@@ -913,9 +1022,6 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_position(&self, particle_id: Uuid) -> Displacement {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
 		Displacement::new(234.0, 2342.0)
 	}
 
@@ -929,9 +1035,6 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_velocity(&self, particle_id: Uuid) -> Velocity {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
 		Velocity::new(23423.4, 234234.4)
 	}
 
@@ -946,10 +1049,6 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<FieldInfo> {
-		// TODO: Remember to panic with a helpful message if particle_id doesn't
-		//	exist. Don't just let the HashMap panic. Write "should panic" tests
-		//	before implementing.
-
 		vec!(FieldInfo {
 			radius: 0.0,
 			affects_self: false,
@@ -973,12 +1072,10 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
 	pub fn step(&self) {
-		// TODO: If not paused, panic. Write "should panic" tests before
-		//	implementing.
 	}
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
-	pub fn get_elapsted_ticks(&self) -> Ticks {
+	pub fn get_elapsed_ticks(&self) -> Ticks {
 		Ticks(0)
 	}
 
