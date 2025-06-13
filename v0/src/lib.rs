@@ -636,7 +636,12 @@ mod tests {
 		// Verify that the simulation actually advances (that an applied force
 		//	actually causes the expected increase in velocity and that a
 		//	velocity actually causes the expected displacement).
-
+		
+		// Verify that the on_tick function gets called. This can be tested by
+		//	having it make some simple change to the state of the simulation
+		//	(e.g., create or delete a particle) and verifying that the state
+		//	change occurred (e.g., see if the particle count changed as
+		//	expected).
 	}
 
 	#[test]
