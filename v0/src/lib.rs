@@ -624,24 +624,74 @@ mod tests {
 		assert!(simulation.is_paused, "The simulation should have paused.");
 	}
 
-	#[test]
-	fn simulation_steps() {
-		// TODO: Implement this test (test simulation.step()).
+	// Simulation.step()...
 
+	#[test]
+	fn simulation_step_increments_elapsed_ticks() {
 		let mut simulation = Simulation::new(Seconds(1.0), None, None);
 
-		// Verify that the step count increases by one (without calling
-		//	get_elapsed_ticks().
+		// Verify that the count of elapsed ticks increases by one (without
+		//	calling get_elapsed_ticks()).
+		assert_eq!(Ticks(0), simulation.elapsed_ticks);
+		simulation.step();
+		assert_eq!(Ticks(1), simulation.elapsed_ticks);
+		simulation.step();
+		assert_eq!(Ticks(2), simulation.elapsed_ticks);
+	}
 
-		// Verify that the simulation actually advances (that an applied force
-		//	actually causes the expected increase in velocity and that a
-		//	velocity actually causes the expected displacement).
-		
-		// Verify that the on_tick function gets called. This can be tested by
-		//	having it make some simple change to the state of the simulation
-		//	(e.g., create or delete a particle) and verifying that the state
-		//	change occurred (e.g., see if the particle count changed as
-		//	expected).
+	// Verifies that an applied force causes the expected increase in velocity
+	//	and that a velocity actually causes the expected displacement.
+	#[test]
+	fn simulation_step_simulates_force() {
+		let force = Force(1.0, 0);
+		let mass = Mass(1);
+		let tick_duration = Seconds(1.0); // TODO: Seconds should probably implement (derive) Copy.
+		let expected_velocity;
+		let mut expected_displacement;
+		let mut simulation = Simulation::new(tick_duration, None, None);
+		let particle_id = simulation.create_particle(
+			Position::new(0.0, 0.0),
+			mass, // TODO: Mass should probably implement (derive) Copy.
+			vec!(Box::new()),
+		);
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle that was just created should exist.");
+
+		// Apply a force.
+		simulation.apply_force(particle_id, force); // TODO: Force should probably implement (derive) Copy.
+		// During this step, the particle should accelerate as the force is
+		//	simulated.
+		simulation.step();
+		// Verify that the particle moved the distance expected during its
+		//	acceleration, based on the particle's mass, force vector, and force
+		//	duration. The actual dsiplacement should be exactly as calculated by
+		//	the equations of motion here because we're only applying a force for
+		//	a single tick.
+		// a = f / m
+		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
+		// Therefore, d = (1 / 2) * (f / m) * t^2
+		expected_displacement = 0.5 * (force / mass) * tick_duration; // TODO: Implement arithmetic operations between these types.
+		assert_eq(
+		// During this step, the particle should coast at a known velocity.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (force / mass) * tick_duration
+		simulation.step();
+		// Verify that the particle moved the distance expected, given its
+		//	expected velocity.
+	}
+
+	#[test]
+	fn simulation_step_calls_on_tick_callback() {
+		// TODO: Implement this.
+
+		// Verify that the on_tick function pointer gets called. This can be
+		//	tested by having it make some simple change to the state of the
+		//	simulation (e.g., create or delete a particle) and verifying that
+		//	the state change occurred (e.g., see if the particle count changed
+		//	as expected).
 	}
 
 	#[test]
@@ -706,12 +756,14 @@ mod tests {
 //	derived implementation will report equality between two structs if all
 //	fields are equal, and non-equality otherwise.
 /// Time, in seconds.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Seconds(f64);
 
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
 /// Supports basic vector math.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Vector2 {
@@ -730,6 +782,7 @@ impl Vector2 {
 }
 
 /// Mass.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Mass(f64);
@@ -737,6 +790,7 @@ pub struct Mass(f64);
 /// Position in space (displacement from the origin), displacement relative to
 /// some starting location, or distance from some arbitrary position.
 /// Wraps `Vector2` and provides functionality specific to displacement.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Displacement(Vector2);
@@ -757,6 +811,7 @@ impl Displacement {
 
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Velocity(Vector2);
@@ -777,6 +832,7 @@ impl Velocity {
 
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Force(Vector2);
@@ -796,6 +852,7 @@ impl Force {
 }
 
 /// A type representing a number of ticks.
+// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub struct Ticks(u64);
@@ -851,7 +908,7 @@ pub struct FieldInfo {
 	name: String,
 }
 
-// TODO: Shoud this (and probably other structs) actually be public? The
+// TODO: Should this (and probably other structs) actually be public? The
 //	Simulation's interface is written in a way that assumes none of this
 //	struct's fields will be directly accessible by the user.
 /// Represents an infinitesimal massive particle. Stores the particle's mass,
