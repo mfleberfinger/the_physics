@@ -857,6 +857,9 @@ impl Force {
 #[derive(Debug)]
 pub struct Ticks(u64);
 
+// TODO: Implement a rigid body collider Field as part of the library. It could
+//	expose parameters (e.g. coefficient of friction, coefficient of restitution)
+//	as fields of the struct.
 /// Defines a field. A field is a struct implementing a method that is called by
 /// the physics engine on each tick in which a particle is within a radius
 /// specified by the field, centered on a particle to which the field is
