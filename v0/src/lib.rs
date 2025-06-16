@@ -110,18 +110,18 @@ mod tests {
 
 	#[test]
 	fn mass_supports_partialEq() {
-		assert_eq!(Mass(0.0), Mass(0.0));
-		assert_eq!(Mass(1.0), Mass(1.0));
-		assert_eq!(Mass(-1.0), Mass(-1.0));
+		assert_eq!(Mass::new(0.0), Mass::new(0.0));
+		assert_eq!(Mass::new(1.0), Mass::new(1.0));
 
-		assert_ne!(Mass(-1.0), Mass(0.0));
-		assert_ne!(Mass(1.0), Mass(0.0));
-		assert_ne!(Mass(-1.0), Mass(1.0));
-		assert_ne!(Mass(0.0), Mass(-1.0));
-		assert_ne!(Mass(0.0), Mass(1.0));
-		assert_ne!(Mass(1.0), Mass(-1.0));
+		assert_ne!(Mass::new(1.0), Mass::new(0.0));
+		assert_ne!(Mass::new(0.0), Mass::new(1.0));
 	}
 
+	#[test]
+	#[should_panic(expected = "Mass must be positive.")]
+	fn mass_new_panics_if_not_positive() {
+		let m = Mass::new(0.0);
+	}
 
 	/********************* Displacement ********************/
 
@@ -268,7 +268,7 @@ mod tests {
 	#[test]
 	fn new_creates_particle() {
 		let particle = Particle::new(
-			Mass(1.0),
+			Mass::new(1.0),
 			Displacement::new(0.0, 0.0),
 			Velocity::new(0.0, 0.0),
 			vec!(Box::new(
@@ -280,7 +280,7 @@ mod tests {
 				}
 			)),
 		);
-		assert_eq!(particle.mass, Mass(1.0));
+		assert_eq!(particle.mass, Mass::new(1.0));
 		assert_eq!(particle.position, Displacement::new(0.0, 0.0));
 		assert_eq!(particle.velocity, Velocity::new(0.0, 0.0));
 		assert_eq!(particle.fields.len(), 1);
@@ -394,12 +394,12 @@ mod tests {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 		let particle_id_2 = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			vec!(Box::new(
 				DummyField {
 					radius: 1.0,
@@ -425,14 +425,14 @@ mod tests {
 			.expect("simulation.particles should contain particle_id_2");
 
 		assert_eq!(particle_1.position, Displacement::new(0.0, 0.0));
-		assert_eq!(particle_1.mass, Mass(1.0));
+		assert_eq!(particle_1.mass, Mass::new(1.0));
 		assert!(
 			particle_1.fields.is_empty(),
 			"particle_1 should have no fields"
 		);
 
 		assert_eq!(particle_2.position, Displacement::new(0.0, 0.0));
-		assert_eq!(particle_2.mass, Mass(1.0));
+		assert_eq!(particle_2.mass, Mass::new(1.0));
 		assert_eq!(
 			particle_2.fields.len(),
 			1,
@@ -445,7 +445,7 @@ mod tests {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -476,7 +476,7 @@ mod tests {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -505,13 +505,13 @@ mod tests {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 
 		let mass = simulation.get_mass(particle_id);
 
-		assert_eq!(Mass(1.0), mass);
+		assert_eq!(Mass::new(1.0), mass);
 	}
 
 	#[test]
@@ -526,7 +526,7 @@ mod tests {
 		let simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(-1.23, 123.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -547,7 +547,7 @@ mod tests {
 		let mut simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -574,7 +574,7 @@ mod tests {
 		let mut simulation = Simulation::new(Seconds(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
-			Mass(1.0),
+			Mass::new(1.0),
 			vec!(Box::new(
 				DummyField {
 					radius: 1.0,
@@ -643,23 +643,23 @@ mod tests {
 	//	and that a velocity actually causes the expected displacement.
 	#[test]
 	fn simulation_step_simulates_force() {
-		let force = Force(1.0, 0);
-		let mass = Mass(1);
-		let tick_duration = Seconds(1.0); // TODO: Seconds should probably implement (derive) Copy.
+		let force = Force::new(1.0, 0.0);
+		let mass = Mass::new(1.0);
+		let tick_duration = Seconds(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
 		let mut simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
-			Position::new(0.0, 0.0),
-			mass, // TODO: Mass should probably implement (derive) Copy.
-			vec!(Box::new()),
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
 		);
 		let particle = simulation.particles
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
 		// Apply a force.
-		simulation.apply_force(particle_id, force); // TODO: Force should probably implement (derive) Copy.
+		simulation.apply_force(particle_id, force);
 		// During this step, the particle should accelerate as the force is
 		//	simulated.
 		simulation.step();
@@ -671,16 +671,22 @@ mod tests {
 		// a = f / m
 		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
 		// Therefore, d = (1 / 2) * (f / m) * t^2
-		expected_displacement = 0.5 * (force / mass) * tick_duration; // TODO: Implement arithmetic operations between these types.
-		assert_eq(
+		// TODO: Implement arithmetic operations between these types.
+		//	See ~/rust/tests for an example.
+		//	See https://doc.rust-lang.org/core/ops/index.html for documentation.
+		expected_displacement =
+			0.5 * (force / mass) * (tick_duration * tick_duration); 
+		assert_eq!(expected_displacement, particle.position);
 		// During this step, the particle should coast at a known velocity.
-		// a = f / m
-		// v = a * t (when initial velocity is 0)
-		// Therefore, v = (f / m) * t
-		expected_velocity = (force / mass) * tick_duration
 		simulation.step();
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (force / mass) * tick_duration;
+		expected_displacement += expected_velocity * tick_duration;
+		assert_eq!(expected_displacement, particle.position);
 	}
 
 	#[test]
@@ -756,16 +762,16 @@ mod tests {
 //	derived implementation will report equality between two structs if all
 //	fields are equal, and non-equality otherwise.
 /// Time, in seconds.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Seconds(f64);
 
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
 /// Supports basic vector math.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Vector2 {
 	x: f64,
 	y: f64,
@@ -782,17 +788,27 @@ impl Vector2 {
 }
 
 /// Mass.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Mass(f64);
+
+impl Mass {
+	pub fn new(m: f64) -> Self {
+		if m <= 0.0 {
+			panic!("Mass must be positive.");
+		}
+
+		Self(m)
+	}
+}
 
 /// Position in space (displacement from the origin), displacement relative to
 /// some starting location, or distance from some arbitrary position.
 /// Wraps `Vector2` and provides functionality specific to displacement.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Displacement(Vector2);
 
 impl Displacement {
@@ -811,9 +827,9 @@ impl Displacement {
 
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Velocity(Vector2);
 
 impl Velocity {
@@ -832,9 +848,9 @@ impl Velocity {
 
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Force(Vector2);
 
 impl Force {
@@ -852,9 +868,9 @@ impl Force {
 }
 
 /// A type representing a number of ticks.
-// TODO: Probably want to derive Clone and Copy.
 #[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Ticks(u64);
 
 // TODO: Implement a rigid body collider Field as part of the library. It could
@@ -936,7 +952,7 @@ impl Particle {
 		// TODO: Intentionally incorrect placeholder code. Write tests, then
 		//	replace.
         Self {
-            mass: Mass(2384928.0),
+            mass: Mass::new(2384928.0),
             position: Displacement(Vector2::new(45345.0, 43434.0)),
             velocity: Velocity(Vector2::new(45345.0, 43434.0)),
             fields: Vec::new(),
@@ -1073,7 +1089,7 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_mass(&self, particle_id: Uuid) -> Mass {
-		Mass(234234.0)
+		Mass::new(234234.0)
 	}
 
 	/// Gets the position (i.e., displacement from the origin) of a specific
