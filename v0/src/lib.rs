@@ -1026,8 +1026,8 @@ mod tests {
 
 	// Verifies that the velocity of a particle is set correctly when a force
 	//	is applied. Should test multiple edge cases (positive values, negative
-	//	values, 0 mass (if this is allowed), multiple directions, particle with
-	//	and without velocity, multiple forces, others?).
+	//	values, multiple directions, particle with and without velocity,
+	//	multiple forces, others?).
 	// Resulting velocity may not be precisely the same as calculated velocity
 	//	due to the tick-based nature of the simulation. Need to decide what
 	//	level of error is acceptable for a given tick length and number of
@@ -1043,8 +1043,23 @@ mod tests {
 	//	due to the tick-based nature of the simulation. Need to decide what
 	//	level of error is acceptable for a given tick length and number of
 	//	ticks.
+	// TODO: Implement a self-affecting gravity field as part of the libary, not
+	//	just for the tests.
 	#[test]
 	fn trajectory_test() {
+	}
+
+	// Creates two particles with rigid body fields. Launches one of those
+	//	particles at the other and verifies that the resulting velocities (speed
+	//	and *direction*) and kinetic energy of each particle are as expected of
+	//	an elastic collision.
+	// Resulting values may not be precisely the same as calculated values
+	//	due to the tick-based nature of the simulation. Need to decide what
+	//	level of error is acceptable for a given tick length and number of
+	//	ticks.
+	// TODO: Define a rigid body field as part of the library.
+	#[test]
+	fn collision_test() {
 	}
 }
 
