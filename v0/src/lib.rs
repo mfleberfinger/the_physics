@@ -446,7 +446,7 @@ mod tests {
 
 	/********************* Simulation ********************/
 
-	fn dummy_function() {
+	fn dummy_function(simulation: Simulation) {
 		// Will just test that on_tick is Some. Not testing it any further.:
         //
         //  Mutating a static variable is unsafe because multiple
@@ -843,15 +843,26 @@ mod tests {
 		assert_eq!(expected_displacement, particle.position);
 	}
 
+	// A trivial on_tick function for testing.
+	fn create_particle(simulation: Simulation) {
+		simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass::new(1.0),
+			Vec::new(),
+		);
+	}
+
 	#[test]
 	fn simulation_step_calls_on_tick_callback() {
-		// TODO: Implement this.
-
-		// Verify that the on_tick function pointer gets called. This can be
-		//	tested by having it make some simple change to the state of the
-		//	simulation (e.g., create or delete a particle) and verifying that
-		//	the state change occurred (e.g., see if the particle count changed
-		//	as expected).
+		// Verifies that the on_tick function pointer gets called. This is done
+		//	by having on_tick create a particle and verifying that the particle
+		//	count changed as expected.
+		let simulation = Simulation::new(
+			Seconds(1.0),
+			None,
+			Some(create_particle)
+		);
+		assert_eq!(simulation.particles.len(), 1);
 	}
 
 	#[test]
@@ -883,8 +894,20 @@ mod tests {
 		assert_eq!(Seconds(1.0), elapsed_time);
 	}
 
+	// TODO: Write a test to verify that a field attached to a particle will
+	//	be called and passed a list of all particles within its radius when a
+	//	tick (step()) occurs.
+
+	// TODO: Write a test to verify that a field configured to affect its own
+	//	particle will be passed its own particle ID.
+
+	// TODO: Write a test to verify that a field configured not to affect its
+	//	own particle will not be passed its own particle ID.
 
 	/************** Simulation: functional tests ********************/
+
+	// TODO: Work on these and any operations and skeleton code required to
+	//	implement them.
 
 	// Verifies that the velocity of a particle is set correctly when a force
 	//	is applied. Should test multiple edge cases (positive values, negative
@@ -1292,7 +1315,8 @@ impl Simulation {
 	///		Units are (simulated seconds) / (real world second).
 	///		If None is specified, the simulation will run as fast as possible.
 	/// * `on_tick` - A function that will be called by the simulation on each
-	///		tick.
+	///		tick. Takes the simulation itself as a parameter to allow the user
+	///		to write code that influences the simulation.
 	///
 	///	# Panics
 	/// Panics if `tick_duration` or `simulation_speed` is less than or equal to
@@ -1300,7 +1324,7 @@ impl Simulation {
 	pub fn new(
 		tick_duration: Seconds,
 		simulation_speed: Option<f64>,
-		on_tick: Option<fn()>,
+		on_tick: Option<fn(Simulation)>,
 	) -> Self {
 	/* TODO: Uncomment this and delete the incorrect code below this.
 		// TODO: Remember to panic as described in the documentation comment.
