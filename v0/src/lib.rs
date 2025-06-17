@@ -16,9 +16,9 @@ mod tests {
 	impl Field for DummyField {
 		fn effect(
 			&self,
-			simulation: Simulation,
+			simulation: &Simulation,
 			position: Displacement,
-			particles: Vec<Particle>
+			particle_ids: Vec<Uuid>
 		) {
 			// Does nothing.
 		}
@@ -894,15 +894,130 @@ mod tests {
 		assert_eq!(Seconds(1.0), elapsed_time);
 	}
 
-	// TODO: Write a test to verify that a field attached to a particle will
-	//	be called and passed a list of all particles within its radius when a
-	//	tick (step()) occurs.
+	struct DeletionField {
+		radius: f64,
+		affects_self: bool,
+		affects_others: bool,
+		name: String,
+	}
 
-	// TODO: Write a test to verify that a field configured to affect its own
-	//	particle will be passed its own particle ID.
+	impl Field for DeletionField {
+		fn effect(
+			&self,
+			simulation: &Simulation,
+			position: Displacement,
+			particle_ids: Vec<Uuid>
+		) {
+			for p in particle_ids {
+				simulation.delete_particle(p);
+			}
+		}
 
-	// TODO: Write a test to verify that a field configured not to affect its
-	//	own particle will not be passed its own particle ID.
+		fn get_radius(&self) -> f64 {
+			self.radius
+		}
+
+		fn affects_self(&self) -> bool {
+			self.affects_self
+		}
+
+		fn affects_others(&self) -> bool {
+			self.affects_others
+		}
+
+		fn get_name(&self) -> &String {
+			&self.name
+		}
+	}
+
+	// Verifies that a field attached to a particle will be called and passed a
+	//	list of all particles within its radius when a tick (step()) occurs.
+	#[test]
+	fn simulation_field_affects_others() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let field = DeletionField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: true,
+			name: String::from("The Destructor"),
+		};
+		let destroyer = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass::new(1.0),
+			vec!(Box::new(field)),
+		);
+		let victim_1 = simulation.create_particle(
+			Displacement::new(1.0, 0.0),
+			Mass::new(1.0),
+			Vec::new(),
+		);
+		let victim_2 = simulation.create_particle(
+			Displacement::new(0.0, 1.0),
+			Mass::new(1.0),
+			Vec::new(),
+		);
+		let survivor = simulation.create_particle(
+			Displacement::new(10.1, 0.0),
+			Mass::new(1.0),
+			Vec::new(),
+		);
+
+		simulation.step();
+
+		assert!(
+			!simulation.particles.contains_key(&victim_1),
+			"The victim_1 particle should have been deleted.",
+		);
+		assert!(
+			!simulation.particles.contains_key(&victim_2),
+			"The victim_2 particle should have been deleted.",
+		);
+		assert!(
+			simulation.particles.contains_key(&destroyer),
+			"The destroyer particle should still exist.",
+		);
+		assert!(
+			simulation.particles.contains_key(&survivor),
+			"The survivor particle should still exist.",
+		);
+	}
+
+	// Verifies that a field meant to affect itself will be passed its own
+	//	particle's ID.
+	#[test]
+	fn simulation_field_affects_self() {
+		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let field = DeletionField {
+			radius: 10.0,
+			affects_self: true,
+			affects_others: false,
+			name: String::from("Self Destructor"),
+		};
+		let suicide_particle = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			Mass::new(1.0),
+			vec!(Box::new(field)),
+		);
+		let survivor = simulation.create_particle(
+			Displacement::new(1.0, 0.0),
+			Mass::new(1.0),
+			Vec::new(),
+		);
+
+		assert!(simulation.particles.contains_key(&suicide_particle));
+
+		simulation.step();
+
+		assert!(
+			!simulation.particles.contains_key(&suicide_particle),
+			"The suicide_particle should have been deleted.",
+		);
+		assert!(
+			!simulation.particles.contains_key(&suicide_particle),
+			"The survivor particle should still exist.",
+		);
+	}
+
 
 	/************** Simulation: functional tests ********************/
 
@@ -1198,16 +1313,16 @@ pub struct Ticks(u64);
 pub trait Field {
 	/// Determines what happens when the field is triggered.
 	/// # Arguments
-	/// * `simulation` - The Simulation that calls the effect function.
+	/// * `simulation` - The Simulation that called the effect function.
 	/// # `position` - The position of the particle to which this field is
 	///		attached. The center of the field.
-	/// * `particles` - All particles affected by the field. Determined by
-	///		the simulation.
+	/// * `particle_ids` - IDs of all particles affected by the field. Determined
+	///		by the simulation.
 	fn effect(
 		&self,
-		simulation: Simulation,
+		simulation: &Simulation,
 		position: Displacement,
-		particles: Vec<Particle>
+		particle_ids: Vec<Uuid>
 	);
 
 	// This is a method instead of a field because there is no way to specify
