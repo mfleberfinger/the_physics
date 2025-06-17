@@ -187,6 +187,27 @@ mod tests {
 		}
 	}
 
+	#[test]
+	fn displacement_supports_addition() {
+		assert_eq!(
+			Displacement::new(2.0, 3.0) + Displacement::new(3.0, 4.0),
+			Displacement::new(5.0, 7.0),
+		);
+		assert_eq!(
+			Displacement::new(-2.0, 3.0) + Displacement::new(3.0, -4.0),
+			Displacement::new(1.0, -1.0),
+		);
+	}
+
+	#[test]
+	fn displacement_supports_add_assign() {
+		let mut displacement = Displacement::new(-1.0, -2.0);
+		displacement += Displacement::new(10.0, 20.0);
+		assert_eq!(displacement, Displacement::new(9.0, 18.0));
+		displacement += Displacement::new(-10.0, -20.0);
+		assert_eq!(displacement, Displacement::new(-1.0, -2.0));
+	}
+
 	/********************* Velocity ********************/
 
 	#[test]
@@ -807,9 +828,6 @@ mod tests {
 		// a = f / m
 		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
 		// Therefore, d = (1 / 2) * (f / m) * t^2
-		// TODO: Implement arithmetic operations between these types.
-		//	See ~/rust/tests for an example.
-		//	See https://doc.rust-lang.org/core/ops/index.html for documentation.
 		expected_displacement =
 			0.5 * (force / mass) * tick_duration * tick_duration; 
 		assert_eq!(expected_displacement, particle.position);
@@ -1000,6 +1018,20 @@ impl Displacement {
 
 	pub fn y(&self) -> f64 {
 		self.0.y
+	}
+}
+
+impl ops::Add for Displacement {
+	type Output = Self;
+
+	fn add(self, other: Self) -> Self::Output {
+		Self::new(self.x() + other.x(), self.y() + other.y())
+	}
+}
+
+impl ops::AddAssign for Displacement {
+	fn add_assign(&mut self, other: Self) {
+		*self = *self + other;
 	}
 }
 
