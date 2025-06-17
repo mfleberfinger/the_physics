@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops;
 use uuid::Uuid;
 
 #[cfg(test)]
@@ -69,6 +70,12 @@ mod tests {
 			"Seconds(1.0) was equal to Seconds(-1.0)."
 		);
 	}
+
+	#[test]
+	fn seconds_supports_multiplication_by_a_coefficient() {
+		assert_eq!(Seconds(2.0) * 5.0, Seconds(10.0));
+		assert_eq!(Seconds(-2.0) * 5.0, Seconds(-10.0));
+	}
 	
 	/********************* Vector2 ********************/
 
@@ -104,6 +111,20 @@ mod tests {
 				}
 			}
 		}
+	}
+
+	#[test]
+	fn vector2_supports_scalar_multiplication() {
+		assert_eq!(Vector2::new(1.0, 2.0) * 5.0, Vector2::new(5.0, 10.0));
+		assert_eq!(5.0 * Vector2::new(1.0, 2.0), Vector2::new(5.0, 10.0));
+		assert_eq!(Vector2::new(1.0, 2.0) * (-5.0), Vector2::new(-5.0, -10.0));
+		assert_eq!((-5.0) * Vector2::new(1.0, 2.0), Vector2::new(-5.0, -10.0));
+	}
+
+	#[test]
+	fn vector2_supports_scalar_division() {
+		assert_eq!(Vector2::new(5.0, 10.0) / 5.0, Vector2::new(1.0, 2.0));
+		assert_eq!(Vector2::new(5.0, 10.0) / (-5.0), Vector2::new(-1.0, -2.0));
 	}
 
 	/********************* Mass ********************/
@@ -209,6 +230,109 @@ mod tests {
 		}
 	}
 
+	#[test]
+	fn velocity_supports_multiplication_by_seconds() {
+		assert_eq!(
+			Velocity::new(1.0, 2.0) * Seconds(5.0),
+			Displacement::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Seconds(5.0) * Velocity::new(1.0, 2.0),
+			Displacement::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Velocity::new(1.0, 2.0) * Seconds(-5.0),
+			Displacement::new(-5.0, -10.0)
+		);
+		assert_eq!(
+			Seconds(-5.0) * Velocity::new(1.0, 2.0),
+			Displacement::new(-5.0, -10.0)
+		);
+	}
+
+	/********************* Acceleration ********************/
+
+	#[test]
+	fn new_creates_acceleration() {
+		let acceleration = Acceleration::new(-1.0, 1.0);
+		assert_eq!(acceleration.0.x, -1.0);
+		assert_eq!(acceleration.0.y, 1.0);
+	}
+
+	#[test]
+	fn acceleration_gets_x_and_y() {
+		let acceleration = Acceleration::new(-1.0, 1.0);
+		assert_eq!(acceleration.x(), acceleration.0.x);
+		assert_eq!(acceleration.y(), acceleration.0.y);
+	}
+
+	#[test]
+	fn acceleration_supports_partialEq() {
+		// Test (-1, -1) == (-1, -1), (-1, -1) == (-1, 0),
+		//	(-1, -1) == (-1, 1), ..., (1, 1,) == (1, 1).
+		// There are nine combinations for each vector. 81 total test cases?
+		// For each p1, generate and test each p2...
+		for i1 in -1..2 {
+			for j1 in -1..2 {
+				let x1 = i1 as f64;
+				let y1 = j1 as f64;
+				let a1 = Acceleration::new(x1, y1);
+				for i2 in -1..2 {
+					for j2 in -1..2 {
+						let x2 = i2 as f64;
+						let y2 = j2 as f64;
+						let a2 = Acceleration::new(x2, y2);
+						if x1 == x2 && y1 == y2 {
+							assert_eq!(a1, a2);
+						} else {
+							assert_ne!(a1, a2);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	#[test]
+	fn acceleration_supports_scalar_multiplication() {
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * 5.0,
+			Acceleration::new(5.0, 10.0)
+		);
+		assert_eq!(
+			5.0 * Acceleration::new(1.0, 2.0),
+			Acceleration::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * (-5.0),
+			Acceleration::new(-5.0, -10.0)
+		);
+		assert_eq!(
+			(-5.0) * Acceleration::new(1.0, 2.0),
+			Acceleration::new(-5.0, -10.0)
+		);
+	}
+
+	#[test]
+	fn acceleration_supports_multiplication_by_seconds() {
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * Seconds(5.0),
+			Velocity::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Seconds(5.0) * Acceleration::new(1.0, 2.0),
+			Velocity::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * Seconds(-5.0),
+			Velocity::new(-5.0, -10.0)
+		);
+		assert_eq!(
+			Seconds(-5.0) * Acceleration::new(1.0, 2.0),
+			Velocity::new(-5.0, -10.0)
+		);
+	}
+
 	/********************* Force ********************/
 
 	#[test]
@@ -250,6 +374,18 @@ mod tests {
 				}
 			}
 		}
+	}
+
+	#[test]
+	fn force_supports_division_by_mass() {
+		assert_eq!(
+			Force::new(5.0, 10.0) / Mass(5.0),
+			Acceleration::new(1.0, 2.0)
+		);
+		assert_eq!(
+			Force::new(5.0, 10.0) / Mass(-5.0),
+			Acceleration::new(-1.0, -2.0)
+		);
 	}
 
 	/********************* Ticks ********************/
@@ -675,7 +811,7 @@ mod tests {
 		//	See ~/rust/tests for an example.
 		//	See https://doc.rust-lang.org/core/ops/index.html for documentation.
 		expected_displacement =
-			0.5 * (force / mass) * (tick_duration * tick_duration); 
+			0.5 * (force / mass) * tick_duration * tick_duration; 
 		assert_eq!(expected_displacement, particle.position);
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
@@ -767,6 +903,15 @@ mod tests {
 #[derive(Clone, Copy)]
 pub struct Seconds(f64);
 
+// Implement multiplication of time by a coefficient.
+impl ops::Mul<f64> for Seconds {
+	type Output = Self;
+
+	fn mul(self, rhs: f64) -> Self::Output {
+		Self(self.0 * rhs)
+	}
+}
+
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
 /// Supports basic vector math.
 #[derive(PartialEq)]
@@ -779,10 +924,43 @@ pub struct Vector2 {
 
 impl Vector2 {
 	pub fn new(x: f64, y:f64) -> Self {
-		// TODO: Intentionally incorrect. Write test, then replace.
 		Self {
-			x: 999.0,
-			y: 999.0,
+			x: x,
+			y: y,
+		}
+	}
+}
+
+// Scalar multiplication of a vector.
+impl ops::Mul<f64> for Vector2 {
+	type Output = Self;
+
+	fn mul(self, rhs: f64) -> Self::Output {
+		Self {
+			x: self.x * rhs,
+			y: self.y * rhs,
+		}
+	}
+}
+impl ops::Mul<Vector2> for f64 {
+	type Output = Vector2;
+
+	fn mul(self, rhs: Vector2) -> Self::Output {
+		Vector2 {
+			x: rhs.x * self,
+			y: rhs.y * self,
+		}
+	}
+}
+
+// Scalar division of a vector.
+impl ops::Div<f64> for Vector2 {
+	type Output = Self;
+
+	fn div(self, rhs: f64) -> Self::Output {
+		Self {
+			x: self.x / rhs,
+			y: self.y / rhs,
 		}
 	}
 }
@@ -846,6 +1024,76 @@ impl Velocity {
 	}
 }
 
+// Multiplication of velocity by time.
+impl ops::Mul<Seconds> for Velocity {
+	type Output = Displacement;
+
+	fn mul(self, rhs: Seconds) -> Self::Output {
+		Displacement(self.0 * rhs.0)
+	}
+}
+impl ops::Mul<Velocity> for Seconds {
+	type Output = Displacement;
+
+	fn mul(self, rhs: Velocity) -> Self::Output {
+		Displacement(self.0 * rhs.0)
+	}
+}
+
+/// Acceleration.
+/// Wraps `Vector2` and provides functionality specific to acceleration.
+#[derive(PartialEq)]
+#[derive(Debug)]
+#[derive(Clone, Copy)]
+pub struct Acceleration(Vector2);
+
+impl Acceleration {
+	pub fn new(x: f64, y: f64) -> Self {
+		Self(Vector2::new(x, y))
+	}
+
+	pub fn x(&self) -> f64 {
+		self.0.x
+	}
+
+	pub fn y(&self) -> f64 {
+		self.0.y
+	}
+}
+
+// Scalar multiplication of acceleration.
+impl ops::Mul<f64> for Acceleration {
+	type Output = Self;
+
+	fn mul(self, rhs: f64) -> Self::Output {
+		Acceleration(self.0 * rhs)
+	}
+}
+impl ops::Mul<Acceleration> for f64 {
+	type Output = Acceleration;
+
+	fn mul(self, rhs: Acceleration) -> Self::Output {
+		Acceleration(rhs.0 * self)
+	}
+}
+
+// Multiplication of acceleration by time.
+impl ops::Mul<Seconds> for Acceleration {
+	type Output = Velocity;
+
+	fn mul(self, rhs: Seconds) -> Self::Output {
+		Velocity(self.0 * rhs.0)
+	}
+}
+impl ops::Mul<Acceleration> for Seconds {
+	type Output = Velocity;
+
+	fn mul(self, rhs: Acceleration) -> Self::Output {
+		Velocity(self.0 * rhs.0)
+	}
+}
+
+
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
 #[derive(PartialEq)]
@@ -864,6 +1112,18 @@ impl Force {
 
 	pub fn y(&self) -> f64 {
 		self.0.y
+	}
+}
+
+// Force divided by mass.
+impl ops::Div<Mass> for Force {
+	type Output = Acceleration;
+
+	fn div(self, rhs: Mass) -> Self::Output {
+		Acceleration::new(
+			self.x() / rhs.0,
+			self.y() / rhs.0,
+		)
 	}
 }
 
