@@ -127,15 +127,39 @@ mod tests {
 		assert_eq!(Vector2::new(5.0, 10.0) / (-5.0), Vector2::new(-1.0, -2.0));
 	}
 
+	#[test]
+	fn vector2_supports_addition() {
+		assert_eq!(
+			Vector2::new(0.0, 0.0),
+			Vector2::new(0.0, 0.0) + Vector2::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 0.0) + Vector2::new(0.0, 0.0),
+			Vector2::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Vector2::new(0.0, 1.0) + Vector2::new(0.0, 0.0),
+			Vector2::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 1.0) + Vector2::new(1.0, 1.0),
+			Vector2::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 1.0) + Vector2::new(-1.0, -1.0),
+			Vector2::new(0.0, 0.0),
+		);
+	}
+
 	/********************* Mass ********************/
 
 	#[test]
 	fn mass_supports_partialEq() {
-		assert_eq!(Mass::new(0.0), Mass::new(0.0));
+		assert_eq!(Mass::new(0.1), Mass::new(0.1));
 		assert_eq!(Mass::new(1.0), Mass::new(1.0));
 
-		assert_ne!(Mass::new(1.0), Mass::new(0.0));
-		assert_ne!(Mass::new(0.0), Mass::new(1.0));
+		assert_ne!(Mass::new(1.0), Mass::new(0.1));
+		assert_ne!(Mass::new(0.1), Mass::new(1.0));
 	}
 
 	#[test]
@@ -271,6 +295,30 @@ mod tests {
 		);
 	}
 
+	#[test]
+	fn velocity_supports_addition() {
+		assert_eq!(
+			Velocity::new(0.0, 0.0),
+			Velocity::new(0.0, 0.0) + Velocity::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 0.0) + Velocity::new(0.0, 0.0),
+			Velocity::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(0.0, 1.0) + Velocity::new(0.0, 0.0),
+			Velocity::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 1.0) + Velocity::new(1.0, 1.0),
+			Velocity::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 1.0) + Velocity::new(-1.0, -1.0),
+			Velocity::new(0.0, 0.0),
+		);
+	}
+
 	/********************* Acceleration ********************/
 
 	#[test]
@@ -354,6 +402,30 @@ mod tests {
 		);
 	}
 
+	#[test]
+	fn acceleration_supports_addition() {
+		assert_eq!(
+			Acceleration::new(0.0, 0.0),
+			Acceleration::new(0.0, 0.0) + Acceleration::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 0.0) + Acceleration::new(0.0, 0.0),
+			Acceleration::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Acceleration::new(0.0, 1.0) + Acceleration::new(0.0, 0.0),
+			Acceleration::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 1.0) + Acceleration::new(1.0, 1.0),
+			Acceleration::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 1.0) + Acceleration::new(-1.0, -1.0),
+			Acceleration::new(0.0, 0.0),
+		);
+	}
+
 	/********************* Force ********************/
 
 	#[test]
@@ -406,6 +478,30 @@ mod tests {
 		assert_eq!(
 			Force::new(5.0, 10.0) / Mass(-5.0),
 			Acceleration::new(-1.0, -2.0)
+		);
+	}
+
+	#[test]
+	fn force_supports_addition() {
+		assert_eq!(
+			Force::new(0.0, 0.0),
+			Force::new(0.0, 0.0) + Force::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 0.0) + Force::new(0.0, 0.0),
+			Force::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Force::new(0.0, 1.0) + Force::new(0.0, 0.0),
+			Force::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 1.0) + Force::new(1.0, 1.0),
+			Force::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 1.0) + Force::new(-1.0, -1.0),
+			Force::new(0.0, 0.0),
 		);
 	}
 
@@ -981,7 +1077,7 @@ mod tests {
 	// Verifies that an applied force causes the expected increase in velocity
 	//	and that a velocity actually causes the expected displacement.
 	#[test]
-	fn simulation_step_simulates_force() {
+	fn functional_single_force() {
 		let force = Force::new(1.0, 0.0);
 		let mass = Mass::new(1.0);
 		let tick_duration = Seconds(1.0);
@@ -1004,7 +1100,7 @@ mod tests {
 		simulation.step();
 		// Verify that the particle moved the distance expected during its
 		//	acceleration, based on the particle's mass, force vector, and force
-		//	duration. The actual dsiplacement should be exactly as calculated by
+		//	duration. The actual displacement should be exactly as calculated by
 		//	the equations of motion here because we're only applying a force for
 		//	a single tick.
 		// a = f / m
@@ -1025,33 +1121,101 @@ mod tests {
 		assert_eq!(expected_displacement, particle.position);
 	}
 
-
 	// TODO: Work on these and any operations and skeleton code required to
 	//	implement them.
-
-	// Verifies that the velocity of a particle is set correctly when a force
-	//	is applied. Should test multiple edge cases (positive values, negative
-	//	values, multiple directions, particle with and without velocity,
-	//	multiple forces, others?).
-	// Resulting velocity may not be precisely the same as calculated velocity
-	//	due to the tick-based nature of the simulation. Need to decide what
-	//	level of error is acceptable for a given tick length and number of
-	//	ticks.
+	
+	// Apply several forces, then call step() and verify that the particle
+	//	reacts appropriately to the vector sum of the forces.
 	#[test]
-	fn simulation_calculates_velocity() {
+	fn functional_sum_of_several_forces() {
+		let f0 = Force::new(1.0, 1.0);
+		let f1 = Force::new(10.0, 10.0);
+		let f2 = Force::new(-2.0, -1.0);
+		let f3 = Force::new(-10.0, -4.0);
+		let f4 = Force::new(20.0, -1.0);
+		let net_force = f0 + f1 + f2 + f3 + f4;
+		let mass = Mass::new(1.0);
+		let tick_duration = Seconds(1.0);
+		let expected_velocity;
+		let mut expected_displacement;
+		let mut simulation = Simulation::new(tick_duration, None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle that was just created should exist.");
+
+		// Apply several forces.
+		simulation.apply_force(particle_id, f0);
+		simulation.apply_force(particle_id, f1);
+		simulation.apply_force(particle_id, f2);
+		simulation.apply_force(particle_id, f3);
+		simulation.apply_force(particle_id, f4);
+		// During this step, the particle should accelerate as the force is
+		//	simulated.
+		simulation.step();
+		// Verify that the particle moved the distance expected during its
+		//	acceleration, based on the particle's mass, force vector, and force
+		//	duration. The actual displacement should be exactly as calculated by
+		//	the equations of motion here because we're only applying a force for
+		//	a single tick.
+		// a = f / m
+		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
+		// Therefore, d = (1 / 2) * (f / m) * t^2
+		expected_displacement =
+			0.5 * (net_force / mass) * tick_duration * tick_duration;
+		assert_eq!(expected_displacement, particle.position);
+		// During this step, the particle should coast at a known velocity.
+		simulation.step();
+		// Verify that the particle moved the distance expected, given its
+		//	expected velocity.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (net_force / mass) * tick_duration;
+		expected_displacement += expected_velocity * tick_duration;
+		assert_eq!(expected_displacement, particle.position);
+	}
+
+	// Apply a force to particles with several different masses. Verify that
+	//	the particles move appropriately.
+	#[test]
+	fn functional_force_applied_to_several_masses() {
+	}
+
+	// Apply a force to particles in simulations with several different
+	//	tick_durations. Verify that the particles move appropriately.
+	#[test]
+	fn functional_force_applied_with_several_tick_durations() {
+	}
+
+	// Apply several forces in several directions, over several calls to the
+	//	step() method. Check the velocity and displacement after each step().
+	// Resulting velocity may not be precisely the same as calculated velocity
+	//	due to the tick-based nature of the simulation and floating point error.
+	//	Need to decide what level of error is acceptable for a given tick length
+	//	and number of ticks.
+	#[test]
+	fn functional_several_forces_over_several_ticks() {
+		// Nine combinations of positive, negative, and 0:
+		//	(-, -), (-, 0), (-, +), (0, -), (0, 0), (0, +), (+, -), (+, 0),
+		//	(+, +)
 	}
 
 	// Creates a particle with a self-affecting gravity field and launches it
 	//	with a known force. Uses equations of motion to calculate the expected
 	//	position, velocity, energy, etc. of the particle at different times.
 	// Resulting values may not be precisely the same as calculated values
-	//	due to the tick-based nature of the simulation. Need to decide what
-	//	level of error is acceptable for a given tick length and number of
-	//	ticks.
+	//	due to the tick-based nature of the simulation and floating point error.
+	//	Need to decide what level of error is acceptable for a given tick length
+	//	and number of ticks.
 	// TODO: Implement a self-affecting gravity field as part of the libary, not
 	//	just for the tests.
 	#[test]
-	fn trajectory_test() {
+	fn functional_trajectory_test() {
 	}
 
 	// Creates two particles with rigid body fields. Launches one of those
@@ -1059,12 +1223,12 @@ mod tests {
 	//	and *direction*) and kinetic energy of each particle are as expected of
 	//	an elastic collision.
 	// Resulting values may not be precisely the same as calculated values
-	//	due to the tick-based nature of the simulation. Need to decide what
-	//	level of error is acceptable for a given tick length and number of
-	//	ticks.
+	//	due to the tick-based nature of the simulation and floating point error.
+	//	Need to decide what level of error is acceptable for a given tick length
+	//	and number of ticks.
 	// TODO: Define a rigid body field as part of the library.
 	#[test]
-	fn collision_test() {
+	fn functional_collision() {
 	}
 }
 
@@ -1141,6 +1305,18 @@ impl ops::Div<f64> for Vector2 {
 	}
 }
 
+// Vector addition.
+impl ops::Add for Vector2 {
+	type Output = Self;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self {
+			x: self.x + rhs.x,
+			y: self.y + rhs.y,
+		}
+	}
+}
+
 /// Mass.
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -1182,8 +1358,8 @@ impl Displacement {
 impl ops::Add for Displacement {
 	type Output = Self;
 
-	fn add(self, other: Self) -> Self::Output {
-		Self::new(self.x() + other.x(), self.y() + other.y())
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
 	}
 }
 
@@ -1227,6 +1403,14 @@ impl ops::Mul<Velocity> for Seconds {
 
 	fn mul(self, rhs: Velocity) -> Self::Output {
 		Displacement(self.0 * rhs.0)
+	}
+}
+
+impl ops::Add for Velocity {
+	type Output = Velocity;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
 	}
 }
 
@@ -1283,6 +1467,13 @@ impl ops::Mul<Acceleration> for Seconds {
 	}
 }
 
+impl ops::Add for Acceleration {
+	type Output = Acceleration;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
+	}
+}
 
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
@@ -1314,6 +1505,14 @@ impl ops::Div<Mass> for Force {
 			self.x() / rhs.0,
 			self.y() / rhs.0,
 		)
+	}
+}
+
+impl ops::Add for Force {
+	type Output = Force;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
 	}
 }
 
