@@ -796,53 +796,6 @@ mod tests {
 		assert_eq!(Ticks(2), simulation.elapsed_ticks);
 	}
 
-	// Verifies that an applied force causes the expected increase in velocity
-	//	and that a velocity actually causes the expected displacement.
-	#[test]
-	fn simulation_step_simulates_force() {
-		let force = Force::new(1.0, 0.0);
-		let mass = Mass::new(1.0);
-		let tick_duration = Seconds(1.0);
-		let expected_velocity;
-		let mut expected_displacement;
-		let mut simulation = Simulation::new(tick_duration, None, None);
-		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			mass,
-			vec!(),
-		);
-		let particle = simulation.particles
-			.get(&particle_id)
-			.expect("The particle that was just created should exist.");
-
-		// Apply a force.
-		simulation.apply_force(particle_id, force);
-		// During this step, the particle should accelerate as the force is
-		//	simulated.
-		simulation.step();
-		// Verify that the particle moved the distance expected during its
-		//	acceleration, based on the particle's mass, force vector, and force
-		//	duration. The actual dsiplacement should be exactly as calculated by
-		//	the equations of motion here because we're only applying a force for
-		//	a single tick.
-		// a = f / m
-		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
-		// Therefore, d = (1 / 2) * (f / m) * t^2
-		expected_displacement =
-			0.5 * (force / mass) * tick_duration * tick_duration; 
-		assert_eq!(expected_displacement, particle.position);
-		// During this step, the particle should coast at a known velocity.
-		simulation.step();
-		// Verify that the particle moved the distance expected, given its
-		//	expected velocity.
-		// a = f / m
-		// v = a * t (when initial velocity is 0)
-		// Therefore, v = (f / m) * t
-		expected_velocity = (force / mass) * tick_duration;
-		expected_displacement += expected_velocity * tick_duration;
-		assert_eq!(expected_displacement, particle.position);
-	}
-
 	// A trivial on_tick function for testing.
 	fn create_particle(simulation: Simulation) {
 		simulation.create_particle(
@@ -862,7 +815,11 @@ mod tests {
 			None,
 			Some(create_particle)
 		);
+
+		simulation.step();
 		assert_eq!(simulation.particles.len(), 1);
+		simulation.step();
+		assert_eq!(simulation.particles.len(), 2);
 	}
 
 	#[test]
@@ -1020,6 +977,54 @@ mod tests {
 
 
 	/************** Simulation: functional tests ********************/
+
+	// Verifies that an applied force causes the expected increase in velocity
+	//	and that a velocity actually causes the expected displacement.
+	#[test]
+	fn simulation_step_simulates_force() {
+		let force = Force::new(1.0, 0.0);
+		let mass = Mass::new(1.0);
+		let tick_duration = Seconds(1.0);
+		let expected_velocity;
+		let mut expected_displacement;
+		let mut simulation = Simulation::new(tick_duration, None, None);
+		let particle_id = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle that was just created should exist.");
+
+		// Apply a force.
+		simulation.apply_force(particle_id, force);
+		// During this step, the particle should accelerate as the force is
+		//	simulated.
+		simulation.step();
+		// Verify that the particle moved the distance expected during its
+		//	acceleration, based on the particle's mass, force vector, and force
+		//	duration. The actual dsiplacement should be exactly as calculated by
+		//	the equations of motion here because we're only applying a force for
+		//	a single tick.
+		// a = f / m
+		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
+		// Therefore, d = (1 / 2) * (f / m) * t^2
+		expected_displacement =
+			0.5 * (force / mass) * tick_duration * tick_duration;
+		assert_eq!(expected_displacement, particle.position);
+		// During this step, the particle should coast at a known velocity.
+		simulation.step();
+		// Verify that the particle moved the distance expected, given its
+		//	expected velocity.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (force / mass) * tick_duration;
+		expected_displacement += expected_velocity * tick_duration;
+		assert_eq!(expected_displacement, particle.position);
+	}
+
 
 	// TODO: Work on these and any operations and skeleton code required to
 	//	implement them.
