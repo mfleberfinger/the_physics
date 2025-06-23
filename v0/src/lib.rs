@@ -1083,7 +1083,7 @@ mod tests {
 		let tick_duration = Seconds(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
-		let mut simulation = Simulation::new(tick_duration, None, None);
+		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			mass,
@@ -1121,9 +1121,6 @@ mod tests {
 		assert_eq!(expected_displacement, particle.position);
 	}
 
-	// TODO: Work on these and any operations and skeleton code required to
-	//	implement them.
-	
 	// Apply several forces, then call step() and verify that the particle
 	//	reacts appropriately to the vector sum of the forces.
 	#[test]
@@ -1138,7 +1135,7 @@ mod tests {
 		let tick_duration = Seconds(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
-		let mut simulation = Simulation::new(tick_duration, None, None);
+		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			mass,
@@ -1184,13 +1181,268 @@ mod tests {
 	//	the particles move appropriately.
 	#[test]
 	fn functional_force_applied_to_several_masses() {
+		let force = Force::new(25.123, 50.5);
+		let m0 = Mass::new(10.1);
+		let m1 = Mass::new(100.01);
+		let m2 = Mass::new(20.0);
+		let m3 = Mass::new(200.0);
+		let tick_duration = Seconds(0.005);
+		let mut expected_velocity;
+		let mut d0;
+		let mut d1;
+		let mut d2;
+		let mut d3;
+		let simulation = Simulation::new(tick_duration, None, None);
+		let p_id_0 = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			m0,
+			vec!(),
+		);
+		let p_id_1 = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			m1,
+			vec!(),
+		);
+		let p_id_2 = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			m2,
+			vec!(),
+		);
+		let p_id_3 = simulation.create_particle(
+			Displacement::new(0.0, 0.0),
+			m3,
+			vec!(),
+		);
+		let p0 = simulation.particles
+			.get(&p_id_0)
+			.expect("The particle (p_id_0) that was just created should exist.");
+		let p1 = simulation.particles
+			.get(&p_id_1)
+			.expect("The particle (p_id_1) that was just created should exist.");
+		let p2 = simulation.particles
+			.get(&p_id_2)
+			.expect("The particle (p_id_2) that was just created should exist.");
+		let p3 = simulation.particles
+			.get(&p_id_3)
+			.expect("The particle (p_id_3) that was just created should exist.");
+
+		// Apply a force.
+		simulation.apply_force(p_id_0, force);
+		simulation.apply_force(p_id_1, force);
+		simulation.apply_force(p_id_2, force);
+		simulation.apply_force(p_id_3, force);
+
+		// During this step, the particles should accelerate as the force is
+		//	simulated.
+		simulation.step();
+
+		// Verify that the particles moved the distance expected during their
+		//	acceleration, based on the particles' masses, force vector, and
+		//	force duration. The actual displacement should be exactly as
+		//	calculated by the equations of motion here because we're only
+		//	applying a force for a single tick.
+		// a = f / m
+		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
+		// Therefore, d = (1 / 2) * (f / m) * t^2
+		d0 = 0.5 * (force / m0) * tick_duration * tick_duration;
+		assert_eq!(
+			d0,
+			p0.position,
+			"The displacement of particle p0 was wrong after acceleration."
+		);
+		d1 = 0.5 * (force / m1) * tick_duration * tick_duration;
+		assert_eq!(
+			d1,
+			p1.position,
+			"The displacement of particle p1 was wrong after acceleration."
+		);
+		d2 = 0.5 * (force / m2) * tick_duration * tick_duration;
+		assert_eq!(
+			d2,
+			p2.position,
+			"The displacement of particle p2 was wrong after acceleration."
+		);
+		d3 = 0.5 * (force / m3) * tick_duration * tick_duration;
+		assert_eq!(
+			d3,
+			p3.position,
+			"The displacement of particle p3 was wrong after acceleration."
+		);
+
+		// During this step, the particles should coast at known velocities.
+		simulation.step();
+
+		// Verify that the particles moved the distance expected, given their
+		//	expected velocities.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (force / m0) * tick_duration;
+		d0 += expected_velocity * tick_duration;
+		assert_eq!(
+			d0,
+			p0.position,
+			"The displacement of particle p0 was wrong after coasting."
+		);
+		expected_velocity = (force / m1) * tick_duration;
+		d1 += expected_velocity * tick_duration;
+		assert_eq!(
+			d1,
+			p1.position,
+			"The displacement of particle p1 was wrong after coasting."
+		);
+		expected_velocity = (force / m2) * tick_duration;
+		d2 += expected_velocity * tick_duration;
+		assert_eq!(
+			d2,
+			p2.position,
+			"The displacement of particle p2 was wrong after coasting."
+		);
+		expected_velocity = (force / m3) * tick_duration;
+		d3 += expected_velocity * tick_duration;
+		assert_eq!(
+			d3,
+			p3.position,
+			"The displacement of particle p3 was wrong after coasting."
+		);
 	}
 
 	// Apply a force to particles in simulations with several different
 	//	tick_durations. Verify that the particles move appropriately.
 	#[test]
 	fn functional_force_applied_with_several_tick_durations() {
+		let force = Force::new(5.0, 10.0);
+		let mass = Mass::new(1.0);
+		let tick_0 = Seconds(0.001);
+		let tick_1 = Seconds(0.0002);
+		let tick_2 = Seconds(0.00003);
+		let tick_3 = Seconds(0.000004);
+		let mut expected_velocity;
+		let mut d0;
+		let mut d1;
+		let mut d2;
+		let mut d3;
+		let s0 = Simulation::new(tick_0, None, None);
+		let s1 = Simulation::new(tick_1, None, None);
+		let s2 = Simulation::new(tick_2, None, None);
+		let s3 = Simulation::new(tick_3, None, None);
+		let p_id_0 = s0.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let p_id_1 = s1.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let p_id_2 = s2.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let p_id_3 = s3.create_particle(
+			Displacement::new(0.0, 0.0),
+			mass,
+			vec!(),
+		);
+		let p0 = s0.particles
+			.get(&p_id_0)
+			.expect("The particle that was just created in s0 should exist.");
+		let p1 = s1.particles
+			.get(&p_id_1)
+			.expect("The particle that was just created in s1 should exist.");
+		let p2 = s2.particles
+			.get(&p_id_2)
+			.expect("The particle that was just created in s2 should exist.");
+		let p3 = s3.particles
+			.get(&p_id_3)
+			.expect("The particle that was just created in s3 should exist.");
+
+		// Apply a force.
+		s0.apply_force(p_id_0, force);
+		s1.apply_force(p_id_1, force);
+		s2.apply_force(p_id_2, force);
+		s3.apply_force(p_id_3, force);
+		// During this step, the particle should accelerate as the force is
+		//	simulated.
+		s0.step();
+		s1.step();
+		s2.step();
+		s3.step();
+		// Verify that the particle moved the distance expected during its
+		//	acceleration, based on the particle's mass, force vector, and force
+		//	duration. The actual displacement should be exactly as calculated by
+		//	the equations of motion here because we're only applying a force for
+		//	a single tick.
+		// a = f / m
+		// d = (1 / 2) * a * t^2 (when initial position and velocity are 0)
+		// Therefore, d = (1 / 2) * (f / m) * t^2
+		d0 = 0.5 * (force / mass) * tick_0 * tick_0;
+		assert_eq!(
+			d0,
+			p0.position,
+			"The displacement of particle p0 was wrong after acceleration."
+		);
+		d1 = 0.5 * (force / mass) * tick_1 * tick_1;
+		assert_eq!(
+			d1,
+			p1.position,
+			"The displacement of particle p1 was wrong after acceleration."
+		);
+		d2 = 0.5 * (force / mass) * tick_2 * tick_2;
+		assert_eq!(
+			d2,
+			p2.position,
+			"The displacement of particle p2 was wrong after acceleration."
+		);
+		d3 = 0.5 * (force / mass) * tick_3 * tick_3;
+		assert_eq!(
+			d3,
+			p3.position,
+			"The displacement of particle p3 was wrong after acceleration."
+		);
+		// During this step, the particle should coast at a known velocity.
+		s0.step();
+		s1.step();
+		s2.step();
+		s3.step();
+		// Verify that the particle moved the distance expected, given its
+		//	expected velocity.
+		// a = f / m
+		// v = a * t (when initial velocity is 0)
+		// Therefore, v = (f / m) * t
+		expected_velocity = (force / mass) * tick_0;
+		d0 += expected_velocity * tick_0;
+		assert_eq!(
+			d0,
+			p0.position,
+			"The displacement of particle p0 was wrong after coasting."
+		);
+		expected_velocity = (force / mass) * tick_1;
+		d1 += expected_velocity * tick_1;
+		assert_eq!(
+			d1,
+			p1.position,
+			"The displacement of particle p1 was wrong after coasting."
+		);
+		expected_velocity = (force / mass) * tick_2;
+		d2 += expected_velocity * tick_2;
+		assert_eq!(
+			d2,
+			p2.position,
+			"The displacement of particle p2 was wrong after coasting."
+		);
+		expected_velocity = (force / mass) * tick_3;
+		d3 += expected_velocity * tick_3;
+		assert_eq!(
+			d3,
+			p3.position,
+			"The displacement of particle p3 was wrong after coasting."
+		);
 	}
+
+	// TODO: Continue implementing tests from here.
 
 	// Apply several forces in several directions, over several calls to the
 	//	step() method. Check the velocity and displacement after each step().
