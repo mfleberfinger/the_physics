@@ -1604,6 +1604,17 @@ mod tests {
 		// Nine combinations of positive, negative, and 0:
 		//	(-, -), (-, 0), (-, +), (0, -), (0, 0), (0, +), (+, -), (+, 0),
 		//	(+, +)
+		for i in -1..2 {
+			for j in -1..2 {
+				// Apply the current force vector.
+
+				// Run step().
+
+				// Assert that the new position is correct. Use a failure
+				//	message that includes the difference between expected and
+				//	actual displacement.
+			}
+		}
 	}
 
 	// Creates a particle with a self-affecting gravity field and launches it
