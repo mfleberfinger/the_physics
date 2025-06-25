@@ -151,6 +151,34 @@ mod tests {
 		);
 	}
 
+	#[test]
+	fn vector2_supports_subtraction() {
+		assert_eq!(
+			Vector2::new(0.0, 0.0),
+			Vector2::new(0.0, 0.0) - Vector2::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 0.0) - Vector2::new(0.0, 0.0),
+			Vector2::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Vector2::new(0.0, 1.0) - Vector2::new(0.0, 0.0),
+			Vector2::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 1.0) - Vector2::new(1.0, 1.0),
+			Vector2::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Vector2::new(1.0, 1.0) - Vector2::new(-1.0, -1.0),
+			Vector2::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Vector2::new(-5.5, 2.5) - Vector2::new(10.0, 20.0),
+			Vector2::new(-15.5, -17.5),
+		);
+	}
+
 	/********************* Mass ********************/
 
 	#[test]
@@ -230,6 +258,34 @@ mod tests {
 		assert_eq!(displacement, Displacement::new(9.0, 18.0));
 		displacement += Displacement::new(-10.0, -20.0);
 		assert_eq!(displacement, Displacement::new(-1.0, -2.0));
+	}
+
+	#[test]
+	fn displacement_supports_subtraction() {
+		assert_eq!(
+			Displacement::new(0.0, 0.0),
+			Displacement::new(0.0, 0.0) - Displacement::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Displacement::new(1.0, 0.0) - Displacement::new(0.0, 0.0),
+			Displacement::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Displacement::new(0.0, 1.0) - Displacement::new(0.0, 0.0),
+			Displacement::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Displacement::new(1.0, 1.0) - Displacement::new(1.0, 1.0),
+			Displacement::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Displacement::new(1.0, 1.0) - Displacement::new(-1.0, -1.0),
+			Displacement::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Displacement::new(-5.5, 2.5) - Displacement::new(10.0, 20.0),
+			Displacement::new(-15.5, -17.5),
+		);
 	}
 
 	/********************* Velocity ********************/
@@ -316,6 +372,34 @@ mod tests {
 		assert_eq!(
 			Velocity::new(1.0, 1.0) + Velocity::new(-1.0, -1.0),
 			Velocity::new(0.0, 0.0),
+		);
+	}
+
+	#[test]
+	fn velocity_supports_subtraction() {
+		assert_eq!(
+			Velocity::new(0.0, 0.0),
+			Velocity::new(0.0, 0.0) - Velocity::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 0.0) - Velocity::new(0.0, 0.0),
+			Velocity::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(0.0, 1.0) - Velocity::new(0.0, 0.0),
+			Velocity::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 1.0) - Velocity::new(1.0, 1.0),
+			Velocity::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(1.0, 1.0) - Velocity::new(-1.0, -1.0),
+			Velocity::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Velocity::new(-5.5, 2.5) - Velocity::new(10.0, 20.0),
+			Velocity::new(-15.5, -17.5),
 		);
 	}
 
@@ -426,6 +510,34 @@ mod tests {
 		);
 	}
 
+	#[test]
+	fn acceleration_supports_subtraction() {
+		assert_eq!(
+			Acceleration::new(0.0, 0.0),
+			Acceleration::new(0.0, 0.0) - Acceleration::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 0.0) - Acceleration::new(0.0, 0.0),
+			Acceleration::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Acceleration::new(0.0, 1.0) - Acceleration::new(0.0, 0.0),
+			Acceleration::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 1.0) - Acceleration::new(1.0, 1.0),
+			Acceleration::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 1.0) - Acceleration::new(-1.0, -1.0),
+			Acceleration::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Acceleration::new(-5.5, 2.5) - Acceleration::new(10.0, 20.0),
+			Acceleration::new(-15.5, -17.5),
+		);
+	}
+
 	/********************* Force ********************/
 
 	#[test]
@@ -502,6 +614,34 @@ mod tests {
 		assert_eq!(
 			Force::new(1.0, 1.0) + Force::new(-1.0, -1.0),
 			Force::new(0.0, 0.0),
+		);
+	}
+
+	#[test]
+	fn force_supports_subtraction() {
+		assert_eq!(
+			Force::new(0.0, 0.0),
+			Force::new(0.0, 0.0) - Force::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 0.0) - Force::new(0.0, 0.0),
+			Force::new(1.0, 0.0),
+		);
+		assert_eq!(
+			Force::new(0.0, 1.0) - Force::new(0.0, 0.0),
+			Force::new(0.0, 1.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 1.0) - Force::new(1.0, 1.0),
+			Force::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Force::new(1.0, 1.0) - Force::new(-1.0, -1.0),
+			Force::new(2.0, 2.0),
+		);
+		assert_eq!(
+			Force::new(-5.5, 2.5) - Force::new(10.0, 20.0),
+			Force::new(-15.5, -17.5),
 		);
 	}
 
@@ -1442,6 +1582,15 @@ mod tests {
 		);
 	}
 
+	fn displacements_are_almost_equal(
+		d1: Displacement,
+		d2: Displacement,
+		error: f64
+	) -> bool {
+		let difference = d1 - d2;
+		d1.x().abs() <= error && d1.y().abs() <= error
+	}
+
 	// TODO: Continue implementing tests from here.
 
 	// Apply several forces in several directions, over several calls to the
@@ -1482,6 +1631,11 @@ mod tests {
 	#[test]
 	fn functional_collision() {
 	}
+
+
+	// TODO: When done writing tests, re-read the Rust book's chapter on project
+	//	organization and break this project into multiple files. Probably give
+	//	each struct its own file.
 }
 
 // Using a tuple struct to wrap an f64 so the compiler treats Seconds as a
@@ -1569,6 +1723,18 @@ impl ops::Add for Vector2 {
 	}
 }
 
+// Vector subtraction.
+impl ops::Sub for Vector2 {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self {
+			x: self.x - rhs.x,
+			y: self.y - rhs.y,
+		}
+	}
+}
+
 /// Mass.
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -1621,6 +1787,14 @@ impl ops::AddAssign for Displacement {
 	}
 }
 
+impl ops::Sub for Displacement {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
+	}
+}
+
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
 #[derive(PartialEq)]
@@ -1663,6 +1837,14 @@ impl ops::Add for Velocity {
 
 	fn add(self, rhs: Self) -> Self::Output {
 		Self(self.0 + rhs.0)
+	}
+}
+
+impl ops::Sub for Velocity {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
 	}
 }
 
@@ -1727,6 +1909,14 @@ impl ops::Add for Acceleration {
 	}
 }
 
+impl ops::Sub for Acceleration {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
+	}
+}
+
 /// Force.
 /// Wraps `Vector2` and provides functionality specific to forces.
 #[derive(PartialEq)]
@@ -1768,15 +1958,23 @@ impl ops::Add for Force {
 	}
 }
 
+impl ops::Sub for Force {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
+	}
+}
+
 /// A type representing a number of ticks.
 #[derive(PartialEq)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 pub struct Ticks(u64);
 
-// TODO: Implement a rigid body collider Field as part of the library. It could
-//	expose parameters (e.g. coefficient of friction, coefficient of restitution)
-//	as fields of the struct.
+// TODO: Implement a "rigid body" collider Field as part of the library. It
+//	could expose parameters (e.g. coefficient of friction, coefficient of
+//	restitution) as fields of the struct.
 /// Defines a field. A field is a struct implementing a method that is called by
 /// the physics engine on each tick in which a particle is within a radius
 /// specified by the field, centered on a particle to which the field is
