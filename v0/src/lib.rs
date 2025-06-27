@@ -1591,24 +1591,70 @@ mod tests {
 		d1.x().abs() <= error && d1.y().abs() <= error
 	}
 
-	// TODO: Continue implementing tests from here.
 
-	// Apply several forces in several directions, over several calls to the
-	//	step() method. Check the velocity and displacement after each step().
+	// Apply several forces in several directions, over a few seconds. Check the
+	//	velocity and displacement after each second.
 	// Resulting velocity may not be precisely the same as calculated velocity
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
 	#[test]
-	fn functional_several_forces_over_several_ticks() {
+	fn functional_several_forces_over_several_seconds() {
+		let permissible_error = 0.0;
+		let tick_duration = Seconds(0.001);
+		let initial_position = Displacement::new(0.0, 0.0);
+		let simulation = Simulation::new(tick_duration, None, None);
+		let mass = Mass::new(5.0);
+		let particle_id = simulation.create_particle(
+			initial_position,
+			mass,
+			Vec::new(),
+		);
+
 		// Nine combinations of positive, negative, and 0:
 		//	(-, -), (-, 0), (-, +), (0, -), (0, 0), (0, +), (+, -), (+, 0),
 		//	(+, +)
+		let mut force;
+		let mut expected_position = initial_position;
+		let mut actual_position = initial_position;
+		let mut actual_velocity = Velocity::new(0.0, 0.0);
+		let mut elapsed_time = Seconds(0.0);
+		let mut time_since_last_round = Seconds(0.0);
 		for i in -1..2 {
 			for j in -1..2 {
-				// Apply the current force vector.
+				force = Force::new(10.0 * (i as f64), 5.0 * (j as f64));
 
-				// Run step().
+				// Run a second worth of ticks, applying the current force
+				//	the whole time.
+				for i in 0..((1.0 / tick_duration.0) as i64) {
+					simulation.apply_force(particle_id, force);
+					simulation.step();
+				}
+
+				// Depending on tick duration, we may not be able to run for
+				//	exactly one second. Ask the simulation how much time it has
+				//	actually simulated.
+				time_since_last_round =
+					simulation.get_elapsed_time() - elapsed_time;
+				elapsed_time = simulation.get_elapsed_time();
+
+				// TODO: Continue implementing tests from here.
+				//	2025-06-27 07:22: Wrong the formula for expected displacement.
+				//	Verify that it is correct.
+
+				// Calculate the expected position after the most recent second.
+				// a = f / m
+				// r = r_0 + v_0 * t + 0.5 * a * t * t
+				// therefore, r = r_0 + v_0 * t + 0.5 * (f / m) * t * t
+				expected_position =
+					actual_position + actual_velocity * time_since_last_round +
+					0.5 * (force / mass) * time_since_last_round *
+					time_since_last_round;
+
+				// Get the new velocity and position from the simulation.
+				actual_velocity = simulation.get_velocity(particle_id);
+				actual_position = simulation.get_position(particle_id);
+				
 
 				// Assert that the new position is correct. Use a failure
 				//	message that includes the difference between expected and
