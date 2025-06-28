@@ -76,6 +76,19 @@ mod tests {
 		assert_eq!(Seconds(2.0) * 5.0, Seconds(10.0));
 		assert_eq!(Seconds(-2.0) * 5.0, Seconds(-10.0));
 	}
+
+	#[test]
+	fn seconds_supports_subtraction() {
+        assert_eq!(Seconds(0.0), Seconds(0.0) - Seconds(0.0));
+        assert_eq!(Seconds(-1.0), Seconds(0.0) - Seconds(1.0));
+        assert_eq!(Seconds(1.0), Seconds(0.0) - Seconds(-1.0));
+        assert_eq!(Seconds(1.0), Seconds(1.0) - Seconds(0.0));
+        assert_eq!(Seconds(0.0), Seconds(1.0) - Seconds(1.0));
+        assert_eq!(Seconds(2.0), Seconds(1.0) - Seconds(-1.0));
+        assert_eq!(Seconds(-1.0), Seconds(-1.0) - Seconds(0.0));
+        assert_eq!(Seconds(-2.0), Seconds(-1.0) - Seconds(1.0));
+        assert_eq!(Seconds(0.0), Seconds(-1.0) - Seconds(-1.0));
+	}
 	
 	/********************* Vector2 ********************/
 
@@ -1587,14 +1600,23 @@ mod tests {
 		d2: Displacement,
 		error: f64
 	) -> bool {
-		let difference = d1 - d2;
-		d1.x().abs() <= error && d1.y().abs() <= error
+		let diff = d1 - d2;
+		diff.x().abs() <= error && diff.y().abs() <= error
+	}
+
+	fn velocities_are_almost_equal(
+		v1: Velocity,
+		v2: Velocity,
+		error: f64
+	) -> bool {
+		let diff = v1 - v2;
+		diff.x().abs() <= error && diff.y().abs() <= error
 	}
 
 
 	// Apply several forces in several directions, over a few seconds. Check the
-	//	velocity and displacement after each second.
-	// Resulting velocity may not be precisely the same as calculated velocity
+	//	displacement after each second.
+	// Resulting values may not be precisely the same as calculated values
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
@@ -1617,9 +1639,10 @@ mod tests {
 		let mut force;
 		let mut expected_position = initial_position;
 		let mut actual_position = initial_position;
-		let mut actual_velocity = Velocity::new(0.0, 0.0);
+		let mut expected_velocity = Velocity::new(0.0, 0.0);
 		let mut elapsed_time = Seconds(0.0);
 		let mut time_since_last_round = Seconds(0.0);
+        let mut expected_acceleration;
 		for i in -1..2 {
 			for j in -1..2 {
 				force = Force::new(10.0 * (i as f64), 5.0 * (j as f64));
@@ -1638,30 +1661,46 @@ mod tests {
 					simulation.get_elapsed_time() - elapsed_time;
 				elapsed_time = simulation.get_elapsed_time();
 
-				// TODO: Continue implementing tests from here.
-				//	2025-06-27 07:22: Wrote the formula for expected displacement.
-				//	Verify that it is correct.
-
 				// Calculate the expected position after the most recent second.
 				// a = f / m
 				// r = r_0 + v_0 * t + 0.5 * a * t * t
 				// therefore, r = r_0 + v_0 * t + 0.5 * (f / m) * t * t
+                expected_acceleration = force / mass;
 				expected_position =
-					actual_position + actual_velocity * time_since_last_round +
-					0.5 * (force / mass) * time_since_last_round *
+					actual_position + expected_velocity * time_since_last_round +
+					0.5 * expected_acceleration * time_since_last_round *
 					time_since_last_round;
 
-				// Get the new velocity and position from the simulation.
-				actual_velocity = simulation.get_velocity(particle_id);
+				// Get the new position from the simulation.
 				actual_position = simulation.get_position(particle_id);
-				
+
+                // Calculate the new expected velocity.
+                expected_velocity +=
+                    expected_acceleration * time_since_last_round;
 
 				// Assert that the new position is correct. Use a failure
 				//	message that includes the difference between expected and
-				//	actual displacement.
+				//	actual position.
+                assert!(
+                    displacements_are_almost_equal(
+                        expected_position,
+                        actual_position,
+                        permissible_error,
+                    ),
+                    "Position error greater than permissible error of {:?}.\n\
+                    expected_position = {:?}\n\
+                    actual_position = {:?}\n\
+                    actual - expected = {:?}",
+                    permissible_error,
+                    expected_position,
+                    actual_position,
+                    actual_position - expected_position,
+                );
 			}
 		}
 	}
+
+    // TODO: Continue implementing tests from here.
 
 	// Creates a particle with a self-affecting gravity field and launches it
 	//	with a known force. Uses equations of motion to calculate the expected
@@ -1712,6 +1751,14 @@ impl ops::Mul<f64> for Seconds {
 
 	fn mul(self, rhs: f64) -> Self::Output {
 		Self(self.0 * rhs)
+	}
+}
+
+impl ops::Sub for Seconds {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
 	}
 }
 
@@ -1852,6 +1899,12 @@ impl ops::Sub for Displacement {
 	}
 }
 
+impl ops::SubAssign for Displacement {
+	fn sub_assign(&mut self, other: Self) {
+		*self = *self + other;
+	}
+}
+
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
 #[derive(PartialEq)]
@@ -1897,11 +1950,23 @@ impl ops::Add for Velocity {
 	}
 }
 
+impl ops::AddAssign for Velocity {
+	fn add_assign(&mut self, other: Self) {
+		*self = *self + other;
+	}
+}
+
 impl ops::Sub for Velocity {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self::Output {
 		Self(self.0 - rhs.0)
+	}
+}
+
+impl ops::SubAssign for Velocity {
+	fn sub_assign(&mut self, other: Self) {
+		*self = *self - other;
 	}
 }
 
