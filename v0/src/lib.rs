@@ -1639,7 +1639,7 @@ mod tests {
 				elapsed_time = simulation.get_elapsed_time();
 
 				// TODO: Continue implementing tests from here.
-				//	2025-06-27 07:22: Wrong the formula for expected displacement.
+				//	2025-06-27 07:22: Wrote the formula for expected displacement.
 				//	Verify that it is correct.
 
 				// Calculate the expected position after the most recent second.
