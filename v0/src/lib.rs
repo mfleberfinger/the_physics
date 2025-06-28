@@ -1729,8 +1729,6 @@ mod tests {
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
-	// TODO: Implement a self-affecting gravity field as part of the libary, not
-	//	just for the tests.
 	#[test]
 	fn functional_trajectory() {
 	}
@@ -2177,6 +2175,14 @@ pub trait Field {
 pub struct SimpleSelfGravityField {
     acceleration: Acceleration,
     name: String,
+}
+
+impl SimpleSelfGravityField {
+    fn new(acceleration: Acceleration, name: Option<String>)
+        -> SimpleSelfGravityField
+    {
+        
+    }
 }
 
 impl Field for SimpleSelfGravityField {
