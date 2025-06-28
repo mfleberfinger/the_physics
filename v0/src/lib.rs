@@ -209,6 +209,26 @@ mod tests {
 		let m = Mass::new(0.0);
 	}
 
+    #[test]
+    fn mass_supports_multiplication_by_acceleration() {
+        assert_eq!(
+            Force::new(1.0, 2.0),
+            Mass::new(1.0) * Acceleration::new(1.0, 2.0),
+        );
+        assert_eq!(
+            Force::new(1.0, -2.0),
+            Mass::new(1.0) * Acceleration::new(1.0, -2.0),
+        );
+        assert_eq!(
+            Force::new(-1.0, 2.0),
+            Mass::new(1.0) * Acceleration::new(-1.0, 2.0),
+        );
+        assert_eq!(
+            Force::new(-1.0, -2.0),
+            Mass::new(1.0) * Acceleration::new(-1.0, -2.0),
+        );
+    }
+
 	/********************* Displacement ********************/
 
 	#[test]
@@ -1712,7 +1732,7 @@ mod tests {
 	// TODO: Implement a self-affecting gravity field as part of the libary, not
 	//	just for the tests.
 	#[test]
-	fn functional_trajectory_test() {
+	fn functional_trajectory() {
 	}
 
 	// Creates two particles with rigid body fields. Launches one of those
@@ -1852,6 +1872,17 @@ impl Mass {
 		}
 
 		Self(m)
+	}
+}
+
+impl ops::Mul<Acceleration> for Mass {
+	type Output = Force;
+
+	fn mul(self, rhs: Acceleration) -> Self::Output {
+        Self::Output::new(
+            rhs.x() * self.0,
+            rhs.y() * self.0,
+        )
 	}
 }
 
@@ -2094,7 +2125,7 @@ impl ops::Sub for Force {
 #[derive(Clone, Copy)]
 pub struct Ticks(u64);
 
-// TODO: Implement a "rigid body" collider Field as part of the library. It
+// TODO: Implement a "rigid body" (or "basic collider") collider Field as part of the library. It
 //	could expose parameters (e.g. coefficient of friction, coefficient of
 //	restitution) as fields of the struct.
 /// Defines a field. A field is a struct implementing a method that is called by
@@ -2138,6 +2169,46 @@ pub trait Field {
 	/// particles with a water field and uses different rules to apply an
 	/// adhesion force to particles without the water field.
 	fn get_name(&self) -> &String;
+}
+
+/// Applies "gravity" to the particle to which the field is attached.
+/// Implemented as a force that pulls the object to which it's attached in the
+/// direction of the specified acceleration.
+pub struct SimpleSelfGravityField {
+    acceleration: Acceleration,
+    name: String,
+}
+
+impl Field for SimpleSelfGravityField {
+    fn effect(
+        &self,
+        simulation: &Simulation,
+        position: Displacement,
+        particle_ids: Vec<Uuid>
+    ) {
+        // There should only ever be one thing in the Vec (the particle to
+        //  which this field is attached).
+        for id in particle_ids {
+            let force = simulation.get_mass(id) * self.acceleration;
+            simulation.apply_force(id, force);
+        }
+    }
+
+	fn get_radius(&self) -> f64 {
+        0.0
+    }
+
+	fn affects_self(&self) -> bool {
+        true
+    }
+
+	fn affects_others(&self) -> bool {
+        false
+    }
+
+	fn get_name(&self) -> &String {
+        &self.name
+    }
 }
 
 #[derive(Debug)]
