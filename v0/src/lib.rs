@@ -2178,10 +2178,23 @@ pub struct SimpleSelfGravityField {
 }
 
 impl SimpleSelfGravityField {
+	/// Creates an instance of `SimpleSelfGravityField `.
+	///
+	/// # Arguments
+	/// * `acceleration` - The acceleration due to gravity, "little 'g'."
+    /// * `name` - The field name. Defaults to "SimpleSelfGravityField" if None.
     fn new(acceleration: Acceleration, name: Option<String>)
         -> SimpleSelfGravityField
     {
-        
+        let field_name = match name {
+            Some(s) => s,
+            None => String::from("SimpleSelfGravityField"),
+        };
+
+        SimpleSelfGravityField {
+            acceleration: acceleration,
+            name: field_name,
+        }
     }
 }
 
