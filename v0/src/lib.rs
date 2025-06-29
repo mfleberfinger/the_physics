@@ -1731,7 +1731,49 @@ mod tests {
 	//	and number of ticks.
 	#[test]
 	fn functional_trajectory() {
+        let permissible_error = 0.0;
+        let tick_duration = Seconds(0.001);
+        let simulation = Simulation::new(tick_duration, None, None);
+        let force = Force::new(10.0, 5.0);
+        let mass = Mass::new(5.0);
+        let mut expected_position = Displacement::new(0.0, 0.0);
+        let mut actual_position;
+        let gravity_field = SimpleSelfGravityField::new(
+            Acceleration::new(0.0, -9.81),
+            None,
+        );
+        let particle_id = simulation.create_particle(
+            expected_position,
+            mass,
+            vec!(Box::new(gravity_field)),
+        );
+
+        // Apply the force for a few seconds.
+
+        actual_position = simulation.get_position(particle_id);
+
+        // Verify that the particle is in the correct position immediately after
+        //  the last tick of acceleration.
+
+        while actual_position.y() > 0.0 {
+            panic!("Infinit lop y u no end :(");
+            // As the particle coasts, repeatedly assert that its position is
+            //  correct.
+
+            // TODO: Consider adding some kind of failure condition if the particle
+            //  never crosses y = 0. I need to calculate the time at which it's
+            //  expected to cross 0 anyway. I might as well use it to avoid
+            //  looping forever if the particle doesn't move or flies off into space.
+
+            // Save the time and position of the highest point in the trajectory.
+        }
+
+        // Assert that the time and position of the peak were correct.
+
+        // Assert that the time and position of the zero-crossing (i.e., current
+        //  time and position) are correct.
 	}
+
 
 	// Creates two particles with rigid body fields. Launches one of those
 	//	particles at the other and verifies that the resulting velocities (speed
