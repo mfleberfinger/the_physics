@@ -1734,10 +1734,10 @@ mod tests {
         let permissible_error = 0.0;
         let tick_duration = Seconds(0.001);
         let simulation = Simulation::new(tick_duration, None, None);
-        let force = Force::new(10.0, 5.0);
+        let force = Force::new(250.0, 500.0);
         let mass = Mass::new(5.0);
         let mut expected_position = Displacement::new(0.0, 0.0);
-        let mut actual_position;
+        let mut actual_position = Displacement::new(0.0, 0.0);
         let gravity_field = SimpleSelfGravityField::new(
             Acceleration::new(0.0, -9.81),
             None,
@@ -1749,12 +1749,51 @@ mod tests {
         );
 
         // Apply the force for a few seconds.
+        for i in 0..((3.0 / tick_duration.0) as i64) {
+            simulation.apply_force(particle_id, force);
+            simulation.step();
+        }
 
+        // Find out how long the force was actually applied for and where the
+        //  particle was at the end of the acceleration period.
+        let actual_force_duration = simulation.get_elapsed_time();
+
+        // Calculate the expected position after the most recent second.
+        // a = f / m
+        // r = r_0 + v_0 * t + 0.5 * a * t * t
+        // r = r_0 + v_0 * t + 0.5 * (f / m) * t * t
+        // r_0 and v_0 = 0
+        // Therefore, r = 0.5 * (f / m) * t * t
+        expected_position =
+            0.5 * (force / mass) * actual_force_duration
+            * actual_force_duration;
+
+        // Get the new position from the simulation.
         actual_position = simulation.get_position(particle_id);
-
-        // Verify that the particle is in the correct position immediately after
+        
+        // Assert that the particle is in the correct position immediately after
         //  the last tick of acceleration.
+        assert!(
+            displacements_are_almost_equal(
+                expected_position,
+                actual_position,
+                permissible_error,
+            ),
+            "Position error greater than permissible error of {:?}.\n\
+            expected_position = {:?}\n\
+            actual_position = {:?}\n\
+            actual - expected = {:?}",
+            permissible_error,
+            expected_position,
+            actual_position,
+            actual_position - expected_position,
+        );
 
+        // Calculate when the particle should fall back to y = 0.
+        
+
+        // Step until the particle returns to y = 0, or until enough time has
+        //  passed that we know it should have returned to y = 0.
         while actual_position.y() > 0.0 {
             panic!("Infinit lop y u no end :(");
             // As the particle coasts, repeatedly assert that its position is
