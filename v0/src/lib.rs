@@ -1735,6 +1735,7 @@ mod tests {
         let tick_duration = Seconds(0.001);
         let simulation = Simulation::new(tick_duration, None, None);
         let force = Force::new(250.0, 500.0);
+        let force_duration = Seconds(3.0);
         let mass = Mass::new(5.0);
         let mut expected_position = Displacement::new(0.0, 0.0);
         let mut actual_position = Displacement::new(0.0, 0.0);
@@ -1749,7 +1750,7 @@ mod tests {
         );
 
         // Apply the force for a few seconds.
-        for i in 0..((3.0 / tick_duration.0) as i64) {
+        for i in 0..((force_duration.0 / tick_duration.0) as i64) {
             simulation.apply_force(particle_id, force);
             simulation.step();
         }
@@ -1758,7 +1759,7 @@ mod tests {
         //  particle was at the end of the acceleration period.
         let actual_force_duration = simulation.get_elapsed_time();
 
-        // Calculate the expected position after the most recent second.
+        // Calculate the expected position after the acceleration period.
         // a = f / m
         // r = r_0 + v_0 * t + 0.5 * a * t * t
         // r = r_0 + v_0 * t + 0.5 * (f / m) * t * t
@@ -1789,7 +1790,17 @@ mod tests {
             actual_position - expected_position,
         );
 
-        // Calculate when the particle should fall back to y = 0.
+
+        // Calculate when the particle should reach its maximum height.
+
+        // Calculate the maximum height.
+
+        // Calculate how long the particle should take to fall from its maximum
+        //  height.
+
+        // Calculate when the particle's total flight time.
+        
+        // Calculate total distance the particle should travel (on the x-axis).
         
 
         // Step until the particle returns to y = 0, or until enough time has
