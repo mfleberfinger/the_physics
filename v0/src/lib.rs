@@ -1792,15 +1792,42 @@ mod tests {
 
 
         // Calculate when the particle should reach its maximum height.
+        // t_1 = (-v_yf / g) + t_f
+        // Where...
+        // t_1 is time at which max height is reached.
+        // v_yf is y-velocity immediately after the force is done acting.
+        // g, acceleration due to gravity, is negative.
+        // t_f is the time for which the force was acting.
+        let v_yf = ((force / mass) * actual_force_duration).y();
+        let t_1 = (-v_yf / 
+        // Replace the math-friendly name with a programmer-friendly name.
+        let expected_time_to_y_max = t_1;
 
-        // Calculate the maximum height.
+        // Calculate the expected maximum height.
+        // y_f = 0.5 * ((f_0y / m) + g) * t_f^2
+        // y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f)^2
+        // Where...
+        // y_f is the height achieved while the force was acting.
+        // f_0y is the y-component of the force.
+        // m is the mass of the particle.
+        // y_max is the maximum height.
 
         // Calculate how long the particle should take to fall from its maximum
         //  height.
+        // t_2 = sqrt((-2 * y_max) / g)
+        // Where t_2 is the time taken for the particle to fall from its maximum
+        //  height.
 
-        // Calculate when the particle's total flight time.
+        // Calculate the particle's total flight time (from when the force is
+        //  first applied to when the particle falls to y = 0).
+        // t_omega = t_1 + t_2
+        // Where t_omega is total flight time.
         
         // Calculate total distance the particle should travel (on the x-axis).
+        // d = 0.5 * (f_0x / m) * t_f^2 + ((f_0x / m) * t_f) * (t_omega - t_f)
+        // Where...
+        // d is the total distance.
+        // f_0x is the x-component of the force.
         
 
         // Step until the particle returns to y = 0, or until enough time has
