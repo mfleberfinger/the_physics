@@ -1739,8 +1739,9 @@ mod tests {
         let mass = Mass::new(5.0);
         let mut expected_position = Displacement::new(0.0, 0.0);
         let mut actual_position = Displacement::new(0.0, 0.0);
+		let g = -9.81;
         let gravity_field = SimpleSelfGravityField::new(
-            Acceleration::new(0.0, -9.81),
+            Acceleration::new(0.0, g),
             None,
         );
         let particle_id = simulation.create_particle(
@@ -1798,10 +1799,12 @@ mod tests {
         // v_yf is y-velocity immediately after the force is done acting.
         // g, acceleration due to gravity, is negative.
         // t_f is the time for which the force was acting.
+		let t_f = force_duration.0;
         let v_yf = ((force / mass) * actual_force_duration).y();
-        let t_1 = (-v_yf / 
-        // Replace the math-friendly name with a programmer-friendly name.
-        let expected_time_to_y_max = t_1;
+        let t_1 = (-v_yf / g) + t_f;
+        // Replace the math-friendly name with a programmer-friendly name and
+		//	convert it to the Seconds type.
+        let expected_time_to_y_max = Seconds(t_1);
 
         // Calculate the expected maximum height.
         // y_f = 0.5 * ((f_0y / m) + g) * t_f^2
@@ -1811,18 +1814,27 @@ mod tests {
         // f_0y is the y-component of the force.
         // m is the mass of the particle.
         // y_max is the maximum height.
+		let y_f = 0.5 * ((force.y() / mass.0) + g) * t_f * t_f;
+		let y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f).pow(2);
+        // Replace the math-friendly name with a programmer-friendly name.
+		let maximum_height = y_max;
 
         // Calculate how long the particle should take to fall from its maximum
         //  height.
         // t_2 = sqrt((-2 * y_max) / g)
         // Where t_2 is the time taken for the particle to fall from its maximum
         //  height.
+		let t_2 = ((-2.0 * y_max) / g).sqrt();
 
         // Calculate the particle's total flight time (from when the force is
         //  first applied to when the particle falls to y = 0).
         // t_omega = t_1 + t_2
         // Where t_omega is total flight time.
-        
+		let t_omega = t_1 + t_2;
+        // Replace the math-friendly name with a programmer-friendly name and
+		//	change the type.
+		let total_flight_time = Seconds(t_omega);
+
         // Calculate total distance the particle should travel (on the x-axis).
         // d = 0.5 * (f_0x / m) * t_f^2 + ((f_0x / m) * t_f) * (t_omega - t_f)
         // Where...
