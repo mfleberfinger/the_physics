@@ -1835,12 +1835,14 @@ mod tests {
 		//	change the type.
 		let total_flight_time = Seconds(t_omega);
 
-        // Calculate total distance the particle should travel (on the x-axis).
+        // Calculate total distance the particle should travel (on the x-axis)
+		//	before falling past y = 0.
         // d = 0.5 * (f_0x / m) * t_f^2 + ((f_0x / m) * t_f) * (t_omega - t_f)
         // Where...
         // d is the total distance.
         // f_0x is the x-component of the force.
-        
+        let x_distance = 0.5 * (force.x() / mass.0) * t_f * t_f +
+			((force.x() / mass.0) * t_f) * (t_omega - t_f);
 
         // Step until the particle returns to y = 0, or until enough time has
         //  passed that we know it should have returned to y = 0.
