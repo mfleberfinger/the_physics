@@ -1720,7 +1720,6 @@ mod tests {
 		}
 	}
 
-    // TODO: Continue implementing tests from here.
 
 	// Creates a particle with a self-affecting gravity field and launches it
 	//	with a known force. Uses equations of motion to calculate the expected
@@ -1799,7 +1798,7 @@ mod tests {
         // v_yf is y-velocity immediately after the force is done acting.
         // g, acceleration due to gravity, is negative.
         // t_f is the time for which the force was acting.
-		let t_f = force_duration.0;
+		let t_f = actual_force_duration.0;
         let v_yf = ((force / mass) * actual_force_duration).y();
         let t_1 = (-v_yf / g) + t_f;
         // Replace the math-friendly name with a programmer-friendly name and
@@ -1815,7 +1814,7 @@ mod tests {
         // m is the mass of the particle.
         // y_max is the maximum height.
 		let y_f = 0.5 * ((force.y() / mass.0) + g) * t_f * t_f;
-		let y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f).pow(2);
+		let y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f).powf(2.0);
         // Replace the math-friendly name with a programmer-friendly name.
 		let maximum_height = y_max;
 
@@ -1851,8 +1850,8 @@ mod tests {
             // As the particle coasts, repeatedly assert that its position is
             //  correct.
 
-            // TODO: Consider adding some kind of failure condition if the particle
-            //  never crosses y = 0. I need to calculate the time at which it's
+            // TODO: Add some kind of failure condition if the particle never
+			//	crosses y = 0. I need to calculate the time at which it's
             //  expected to cross 0 anyway. I might as well use it to avoid
             //  looping forever if the particle doesn't move or flies off into space.
 
@@ -1874,10 +1873,9 @@ mod tests {
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
-	// TODO: Define a rigid body field as part of the library.
-	#[test]
-	fn functional_collision() {
-	}
+//	#[test]
+//	fn functional_collision() {
+//	}
 
 
 	// TODO: When done writing tests, re-read the Rust book's chapter on project
