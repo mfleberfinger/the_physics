@@ -78,6 +78,19 @@ mod tests {
 	}
 
 	#[test]
+	fn seconds_supports_addition() {
+        assert_eq!(Seconds(0.0), Seconds(0.0) + Seconds(0.0));
+        assert_eq!(Seconds(1.0), Seconds(0.0) + Seconds(1.0));
+        assert_eq!(Seconds(-1.0), Seconds(0.0) + Seconds(-1.0));
+        assert_eq!(Seconds(1.0), Seconds(1.0) + Seconds(0.0));
+        assert_eq!(Seconds(2.0), Seconds(1.0) + Seconds(1.0));
+        assert_eq!(Seconds(0.0), Seconds(1.0) + Seconds(-1.0));
+        assert_eq!(Seconds(-1.0), Seconds(-1.0) + Seconds(0.0));
+        assert_eq!(Seconds(0.0), Seconds(-1.0) + Seconds(1.0));
+        assert_eq!(Seconds(-2.0), Seconds(-1.0) + Seconds(-1.0));
+	}
+
+	#[test]
 	fn seconds_supports_subtraction() {
         assert_eq!(Seconds(0.0), Seconds(0.0) - Seconds(0.0));
         assert_eq!(Seconds(-1.0), Seconds(0.0) - Seconds(1.0));
@@ -89,6 +102,7 @@ mod tests {
         assert_eq!(Seconds(-2.0), Seconds(-1.0) - Seconds(1.0));
         assert_eq!(Seconds(0.0), Seconds(-1.0) - Seconds(-1.0));
 	}
+
 	
 	/********************* Vector2 ********************/
 
@@ -1615,6 +1629,7 @@ mod tests {
 		);
 	}
 
+	// TODO: Should probably treat `error` as a percent.
 	fn displacements_are_almost_equal(
 		d1: Displacement,
 		d2: Displacement,
@@ -1624,6 +1639,7 @@ mod tests {
 		diff.x().abs() <= error && diff.y().abs() <= error
 	}
 
+	// TODO: Should probably treat `error` as a percent.
 	fn velocities_are_almost_equal(
 		v1: Velocity,
 		v2: Velocity,
@@ -1803,7 +1819,7 @@ mod tests {
         let t_1 = (-v_yf / g) + t_f;
         // Replace the math-friendly name with a programmer-friendly name and
 		//	convert it to the Seconds type.
-        let expected_time_to_y_max = Seconds(t_1);
+        let expected_time_to_peak = Seconds(t_1);
 
         // Calculate the expected maximum height.
         // y_f = 0.5 * ((f_0y / m) + g) * t_f^2
@@ -1815,8 +1831,13 @@ mod tests {
         // y_max is the maximum height.
 		let y_f = 0.5 * ((force.y() / mass.0) + g) * t_f * t_f;
 		let y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f).powf(2.0);
-        // Replace the math-friendly name with a programmer-friendly name.
-		let maximum_height = y_max;
+
+		// Calculate the x position when the particle reaches y_max.
+        // v_xf is x-velocity immediately after the force is done acting.
+		// x_ymax is the x-position when the particle reaches its max height.
+        let v_xf = ((force / mass) * actual_force_duration).x();
+		let x_ymax = v_xf * t_1;
+		let expected_peak = Displacement::new(x_ymax, y_max);
 
         // Calculate how long the particle should take to fall from its maximum
         //  height.
@@ -1832,7 +1853,7 @@ mod tests {
 		let t_omega = t_1 + t_2;
         // Replace the math-friendly name with a programmer-friendly name and
 		//	change the type.
-		let total_flight_time = Seconds(t_omega);
+		let expected_total_flight_time = Seconds(t_omega);
 
         // Calculate total distance the particle should travel (on the x-axis)
 		//	before falling past y = 0.
@@ -1842,26 +1863,31 @@ mod tests {
         // f_0x is the x-component of the force.
         let x_distance = 0.5 * (force.x() / mass.0) * t_f * t_f +
 			((force.x() / mass.0) * t_f) * (t_omega - t_f);
+		let expected_final_position = Displacement::new(x_distance, 0.0);
 
         // Step until the particle returns to y = 0, or until enough time has
         //  passed that we know it should have returned to y = 0.
-        while actual_position.y() > 0.0 {
-            panic!("Infinit lop y u no end :(");
-            // As the particle coasts, repeatedly assert that its position is
-            //  correct.
+		let mut actual_peak = Displacement::new(-1.0, -1.0);
+		let mut actual_time_to_peak = Seconds(0.0);
+        while actual_position.y() > 0.0
+			&& expected_total_flight_time >
+				simulation.get_elapsed_time() + Seconds(10.0) {
 
-            // TODO: Add some kind of failure condition if the particle never
-			//	crosses y = 0. I need to calculate the time at which it's
-            //  expected to cross 0 anyway. I might as well use it to avoid
-            //  looping forever if the particle doesn't move or flies off into space.
+            panic!("Infinit lop y u no end :(");
+
+            // As the particle coasts, assert that its position is correct from
+			//	one tick to the next, given its previous actual position.
 
             // Save the time and position of the highest point in the trajectory.
         }
 
-        // Assert that the time and position of the peak were correct.
+        // Assert that the actual time and height of the peak were correct
+		//	when compared to the expected/calculated time and position, within
+		//	permissible error.
 
-        // Assert that the time and position of the zero-crossing (i.e., current
-        //  time and position) are correct.
+        // Assert that the actual time and position of the zero-crossing (i.e.,
+		//	current time and position) were correct when compared to the
+		//	expected/calculated time and position, within permissible error.
 	}
 
 
@@ -1900,6 +1926,14 @@ impl ops::Mul<f64> for Seconds {
 
 	fn mul(self, rhs: f64) -> Self::Output {
 		Self(self.0 * rhs)
+	}
+}
+
+impl ops::Add for Seconds {
+	type Output = Self;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
 	}
 }
 
