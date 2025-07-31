@@ -1765,7 +1765,8 @@ mod tests {
             vec!(Box::new(gravity_field)),
         );
 
-        // Apply the force for a few seconds.
+		// Forcing phase.
+        // Apply the force for a set duration.
         for i in 0..((force_duration.0 / tick_duration.0) as i64) {
             simulation.apply_force(particle_id, force);
             simulation.step();
@@ -1865,6 +1866,7 @@ mod tests {
 			((force.x() / mass.0) * t_f) * (t_omega - t_f);
 		let expected_final_position = Displacement::new(x_distance, 0.0);
 
+		// Coasting phase.
         // Step until the particle returns to y = 0, or until enough time has
         //  passed that we know it should have returned to y = 0.
 		let mut actual_peak = Displacement::new(-1.0, -1.0);
@@ -1875,8 +1877,24 @@ mod tests {
 
             panic!("Infinit lop y u no end :(");
 
-            // As the particle coasts, assert that its position is correct from
-			//	one tick to the next, given its previous actual position.
+
+			// TODO: Implement the part of the test described in the next comment...
+
+            // As the particle coasts, we will assert that its position is
+			//	correct from one tick to the next, given its previous actual
+			//	position.
+			// Need to consider previous/current velocity and gravitational
+			//	acceleration.
+			// The expectation is that the velocity reported by the simulation
+			//	is the velocity used to calculate the particle's updated
+			//	position in the previous tick. We will calculate the expected
+			//	velocity for the next tick and use that to calculate expected
+			//	position for the next tick.
+
+			// Run the next tick.
+			simulation.step();
+
+
 
             // Save the time and position of the highest point in the trajectory.
         }
@@ -2587,7 +2605,7 @@ impl Simulation {
 	///
 	/// # Arguments
 	/// * `particle_id` - The unique ID of the particle for which to retrieve
-	///		mass.
+	///		velocity.
 	///
 	/// # Panics
 	/// This method will panic if there is no particle identified by
