@@ -1755,8 +1755,9 @@ mod tests {
         let mut expected_position = Displacement::new(0.0, 0.0);
         let mut actual_position = Displacement::new(0.0, 0.0);
 		let g = -9.81;
+		let gravitational_acceleration = Acceleration::new(0.0, g);
         let gravity_field = SimpleSelfGravityField::new(
-            Acceleration::new(0.0, g),
+			gravitational_acceleration,
             None,
         );
         let particle_id = simulation.create_particle(
@@ -1871,6 +1872,7 @@ mod tests {
         //  passed that we know it should have returned to y = 0.
 		let mut actual_peak = Displacement::new(-1.0, -1.0);
 		let mut actual_time_to_peak = Seconds(0.0);
+		let mut actual_velocity;
         while actual_position.y() > 0.0
 			&& expected_total_flight_time >
 				simulation.get_elapsed_time() + Seconds(10.0) {
@@ -1890,10 +1892,21 @@ mod tests {
 			//	position in the previous tick. We will calculate the expected
 			//	velocity for the next tick and use that to calculate expected
 			//	position for the next tick.
+			
+			actual_velocity = simulation.get_velocity(particle_id);
+			// d = d_0 + v_0 * t + (1/2) * a * t^2
+			expected_position =
+				actual_position
+				+ (actual_velocity * tick_duration)
+				+ (0.5 * gravitational_acceleration
+					* tick_duration * tick_duration);
+
+
 
 			// Run the next tick.
 			simulation.step();
 
+			actual_position = simulation.get_position(particle_id);
 
 
             // Save the time and position of the highest point in the trajectory.
@@ -2309,6 +2322,10 @@ pub struct Ticks(u64);
 // TODO: Implement a "rigid body" (or "basic collider") collider Field as part of the library. It
 //	could expose parameters (e.g. coefficient of friction, coefficient of
 //	restitution) as fields of the struct.
+// 2025-08-05: Implementing a rigid body collider might be hacky without changing
+//	my design at least a little. The intent was never to treat individual
+//	particles as rigid bodies. A "rigid body" might emerge as a result of
+//	interactions between multiple particles, but probably won't be its own field.
 /// Defines a field. A field is a struct implementing a method that is called by
 /// the physics engine on each tick in which a particle is within a radius
 /// specified by the field, centered on a particle to which the field is
