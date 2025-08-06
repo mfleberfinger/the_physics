@@ -1798,7 +1798,7 @@ mod tests {
                 actual_position,
                 permissible_error,
             ),
-            "Position error greater than permissible error of {:?}.\n\
+            "After force applied, position error greater than permissible error of {:?}.\n\
             expected_position = {:?}\n\
             actual_position = {:?}\n\
             actual - expected = {:?}",
@@ -1879,9 +1879,6 @@ mod tests {
 
             panic!("Infinit lop y u no end :(");
 
-
-			// TODO: Implement the part of the test described in the next comment...
-
             // As the particle coasts, we will assert that its position is
 			//	correct from one tick to the next, given its previous actual
 			//	position.
@@ -1889,27 +1886,46 @@ mod tests {
 			//	acceleration.
 			// The expectation is that the velocity reported by the simulation
 			//	is the velocity used to calculate the particle's updated
-			//	position in the previous tick. We will calculate the expected
-			//	velocity for the next tick and use that to calculate expected
-			//	position for the next tick.
-			
+			//	position in the previous tick. We will use actual velocity to
+			//	calculate the expected position for the next tick.
+			// We use the formula
+			//	d = d_0 + v_0 * t + (1/2) * a * t^2
+			//	to achieve this.
 			actual_velocity = simulation.get_velocity(particle_id);
-			// d = d_0 + v_0 * t + (1/2) * a * t^2
 			expected_position =
 				actual_position
 				+ (actual_velocity * tick_duration)
 				+ (0.5 * gravitational_acceleration
 					* tick_duration * tick_duration);
 
-
-
 			// Run the next tick.
 			simulation.step();
 
 			actual_position = simulation.get_position(particle_id);
 
+			assert!(
+				displacements_are_almost_equal(
+					expected_position,
+					actual_position,
+					permissible_error
+				),
+				"In-flight position error greater than permissible error of {:?}.\n\
+				expected_position = {:?}\n\
+				actual_position = {:?}\n\
+				actual - expected = {:?}\n\
+				elapsed ticks: {:?}",
+				permissible_error,
+				expected_position,
+				actual_position,
+				actual_position - expected_position,
+				simulation.get_elapsed_ticks(),
+			);
 
             // Save the time and position of the highest point in the trajectory.
+			if (actual_position.y() > actual_peak.y()) {
+				actual_peak = actual_position;
+				actual_time_to_peak = simulation.get_elapsed_time();
+			}
         }
 
         // Assert that the actual time and height of the peak were correct
@@ -1930,6 +1946,10 @@ mod tests {
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
+	// This might not be worth doing. The design of the physics engine didn't
+	//	really intend for individual particles to act as rigid bodies. Similar
+	//	interactions to rigid body collisions are expected to emerge from
+	//	particles pushing and pulling each other via fields.
 //	#[test]
 //	fn functional_collision() {
 //	}
@@ -1946,7 +1966,7 @@ mod tests {
 //	derived implementation will report equality between two structs if all
 //	fields are equal, and non-equality otherwise.
 /// Time, in seconds.
-#[derive(PartialEq)]
+#[derive(PartialEq, PartialOrd)]
 #[derive(Debug)]
 #[derive(Clone, Copy)]
 pub struct Seconds(f64);
