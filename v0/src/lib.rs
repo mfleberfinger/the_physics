@@ -1649,6 +1649,16 @@ mod tests {
 		diff.x().abs() <= error && diff.y().abs() <= error
 	}
 
+	// TODO: Should probably treat `error` as a percent.
+	fn seconds_are_almost_equal(
+		t1: Seconds,
+		t2: Seconds,
+		error: f64
+	) -> bool {
+		let diff = t1 - t2;
+		diff.0.abs() <= error
+	}
+
 
 	// Apply several forces in several directions, over a few seconds. Check the
 	//	displacement after each second.
@@ -1877,8 +1887,6 @@ mod tests {
 			&& expected_total_flight_time >
 				simulation.get_elapsed_time() + Seconds(10.0) {
 
-            panic!("Infinit lop y u no end :(");
-
             // As the particle coasts, we will assert that its position is
 			//	correct from one tick to the next, given its previous actual
 			//	position.
@@ -1928,13 +1936,77 @@ mod tests {
 			}
         }
 
-        // Assert that the actual time and height of the peak were correct
-		//	when compared to the expected/calculated time and position, within
+        // Assert that the actual time and position of the peak were correct
+		//	when compared to the expected (calculated) time and position, within
 		//	permissible error.
+		assert!(
+			seconds_are_almost_equal(
+				expected_time_to_peak,
+				actual_time_to_peak,
+				permissible_error,
+			),
+			"Time-to-peak error greater than permissible error of {:?}.\n\
+			expected_time_to_peak = {:?}\n\
+			actual_time_to_peak = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_time_to_peak,
+			actual_time_to_peak,
+			actual_time_to_peak - expected_time_to_peak,
+		);
+
+		assert!(
+			displacements_are_almost_equal(
+				expected_peak,
+				actual_peak,
+				permissible_error,
+			),
+			"Peak position error greater than permissible error of {:?}.\n\
+			expected_peak = {:?}\n\
+			actual_peak = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_peak,
+			actual_peak,
+			actual_peak - expected_peak,
+		);
 
         // Assert that the actual time and position of the zero-crossing (i.e.,
 		//	current time and position) were correct when compared to the
 		//	expected/calculated time and position, within permissible error.
+		let actual_total_flight_time = simulation.get_elapsed_time();
+		assert!(
+			seconds_are_almost_equal(
+				expected_total_flight_time,
+				actual_total_flight_time,
+				permissible_error,
+			),
+			"Total flight time error greater than permissible error of {:?}.\n\
+			expected_total_flight_time = {:?}\n\
+			actual_total_flight_time = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_total_flight_time,
+			actual_total_flight_time,
+			actual_total_flight_time - expected_total_flight_time,
+		);
+
+		let actual_final_position = simulation.get_position(particle_id);
+		assert!(
+			displacements_are_almost_equal(
+				expected_final_position,
+				actual_final_position,
+				permissible_error,
+			),
+			"Final position error greater than permissible error of {:?}.\n\
+			expected_final_position = {:?}\n\
+			actual_final_position = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_final_position,
+			actual_final_position,
+			actual_peak - expected_peak,
+		);
 	}
 
 
