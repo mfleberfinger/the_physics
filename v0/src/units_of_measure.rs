@@ -1,3 +1,5 @@
+// TODO: Rename this file and module to "physical_quantities". Rename the
+//	"Seconds" type to "Time".
 use std::ops;
 
 
