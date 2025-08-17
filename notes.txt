@@ -2,9 +2,10 @@ TODO:
 	
 	See asterisks below.
 
-	When convenient, split the library into multiple files. Each struct should
+	When convenient, split the library into multiple files. Each struct should ***************************************
 		probably get its own file. Need to figure out how to organize files and
 		ensure that tests still have access to private methods and fields.
+		- See "Modules" below.
 	
 	When done, search the code for any remaining "TODO" comments.
 
@@ -31,11 +32,11 @@ Development process (not necessarily in order)
 			-> Make a Simulation struct to store everything that belongs to the
 				active simulation.
 	- Write structs and skeleton functions/methods based on the interface design.	[done]
-	- Write failing tests.	******************************************************************************
+	- Write failing tests.															[done]
 		+ Starting to write these while working on the design, based on the
 			methods under the "Interface", section, below, might be helpful for
 			coming up with more of the design.
-	- Implement the library.
+	- Implement the library. ******************************************************************************
 	- Write the demo.
 
 Testing
@@ -352,6 +353,15 @@ Ticks
 			-> Probably use an Option<some_unsigned_type> and use None for max
 				speed.
 
+Modules
+	- units_of_measure
+		+ Contains all of the structs representing units of measure (e.g.,
+			Seconds, Vector2, Force) and their impl blocks.
+	- simulation
+		+ Contains the Simulation, Field, and Particle structs and their impl
+			blocks.
+	
+
 Graphics
 	- Research rust graphics/animation/visualization libraries. Simpler is
 		better.
@@ -365,6 +375,10 @@ Custom screensaver?
 	- There are xscreensaver rust bindings, apparently. I might be able to make
 		a custom screensaver that generates and simulates random arrangements of
 		particles with random properties and field parameters.
+
+Make a small game?
+	- Probably won't be able to do much with this iteration. It's unlikely to
+		be performant.
 
 To remember for future iterations:
 	- To eliminate floating point errors, do all calculations in integer
