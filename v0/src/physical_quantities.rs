@@ -1,5 +1,3 @@
-// TODO: Rename this file and module to "physical_quantities". Rename the
-//	"Seconds" type to "Time".
 use std::ops;
 
 
@@ -7,67 +5,67 @@ use std::ops;
 mod tests {
     use super::*;
 
-	/********************* Seconds ********************/
+	/********************* Time ********************/
 
 	#[test]
-	fn seconds_supports_partialEq() {
+	fn time_supports_partialEq() {
 		assert!(
-			Seconds(-1.0) == Seconds(-1.0),
-			"Seconds(-1.0) did not equal Seconds(-1.0)."
+			Time(-1.0) == Time(-1.0),
+			"Time(-1.0) did not equal Time(-1.0)."
 		);
 		assert!(
-			Seconds(0.0) == Seconds(0.0),
-			"Seconds(0.0) did not equal Seconds(0.0)."
+			Time(0.0) == Time(0.0),
+			"Time(0.0) did not equal Time(0.0)."
 		);
 		assert!(
-			Seconds(1.0) == Seconds(1.0),
-			"Seconds(1.0) did not equal Seconds(1.0)."
+			Time(1.0) == Time(1.0),
+			"Time(1.0) did not equal Time(1.0)."
 		);
 
 		assert!(
-			Seconds(-1.0) != Seconds(0.0),
-			"Seconds(-1.0) was equal Seconds(0.0)."
+			Time(-1.0) != Time(0.0),
+			"Time(-1.0) was equal Time(0.0)."
 		);
 		assert!(
-			Seconds(0.0) != Seconds(1.0),
-			"Seconds(0.0) was equal to Seconds(1.0)."
+			Time(0.0) != Time(1.0),
+			"Time(0.0) was equal to Time(1.0)."
 		);
 		assert!(
-			Seconds(1.0) != Seconds(-1.0),
-			"Seconds(1.0) was equal to Seconds(-1.0)."
+			Time(1.0) != Time(-1.0),
+			"Time(1.0) was equal to Time(-1.0)."
 		);
 	}
 
 	#[test]
-	fn seconds_supports_multiplication_by_a_coefficient() {
-		assert_eq!(Seconds(2.0) * 5.0, Seconds(10.0));
-		assert_eq!(Seconds(-2.0) * 5.0, Seconds(-10.0));
+	fn time_supports_multiplication_by_a_coefficient() {
+		assert_eq!(Time(2.0) * 5.0, Time(10.0));
+		assert_eq!(Time(-2.0) * 5.0, Time(-10.0));
 	}
 
 	#[test]
-	fn seconds_supports_addition() {
-        assert_eq!(Seconds(0.0), Seconds(0.0) + Seconds(0.0));
-        assert_eq!(Seconds(1.0), Seconds(0.0) + Seconds(1.0));
-        assert_eq!(Seconds(-1.0), Seconds(0.0) + Seconds(-1.0));
-        assert_eq!(Seconds(1.0), Seconds(1.0) + Seconds(0.0));
-        assert_eq!(Seconds(2.0), Seconds(1.0) + Seconds(1.0));
-        assert_eq!(Seconds(0.0), Seconds(1.0) + Seconds(-1.0));
-        assert_eq!(Seconds(-1.0), Seconds(-1.0) + Seconds(0.0));
-        assert_eq!(Seconds(0.0), Seconds(-1.0) + Seconds(1.0));
-        assert_eq!(Seconds(-2.0), Seconds(-1.0) + Seconds(-1.0));
+	fn time_supports_addition() {
+        assert_eq!(Time(0.0), Time(0.0) + Time(0.0));
+        assert_eq!(Time(1.0), Time(0.0) + Time(1.0));
+        assert_eq!(Time(-1.0), Time(0.0) + Time(-1.0));
+        assert_eq!(Time(1.0), Time(1.0) + Time(0.0));
+        assert_eq!(Time(2.0), Time(1.0) + Time(1.0));
+        assert_eq!(Time(0.0), Time(1.0) + Time(-1.0));
+        assert_eq!(Time(-1.0), Time(-1.0) + Time(0.0));
+        assert_eq!(Time(0.0), Time(-1.0) + Time(1.0));
+        assert_eq!(Time(-2.0), Time(-1.0) + Time(-1.0));
 	}
 
 	#[test]
-	fn seconds_supports_subtraction() {
-        assert_eq!(Seconds(0.0), Seconds(0.0) - Seconds(0.0));
-        assert_eq!(Seconds(-1.0), Seconds(0.0) - Seconds(1.0));
-        assert_eq!(Seconds(1.0), Seconds(0.0) - Seconds(-1.0));
-        assert_eq!(Seconds(1.0), Seconds(1.0) - Seconds(0.0));
-        assert_eq!(Seconds(0.0), Seconds(1.0) - Seconds(1.0));
-        assert_eq!(Seconds(2.0), Seconds(1.0) - Seconds(-1.0));
-        assert_eq!(Seconds(-1.0), Seconds(-1.0) - Seconds(0.0));
-        assert_eq!(Seconds(-2.0), Seconds(-1.0) - Seconds(1.0));
-        assert_eq!(Seconds(0.0), Seconds(-1.0) - Seconds(-1.0));
+	fn time_supports_subtraction() {
+        assert_eq!(Time(0.0), Time(0.0) - Time(0.0));
+        assert_eq!(Time(-1.0), Time(0.0) - Time(1.0));
+        assert_eq!(Time(1.0), Time(0.0) - Time(-1.0));
+        assert_eq!(Time(1.0), Time(1.0) - Time(0.0));
+        assert_eq!(Time(0.0), Time(1.0) - Time(1.0));
+        assert_eq!(Time(2.0), Time(1.0) - Time(-1.0));
+        assert_eq!(Time(-1.0), Time(-1.0) - Time(0.0));
+        assert_eq!(Time(-2.0), Time(-1.0) - Time(1.0));
+        assert_eq!(Time(0.0), Time(-1.0) - Time(-1.0));
 	}
 
 	
@@ -346,21 +344,21 @@ mod tests {
 	}
 
 	#[test]
-	fn velocity_supports_multiplication_by_seconds() {
+	fn velocity_supports_multiplication_by_time() {
 		assert_eq!(
-			Velocity::new(1.0, 2.0) * Seconds(5.0),
+			Velocity::new(1.0, 2.0) * Time(5.0),
 			Displacement::new(5.0, 10.0)
 		);
 		assert_eq!(
-			Seconds(5.0) * Velocity::new(1.0, 2.0),
+			Time(5.0) * Velocity::new(1.0, 2.0),
 			Displacement::new(5.0, 10.0)
 		);
 		assert_eq!(
-			Velocity::new(1.0, 2.0) * Seconds(-5.0),
+			Velocity::new(1.0, 2.0) * Time(-5.0),
 			Displacement::new(-5.0, -10.0)
 		);
 		assert_eq!(
-			Seconds(-5.0) * Velocity::new(1.0, 2.0),
+			Time(-5.0) * Velocity::new(1.0, 2.0),
 			Displacement::new(-5.0, -10.0)
 		);
 	}
@@ -481,21 +479,21 @@ mod tests {
 	}
 
 	#[test]
-	fn acceleration_supports_multiplication_by_seconds() {
+	fn acceleration_supports_multiplication_by_time() {
 		assert_eq!(
-			Acceleration::new(1.0, 2.0) * Seconds(5.0),
+			Acceleration::new(1.0, 2.0) * Time(5.0),
 			Velocity::new(5.0, 10.0)
 		);
 		assert_eq!(
-			Seconds(5.0) * Acceleration::new(1.0, 2.0),
+			Time(5.0) * Acceleration::new(1.0, 2.0),
 			Velocity::new(5.0, 10.0)
 		);
 		assert_eq!(
-			Acceleration::new(1.0, 2.0) * Seconds(-5.0),
+			Acceleration::new(1.0, 2.0) * Time(-5.0),
 			Velocity::new(-5.0, -10.0)
 		);
 		assert_eq!(
-			Seconds(-5.0) * Acceleration::new(1.0, 2.0),
+			Time(-5.0) * Acceleration::new(1.0, 2.0),
 			Velocity::new(-5.0, -10.0)
 		);
 	}
@@ -671,381 +669,386 @@ mod tests {
 	}
 }
 
-// Using a tuple struct to wrap an f64 so the compiler treats Seconds as a
-//	distinct type. This is the "newtype pattern."
-// The PartialEq trait is automatically implemented using "derive" here. The
-//	derived implementation will report equality between two structs if all
-//	fields are equal, and non-equality otherwise.
-/// Time, in seconds.
-#[derive(PartialEq, PartialOrd)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Seconds(f64);
+pub mod units_of_measure {
 
-// Implement multiplication of time by a coefficient.
-impl ops::Mul<f64> for Seconds {
-	type Output = Self;
+	// Using a tuple struct to wrap an f64 so the compiler treats Time as a
+	//	distinct type. This is the "newtype pattern."
+	// The PartialEq trait is automatically implemented using "derive" here. The
+	//	derived implementation will report equality between two structs if all
+	//	fields are equal, and non-equality otherwise.
+	/// Represents a length of time. Could be though of as milliseconds, seconds,
+	/// minutes, etc.
+	#[derive(PartialEq, PartialOrd)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Time(f64);
 
-	fn mul(self, rhs: f64) -> Self::Output {
-		Self(self.0 * rhs)
-	}
-}
+	// Implement multiplication of time by a coefficient.
+	impl ops::Mul<f64> for Time {
+		type Output = Self;
 
-impl ops::Add for Seconds {
-	type Output = Self;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self(self.0 + rhs.0)
-	}
-}
-
-impl ops::Sub for Seconds {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self(self.0 - rhs.0)
-	}
-}
-
-/// A two-dimensional vector (not to be confused with `Vec<T>`).
-/// Supports basic vector math.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Vector2 {
-	x: f64,
-	y: f64,
-}
-
-impl Vector2 {
-	pub fn new(x: f64, y:f64) -> Self {
-		Self {
-			x: x,
-			y: y,
+		fn mul(self, rhs: f64) -> Self::Output {
+			Self(self.0 * rhs)
 		}
 	}
-}
 
-// Scalar multiplication of a vector.
-impl ops::Mul<f64> for Vector2 {
-	type Output = Self;
+	impl ops::Add for Time {
+		type Output = Self;
 
-	fn mul(self, rhs: f64) -> Self::Output {
-		Self {
-			x: self.x * rhs,
-			y: self.y * rhs,
+		fn add(self, rhs: Self) -> Self::Output {
+			Self(self.0 + rhs.0)
 		}
 	}
-}
-impl ops::Mul<Vector2> for f64 {
-	type Output = Vector2;
 
-	fn mul(self, rhs: Vector2) -> Self::Output {
-		Vector2 {
-			x: rhs.x * self,
-			y: rhs.y * self,
+	impl ops::Sub for Time {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self(self.0 - rhs.0)
 		}
 	}
-}
 
-// Scalar division of a vector.
-impl ops::Div<f64> for Vector2 {
-	type Output = Self;
+	/// A two-dimensional vector (not to be confused with `Vec<T>`).
+	/// Supports basic vector math.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Vector2 {
+		x: f64,
+		y: f64,
+	}
 
-	fn div(self, rhs: f64) -> Self::Output {
-		Self {
-			x: self.x / rhs,
-			y: self.y / rhs,
+	impl Vector2 {
+		pub fn new(x: f64, y:f64) -> Self {
+			Self {
+				x: x,
+				y: y,
+			}
 		}
 	}
-}
 
-// Vector addition.
-impl ops::Add for Vector2 {
-	type Output = Self;
+	// Scalar multiplication of a vector.
+	impl ops::Mul<f64> for Vector2 {
+		type Output = Self;
 
-	fn add(self, rhs: Self) -> Self::Output {
-		Self {
-			x: self.x + rhs.x,
-			y: self.y + rhs.y,
+		fn mul(self, rhs: f64) -> Self::Output {
+			Self {
+				x: self.x * rhs,
+				y: self.y * rhs,
+			}
 		}
 	}
-}
+	impl ops::Mul<Vector2> for f64 {
+		type Output = Vector2;
 
-// Vector subtraction.
-impl ops::Sub for Vector2 {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self {
-			x: self.x - rhs.x,
-			y: self.y - rhs.y,
+		fn mul(self, rhs: Vector2) -> Self::Output {
+			Vector2 {
+				x: rhs.x * self,
+				y: rhs.y * self,
+			}
 		}
 	}
-}
 
-/// Mass.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Mass(f64);
+	// Scalar division of a vector.
+	impl ops::Div<f64> for Vector2 {
+		type Output = Self;
 
-impl Mass {
-	pub fn new(m: f64) -> Self {
-		if m <= 0.0 {
-			panic!("Mass must be positive.");
+		fn div(self, rhs: f64) -> Self::Output {
+			Self {
+				x: self.x / rhs,
+				y: self.y / rhs,
+			}
+		}
+	}
+
+	// Vector addition.
+	impl ops::Add for Vector2 {
+		type Output = Self;
+
+		fn add(self, rhs: Self) -> Self::Output {
+			Self {
+				x: self.x + rhs.x,
+				y: self.y + rhs.y,
+			}
+		}
+	}
+
+	// Vector subtraction.
+	impl ops::Sub for Vector2 {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self {
+				x: self.x - rhs.x,
+				y: self.y - rhs.y,
+			}
+		}
+	}
+
+	/// Mass.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Mass(f64);
+
+	impl Mass {
+		pub fn new(m: f64) -> Self {
+			if m <= 0.0 {
+				panic!("Mass must be positive.");
+			}
+
+			Self(m)
+		}
+	}
+
+	impl ops::Mul<Acceleration> for Mass {
+		type Output = Force;
+
+		fn mul(self, rhs: Acceleration) -> Self::Output {
+			Self::Output::new(
+				rhs.x() * self.0,
+				rhs.y() * self.0,
+			)
+		}
+	}
+
+	/// Position in space (displacement from the origin), displacement relative to
+	/// some starting location, or distance from some arbitrary position.
+	/// Wraps `Vector2` and provides functionality specific to displacement.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Displacement(Vector2);
+
+	impl Displacement {
+		pub fn new(x: f64, y: f64) -> Self {
+			Self(Vector2::new(x, y))
 		}
 
-		Self(m)
+		pub fn x(&self) -> f64 {
+			self.0.x
+		}
+
+		pub fn y(&self) -> f64 {
+			self.0.y
+		}
 	}
+
+	impl ops::Add for Displacement {
+		type Output = Self;
+
+		fn add(self, rhs: Self) -> Self::Output {
+			Self(self.0 + rhs.0)
+		}
+	}
+
+	impl ops::AddAssign for Displacement {
+		fn add_assign(&mut self, other: Self) {
+			*self = *self + other;
+		}
+	}
+
+	impl ops::Sub for Displacement {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self(self.0 - rhs.0)
+		}
+	}
+
+	impl ops::SubAssign for Displacement {
+		fn sub_assign(&mut self, other: Self) {
+			*self = *self + other;
+		}
+	}
+
+	/// Velocity.
+	/// Wraps `Vector2` and provides functionality specific to velocity.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Velocity(Vector2);
+
+	impl Velocity {
+		pub fn new(x: f64, y: f64) -> Self {
+			Self(Vector2::new(x, y))
+		}
+
+		pub fn x(&self) -> f64 {
+			self.0.x
+		}
+
+		pub fn y(&self) -> f64 {
+			self.0.y
+		}
+	}
+
+	// Multiplication of velocity by time.
+	impl ops::Mul<Time> for Velocity {
+		type Output = Displacement;
+
+		fn mul(self, rhs: Time) -> Self::Output {
+			Displacement(self.0 * rhs.0)
+		}
+	}
+	impl ops::Mul<Velocity> for Time {
+		type Output = Displacement;
+
+		fn mul(self, rhs: Velocity) -> Self::Output {
+			Displacement(self.0 * rhs.0)
+		}
+	}
+
+	impl ops::Add for Velocity {
+		type Output = Velocity;
+
+		fn add(self, rhs: Self) -> Self::Output {
+			Self(self.0 + rhs.0)
+		}
+	}
+
+	impl ops::AddAssign for Velocity {
+		fn add_assign(&mut self, other: Self) {
+			*self = *self + other;
+		}
+	}
+
+	impl ops::Sub for Velocity {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self(self.0 - rhs.0)
+		}
+	}
+
+	impl ops::SubAssign for Velocity {
+		fn sub_assign(&mut self, other: Self) {
+			*self = *self - other;
+		}
+	}
+
+	/// Acceleration.
+	/// Wraps `Vector2` and provides functionality specific to acceleration.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Acceleration(Vector2);
+
+	impl Acceleration {
+		pub fn new(x: f64, y: f64) -> Self {
+			Self(Vector2::new(x, y))
+		}
+
+		pub fn x(&self) -> f64 {
+			self.0.x
+		}
+
+		pub fn y(&self) -> f64 {
+			self.0.y
+		}
+	}
+
+	// Scalar multiplication of acceleration.
+	impl ops::Mul<f64> for Acceleration {
+		type Output = Self;
+
+		fn mul(self, rhs: f64) -> Self::Output {
+			Acceleration(self.0 * rhs)
+		}
+	}
+	impl ops::Mul<Acceleration> for f64 {
+		type Output = Acceleration;
+
+		fn mul(self, rhs: Acceleration) -> Self::Output {
+			Acceleration(rhs.0 * self)
+		}
+	}
+
+	// Multiplication of acceleration by time.
+	impl ops::Mul<Time> for Acceleration {
+		type Output = Velocity;
+
+		fn mul(self, rhs: Time) -> Self::Output {
+			Velocity(self.0 * rhs.0)
+		}
+	}
+	impl ops::Mul<Acceleration> for Time {
+		type Output = Velocity;
+
+		fn mul(self, rhs: Acceleration) -> Self::Output {
+			Velocity(self.0 * rhs.0)
+		}
+	}
+
+	impl ops::Add for Acceleration {
+		type Output = Acceleration;
+
+		fn add(self, rhs: Self) -> Self::Output {
+			Self(self.0 + rhs.0)
+		}
+	}
+
+	impl ops::Sub for Acceleration {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self(self.0 - rhs.0)
+		}
+	}
+
+	/// Force.
+	/// Wraps `Vector2` and provides functionality specific to forces.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Force(Vector2);
+
+	impl Force {
+		pub fn new(x: f64, y: f64) -> Self {
+			Self(Vector2::new(x, y))
+		}
+
+		pub fn x(&self) -> f64 {
+			self.0.x
+		}
+
+		pub fn y(&self) -> f64 {
+			self.0.y
+		}
+	}
+
+	// Force divided by mass.
+	impl ops::Div<Mass> for Force {
+		type Output = Acceleration;
+
+		fn div(self, rhs: Mass) -> Self::Output {
+			Acceleration::new(
+				self.x() / rhs.0,
+				self.y() / rhs.0,
+			)
+		}
+	}
+
+	impl ops::Add for Force {
+		type Output = Force;
+
+		fn add(self, rhs: Self) -> Self::Output {
+			Self(self.0 + rhs.0)
+		}
+	}
+
+	impl ops::Sub for Force {
+		type Output = Self;
+
+		fn sub(self, rhs: Self) -> Self::Output {
+			Self(self.0 - rhs.0)
+		}
+	}
+
+	/// A type representing a number of ticks.
+	#[derive(PartialEq)]
+	#[derive(Debug)]
+	#[derive(Clone, Copy)]
+	pub struct Ticks(u64);
+
 }
-
-impl ops::Mul<Acceleration> for Mass {
-	type Output = Force;
-
-	fn mul(self, rhs: Acceleration) -> Self::Output {
-        Self::Output::new(
-            rhs.x() * self.0,
-            rhs.y() * self.0,
-        )
-	}
-}
-
-/// Position in space (displacement from the origin), displacement relative to
-/// some starting location, or distance from some arbitrary position.
-/// Wraps `Vector2` and provides functionality specific to displacement.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Displacement(Vector2);
-
-impl Displacement {
-	pub fn new(x: f64, y: f64) -> Self {
-		Self(Vector2::new(x, y))
-	}
-
-	pub fn x(&self) -> f64 {
-		self.0.x
-	}
-
-	pub fn y(&self) -> f64 {
-		self.0.y
-	}
-}
-
-impl ops::Add for Displacement {
-	type Output = Self;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self(self.0 + rhs.0)
-	}
-}
-
-impl ops::AddAssign for Displacement {
-	fn add_assign(&mut self, other: Self) {
-		*self = *self + other;
-	}
-}
-
-impl ops::Sub for Displacement {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self(self.0 - rhs.0)
-	}
-}
-
-impl ops::SubAssign for Displacement {
-	fn sub_assign(&mut self, other: Self) {
-		*self = *self + other;
-	}
-}
-
-/// Velocity.
-/// Wraps `Vector2` and provides functionality specific to velocity.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Velocity(Vector2);
-
-impl Velocity {
-	pub fn new(x: f64, y: f64) -> Self {
-		Self(Vector2::new(x, y))
-	}
-
-	pub fn x(&self) -> f64 {
-		self.0.x
-	}
-
-	pub fn y(&self) -> f64 {
-		self.0.y
-	}
-}
-
-// Multiplication of velocity by time.
-impl ops::Mul<Seconds> for Velocity {
-	type Output = Displacement;
-
-	fn mul(self, rhs: Seconds) -> Self::Output {
-		Displacement(self.0 * rhs.0)
-	}
-}
-impl ops::Mul<Velocity> for Seconds {
-	type Output = Displacement;
-
-	fn mul(self, rhs: Velocity) -> Self::Output {
-		Displacement(self.0 * rhs.0)
-	}
-}
-
-impl ops::Add for Velocity {
-	type Output = Velocity;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self(self.0 + rhs.0)
-	}
-}
-
-impl ops::AddAssign for Velocity {
-	fn add_assign(&mut self, other: Self) {
-		*self = *self + other;
-	}
-}
-
-impl ops::Sub for Velocity {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self(self.0 - rhs.0)
-	}
-}
-
-impl ops::SubAssign for Velocity {
-	fn sub_assign(&mut self, other: Self) {
-		*self = *self - other;
-	}
-}
-
-/// Acceleration.
-/// Wraps `Vector2` and provides functionality specific to acceleration.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Acceleration(Vector2);
-
-impl Acceleration {
-	pub fn new(x: f64, y: f64) -> Self {
-		Self(Vector2::new(x, y))
-	}
-
-	pub fn x(&self) -> f64 {
-		self.0.x
-	}
-
-	pub fn y(&self) -> f64 {
-		self.0.y
-	}
-}
-
-// Scalar multiplication of acceleration.
-impl ops::Mul<f64> for Acceleration {
-	type Output = Self;
-
-	fn mul(self, rhs: f64) -> Self::Output {
-		Acceleration(self.0 * rhs)
-	}
-}
-impl ops::Mul<Acceleration> for f64 {
-	type Output = Acceleration;
-
-	fn mul(self, rhs: Acceleration) -> Self::Output {
-		Acceleration(rhs.0 * self)
-	}
-}
-
-// Multiplication of acceleration by time.
-impl ops::Mul<Seconds> for Acceleration {
-	type Output = Velocity;
-
-	fn mul(self, rhs: Seconds) -> Self::Output {
-		Velocity(self.0 * rhs.0)
-	}
-}
-impl ops::Mul<Acceleration> for Seconds {
-	type Output = Velocity;
-
-	fn mul(self, rhs: Acceleration) -> Self::Output {
-		Velocity(self.0 * rhs.0)
-	}
-}
-
-impl ops::Add for Acceleration {
-	type Output = Acceleration;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self(self.0 + rhs.0)
-	}
-}
-
-impl ops::Sub for Acceleration {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self(self.0 - rhs.0)
-	}
-}
-
-/// Force.
-/// Wraps `Vector2` and provides functionality specific to forces.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Force(Vector2);
-
-impl Force {
-	pub fn new(x: f64, y: f64) -> Self {
-		Self(Vector2::new(x, y))
-	}
-
-	pub fn x(&self) -> f64 {
-		self.0.x
-	}
-
-	pub fn y(&self) -> f64 {
-		self.0.y
-	}
-}
-
-// Force divided by mass.
-impl ops::Div<Mass> for Force {
-	type Output = Acceleration;
-
-	fn div(self, rhs: Mass) -> Self::Output {
-		Acceleration::new(
-			self.x() / rhs.0,
-			self.y() / rhs.0,
-		)
-	}
-}
-
-impl ops::Add for Force {
-	type Output = Force;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self(self.0 + rhs.0)
-	}
-}
-
-impl ops::Sub for Force {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self(self.0 - rhs.0)
-	}
-}
-
-/// A type representing a number of ticks.
-#[derive(PartialEq)]
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-pub struct Ticks(u64);

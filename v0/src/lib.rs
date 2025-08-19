@@ -97,13 +97,13 @@ mod tests {
     #[test]
     fn new_creates_simulation() {
         let simulation = Simulation::new(
-			Seconds(1.0),
+			Time(1.0),
 			None,
 			None,
 		);
 		assert_eq!(
 			simulation.tick_duration,
-			Seconds(1.0),
+			Time(1.0),
 			"Incorrect tick_duration.",
 		);
 		assert_eq!(
@@ -125,13 +125,13 @@ mod tests {
 		);
 
 		let simulation = Simulation::new(
-			Seconds(1.0),
+			Time(1.0),
 			Some(1.0),
 			Some(dummy_function),
 		);
 		assert_eq!(
 			simulation.tick_duration,
-			Seconds(1.0),
+			Time(1.0),
 			"Incorrect tick_duration."
 		);
 		assert_eq!(
@@ -157,20 +157,20 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "tick_duration must be positive")]
 	fn simulation_new_panics_on_negative_tick_duration() {
-		let simulation = Simulation::new(Seconds(-1.0), None, None);
+		let simulation = Simulation::new(Time(-1.0), None, None);
 	}
 
 	#[test]
 	#[should_panic(expected = "simulation_speed must be positive")]
 	fn simulation_new_panics_on_negative_simulation_speed() {
-		let simulation = Simulation::new(Seconds(1.0), Some(-1.0), None);
+		let simulation = Simulation::new(Time(1.0), Some(-1.0), None);
 	}
 
 	// Verifies that create_particle() creates a particle with the correct
 	//	parameters and that it is added to the particles collection.
 	#[test]
 	fn simulation_creates_particle() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -221,7 +221,7 @@ mod tests {
 
 	#[test]
 	fn simulation_deletes_particle() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -244,7 +244,7 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_delete_particle_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.delete_particle(Uuid::new_v4());
 	}
 
@@ -252,7 +252,7 @@ mod tests {
 	//	collection of forces to simulate on the next tick.
 	#[test]
 	fn simulation_applies_force() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -275,13 +275,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_apply_foce_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.apply_force(Uuid::new_v4(), Force::new(1.0, 1.0));
 	}
 
 	#[test]
 	fn simulation_gets_mass() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -296,13 +296,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_mass_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.get_mass(Uuid::new_v4());
 	}
 	
 	#[test]
 	fn simulation_gets_position() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(-1.23, 123.0),
 			Mass::new(1.0),
@@ -317,13 +317,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_position_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.get_position(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_gets_velocity() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -344,13 +344,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_velocity_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.get_velocity(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_gets_field_info() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			Displacement::new(0.0, 0.0),
 			Mass::new(1.0),
@@ -375,13 +375,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_field_info_panics_on_missing_id() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		simulation.get_field_info(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_starts() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 
 		// Force the simulation to be paused, in case the constructor is broken.
 		simulation.is_paused = true;
@@ -393,7 +393,7 @@ mod tests {
 
 	#[test]
 	fn simulation_pauses() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 
 		// Force the simulation to be unpaused.
 		simulation.is_paused = false;
@@ -407,7 +407,7 @@ mod tests {
 
 	#[test]
 	fn simulation_step_increments_elapsed_ticks() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 
 		// Verify that the count of elapsed ticks increases by one (without
 		//	calling get_elapsed_ticks()).
@@ -433,7 +433,7 @@ mod tests {
 		//	by having on_tick create a particle and verifying that the particle
 		//	count changed as expected.
 		let simulation = Simulation::new(
-			Seconds(1.0),
+			Time(1.0),
 			None,
 			Some(create_particle)
 		);
@@ -447,14 +447,14 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "The simulation must be paused to call step().")]
 	fn simulation_step_panics_if_not_paused() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 		simulation.is_paused = false;
 		simulation.step();
 	}
 
 	#[test]
 	fn simulation_gets_elapsed_ticks() {
-		let mut simulation = Simulation::new(Seconds(1.0), None, None);
+		let mut simulation = Simulation::new(Time(1.0), None, None);
 		simulation.elapsed_ticks = Ticks(1);
 
 		let elapsed_ticks = simulation.get_elapsed_ticks();
@@ -464,13 +464,13 @@ mod tests {
 
 	#[test]
 	fn simulation_gets_elapsed_time() {
-		let mut simulation = Simulation::new(Seconds(0.001), None, None);
+		let mut simulation = Simulation::new(Time(0.001), None, None);
 		simulation.elapsed_ticks = Ticks(1000);
 
 		let elapsed_time = simulation.get_elapsed_time();
 
 		// elapsed time = (elapsed ticks) * (ticks duration)
-		assert_eq!(Seconds(1.0), elapsed_time);
+		assert_eq!(Time(1.0), elapsed_time);
 	}
 
 	struct DeletionField {
@@ -513,7 +513,7 @@ mod tests {
 	//	list of all particles within its radius when a tick (step()) occurs.
 	#[test]
 	fn simulation_field_affects_others() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: false,
@@ -565,7 +565,7 @@ mod tests {
 	//	particle's ID.
 	#[test]
 	fn simulation_field_affects_self() {
-		let simulation = Simulation::new(Seconds(1.0), None, None);
+		let simulation = Simulation::new(Time(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: true,
@@ -606,7 +606,7 @@ mod tests {
 	fn functional_single_force() {
 		let force = Force::new(1.0, 0.0);
 		let mass = Mass::new(1.0);
-		let tick_duration = Seconds(1.0);
+		let tick_duration = Time(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
 		let simulation = Simulation::new(tick_duration, None, None);
@@ -658,7 +658,7 @@ mod tests {
 		let f4 = Force::new(20.0, -1.0);
 		let net_force = f0 + f1 + f2 + f3 + f4;
 		let mass = Mass::new(1.0);
-		let tick_duration = Seconds(1.0);
+		let tick_duration = Time(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
 		let simulation = Simulation::new(tick_duration, None, None);
@@ -712,7 +712,7 @@ mod tests {
 		let m1 = Mass::new(100.01);
 		let m2 = Mass::new(20.0);
 		let m3 = Mass::new(200.0);
-		let tick_duration = Seconds(0.005);
+		let tick_duration = Time(0.005);
 		let mut expected_velocity;
 		let mut d0;
 		let mut d1;
@@ -839,10 +839,10 @@ mod tests {
 	fn functional_force_applied_with_several_tick_durations() {
 		let force = Force::new(5.0, 10.0);
 		let mass = Mass::new(1.0);
-		let tick_0 = Seconds(0.001);
-		let tick_1 = Seconds(0.0002);
-		let tick_2 = Seconds(0.00003);
-		let tick_3 = Seconds(0.000004);
+		let tick_0 = Time(0.001);
+		let tick_1 = Time(0.0002);
+		let tick_2 = Time(0.00003);
+		let tick_3 = Time(0.000004);
 		let mut expected_velocity;
 		let mut d0;
 		let mut d1;
@@ -989,9 +989,9 @@ mod tests {
 	}
 
 	// TODO: Should probably treat `error` as a percent.
-	fn seconds_are_almost_equal(
-		t1: Seconds,
-		t2: Seconds,
+	fn times_are_almost_equal(
+		t1: Time,
+		t2: Time,
 		error: f64
 	) -> bool {
 		let diff = t1 - t2;
@@ -1008,7 +1008,7 @@ mod tests {
 	#[test]
 	fn functional_several_forces_over_several_seconds() {
 		let permissible_error = 0.0;
-		let tick_duration = Seconds(0.001);
+		let tick_duration = Time(0.001);
 		let initial_position = Displacement::new(0.0, 0.0);
 		let simulation = Simulation::new(tick_duration, None, None);
 		let mass = Mass::new(5.0);
@@ -1025,8 +1025,8 @@ mod tests {
 		let mut expected_position = initial_position;
 		let mut actual_position = initial_position;
 		let mut expected_velocity = Velocity::new(0.0, 0.0);
-		let mut elapsed_time = Seconds(0.0);
-		let mut time_since_last_round = Seconds(0.0);
+		let mut elapsed_time = Time(0.0);
+		let mut time_since_last_round = Time(0.0);
         let mut expected_acceleration;
 		for i in -1..2 {
 			for j in -1..2 {
@@ -1096,10 +1096,10 @@ mod tests {
 	#[test]
 	fn functional_trajectory() {
         let permissible_error = 0.0;
-        let tick_duration = Seconds(0.001);
+        let tick_duration = Time(0.001);
         let simulation = Simulation::new(tick_duration, None, None);
         let force = Force::new(250.0, 500.0);
-        let force_duration = Seconds(3.0);
+        let force_duration = Time(3.0);
         let mass = Mass::new(5.0);
         let mut expected_position = Displacement::new(0.0, 0.0);
         let mut actual_position = Displacement::new(0.0, 0.0);
@@ -1169,8 +1169,8 @@ mod tests {
         let v_yf = ((force / mass) * actual_force_duration).y();
         let t_1 = (-v_yf / g) + t_f;
         // Replace the math-friendly name with a programmer-friendly name and
-		//	convert it to the Seconds type.
-        let expected_time_to_peak = Seconds(t_1);
+		//	convert it to the Time type.
+        let expected_time_to_peak = Time(t_1);
 
         // Calculate the expected maximum height.
         // y_f = 0.5 * ((f_0y / m) + g) * t_f^2
@@ -1204,7 +1204,7 @@ mod tests {
 		let t_omega = t_1 + t_2;
         // Replace the math-friendly name with a programmer-friendly name and
 		//	change the type.
-		let expected_total_flight_time = Seconds(t_omega);
+		let expected_total_flight_time = Time(t_omega);
 
         // Calculate total distance the particle should travel (on the x-axis)
 		//	before falling past y = 0.
@@ -1220,11 +1220,11 @@ mod tests {
         // Step until the particle returns to y = 0, or until enough time has
         //  passed that we know it should have returned to y = 0.
 		let mut actual_peak = Displacement::new(-1.0, -1.0);
-		let mut actual_time_to_peak = Seconds(0.0);
+		let mut actual_time_to_peak = Time(0.0);
 		let mut actual_velocity;
         while actual_position.y() > 0.0
 			&& expected_total_flight_time >
-				simulation.get_elapsed_time() + Seconds(10.0) {
+				simulation.get_elapsed_time() + Time(10.0) {
 
             // As the particle coasts, we will assert that its position is
 			//	correct from one tick to the next, given its previous actual
@@ -1279,7 +1279,7 @@ mod tests {
 		//	when compared to the expected (calculated) time and position, within
 		//	permissible error.
 		assert!(
-			seconds_are_almost_equal(
+			times_are_almost_equal(
 				expected_time_to_peak,
 				actual_time_to_peak,
 				permissible_error,
@@ -1315,7 +1315,7 @@ mod tests {
 		//	expected/calculated time and position, within permissible error.
 		let actual_total_flight_time = simulation.get_elapsed_time();
 		assert!(
-			seconds_are_almost_equal(
+			times_are_almost_equal(
 				expected_total_flight_time,
 				actual_total_flight_time,
 				permissible_error,
@@ -1530,7 +1530,7 @@ impl Particle {
 pub struct Simulation {
 	// The number of simulated seconds that elapse in a single tick.
 	//	This is effectively the resolution of the simulation.
-	tick_duration: Seconds,
+	tick_duration: Time,
 	// A collection that owns all particles in the simulation.
 	particles: HashMap<Uuid, Particle>,
 	// The number of ticks that have passed so far.
@@ -1557,11 +1557,12 @@ impl Simulation {
 	/// Creates an instance of `Simulation`.
 	///
 	/// # Arguments
-	/// * `tick_duration` - The number of simulated seconds that elapse in a
+	/// * `tick_duration` - The amount of simulated time that elapses in a
 	///		single tick. Effectively the resolution of the simulation.
 	/// * `simulation_speed` - The speed at which the simulation will run,
 	///		resources permitting.
-	///		Units are (simulated seconds) / (real world second).
+	///		Units can be though of as, for eaxmple,
+	///		(simulated seconds) / (real world second).
 	///		If None is specified, the simulation will run as fast as possible.
 	/// * `on_tick` - A function that will be called by the simulation on each
 	///		tick. Takes the simulation itself as a parameter to allow the user
@@ -1571,7 +1572,7 @@ impl Simulation {
 	/// Panics if `tick_duration` or `simulation_speed` is less than or equal to
 	/// zero.
 	pub fn new(
-		tick_duration: Seconds,
+		tick_duration: Time,
 		simulation_speed: Option<f64>,
 		on_tick: Option<fn(Simulation)>,
 	) -> Self {
@@ -1588,7 +1589,7 @@ impl Simulation {
 		}
 	*/
 		Self {
-			tick_duration: Seconds(-1.0),
+			tick_duration: Time(-1.0),
 			particles: HashMap::new(),
 			elapsed_ticks: Ticks(11234124),
 			simulation_speed: Some(-1.0),
@@ -1725,9 +1726,9 @@ impl Simulation {
 		Ticks(0)
 	}
 
-	/// Returns the number of elapsed simulated seconds since the start of the
-	/// simulation.
-	pub fn get_elapsed_time(&self) -> Seconds {
-		Seconds(0.0)
+	/// Returns the returns the amount of simulated time (e.g., seconds) since
+	/// the start of the simulation.
+	pub fn get_elapsed_time(&self) -> Time {
+		Time(0.0)
 	}
 }
