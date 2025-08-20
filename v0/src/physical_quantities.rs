@@ -1,6 +1,3 @@
-use std::ops;
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -669,7 +666,8 @@ mod tests {
 	}
 }
 
-pub mod units_of_measure {
+pub mod physical_quantities {
+use std::ops;
 
 	// Using a tuple struct to wrap an f64 so the compiler treats Time as a
 	//	distinct type. This is the "newtype pattern."
