@@ -186,6 +186,22 @@ pub struct FieldInfo {
 	name: String,
 }
 
+impl FieldInfo {
+	pub fn new(
+		radius: f64,
+		affects_self: bool,
+		affects_others: bool,
+		name: String,
+	) -> Self {
+		Self {
+			radius: radius,
+			affects_self: affects_self,
+			affects_others: affects_others,
+			name: name,
+		}
+	}
+}
+
 // TODO: Should this (and probably other structs) actually be public? The
 //	Simulation's interface is written in a way that assumes none of this
 //	struct's fields will be directly accessible by the user.

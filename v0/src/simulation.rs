@@ -1479,12 +1479,12 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<simulation_objects::FieldInfo> {
-		vec!(simulation_objects::FieldInfo {
-			radius: 0.0,
-			affects_self: false,
-			affects_others: false,
-			name: String::from("William Beauregard Jefferschmidt IV"),
-		})
+		vec!(simulation_objects::FieldInfo::new (
+			0.0,
+			false,
+			false,
+			String::from("William Beauregard Jefferschmidt IV"),
+		))
 	}
 
 	/// Starts the simulation.
