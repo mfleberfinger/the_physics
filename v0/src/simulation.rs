@@ -1,3 +1,7 @@
+use crate::{physical_quantities, simulation_objects};
+use std::collections::HashMap;
+use uuid::Uuid;
+
 
 #[cfg(test)]
 mod tests {
@@ -34,18 +38,18 @@ mod tests {
     #[test]
     fn new_creates_simulation() {
         let simulation = Simulation::new(
-			Time(1.0),
+			physical_quantities::Time::new(1.0),
 			None,
 			None,
 		);
 		assert_eq!(
 			simulation.tick_duration,
-			Time(1.0),
+			physical_quantities::Time::new(1.0),
 			"Incorrect tick_duration.",
 		);
 		assert_eq!(
 			simulation.elapsed_ticks,
-			Ticks(0),
+			physical_quantities::Ticks::new(0),
 			"Incorrect elapsed_ticks."
 		);
 		assert!(
@@ -62,18 +66,18 @@ mod tests {
 		);
 
 		let simulation = Simulation::new(
-			Time(1.0),
+			physical_quantities::Time::new(1.0),
 			Some(1.0),
 			Some(dummy_function),
 		);
 		assert_eq!(
 			simulation.tick_duration,
-			Time(1.0),
+			physical_quantities::Time::new(1.0),
 			"Incorrect tick_duration."
 		);
 		assert_eq!(
 			simulation.elapsed_ticks,
-			Ticks(0),
+			physical_quantities::Ticks::new(0),
 			"Incorrect elapsed_ticks."
 		);
 		assert_eq!(
@@ -94,28 +98,28 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "tick_duration must be positive")]
 	fn simulation_new_panics_on_negative_tick_duration() {
-		let simulation = Simulation::new(Time(-1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(-1.0), None, None);
 	}
 
 	#[test]
 	#[should_panic(expected = "simulation_speed must be positive")]
 	fn simulation_new_panics_on_negative_simulation_speed() {
-		let simulation = Simulation::new(Time(1.0), Some(-1.0), None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), Some(-1.0), None);
 	}
 
 	// Verifies that create_particle() creates a particle with the correct
 	//	parameters and that it is added to the particles collection.
 	#[test]
 	fn simulation_creates_particle() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 		let particle_id_2 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
 				DummyField {
 					radius: 1.0,
@@ -140,15 +144,15 @@ mod tests {
 		let particle_2 = simulation.particles.get(&particle_id_2)
 			.expect("simulation.particles should contain particle_id_2");
 
-		assert_eq!(particle_1.position, Displacement::new(0.0, 0.0));
-		assert_eq!(particle_1.mass, Mass::new(1.0));
+		assert_eq!(particle_1.position, physical_quantities::Displacement::new(0.0, 0.0));
+		assert_eq!(particle_1.mass, physical_quantities::Mass::new(1.0));
 		assert!(
 			particle_1.fields.is_empty(),
 			"particle_1 should have no fields"
 		);
 
-		assert_eq!(particle_2.position, Displacement::new(0.0, 0.0));
-		assert_eq!(particle_2.mass, Mass::new(1.0));
+		assert_eq!(particle_2.position, physical_quantities::Displacement::new(0.0, 0.0));
+		assert_eq!(particle_2.mass, physical_quantities::Mass::new(1.0));
 		assert_eq!(
 			particle_2.fields.len(),
 			1,
@@ -158,10 +162,10 @@ mod tests {
 
 	#[test]
 	fn simulation_deletes_particle() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -181,7 +185,7 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_delete_particle_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.delete_particle(Uuid::new_v4());
 	}
 
@@ -189,14 +193,14 @@ mod tests {
 	//	collection of forces to simulate on the next tick.
 	#[test]
 	fn simulation_applies_force() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
-		simulation.apply_force(particle_id, Force::new(1.0, 1.0));
+		simulation.apply_force(particle_id, physical_quantities::Force::new(1.0, 1.0));
 		assert!(
 			simulation.applied_forces.contains_key(&particle_id),
 			"Applied forces should appear in the applied_forces collection.",
@@ -204,7 +208,7 @@ mod tests {
 
 		assert_eq!(
 			simulation.applied_forces[&particle_id][0],
-			Force::new(1.0, 1.0),
+			physical_quantities::Force::new(1.0, 1.0),
 			"The force in applied_forces is incorrect.",
 		);
 	}
@@ -212,85 +216,85 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_apply_foce_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
-		simulation.apply_force(Uuid::new_v4(), Force::new(1.0, 1.0));
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		simulation.apply_force(Uuid::new_v4(), physical_quantities::Force::new(1.0, 1.0));
 	}
 
 	#[test]
 	fn simulation_gets_mass() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
 		let mass = simulation.get_mass(particle_id);
 
-		assert_eq!(Mass::new(1.0), mass);
+		assert_eq!(physical_quantities::Mass::new(1.0), mass);
 	}
 
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_mass_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.get_mass(Uuid::new_v4());
 	}
 	
 	#[test]
 	fn simulation_gets_position() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(-1.23, 123.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(-1.23, 123.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
 		let position = simulation.get_position(particle_id);
 
-		assert_eq!(Displacement::new(-1.23, 123.0), position);
+		assert_eq!(physical_quantities::Displacement::new(-1.23, 123.0), position);
 	}
 
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_position_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.get_position(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_gets_velocity() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
 		// We have access to the simulation here, so just set the velocity. The
 		//	get_velocity method should just return Particle.velocity.
 		match simulation.particles.get_mut(&particle_id) {
-			Some(p) => p.velocity = Velocity::new(1.0, 1.0),
+			Some(p) => p.velocity = physical_quantities::Velocity::new(1.0, 1.0),
 			None => panic!("The created particle was not found!"),
 		};
 		let velocity = simulation.get_velocity(particle_id);
 
-		assert_eq!(Velocity::new(1.0, 1.0), velocity);
+		assert_eq!(physical_quantities::Velocity::new(1.0, 1.0), velocity);
 	}
 
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_velocity_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.get_velocity(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_gets_field_info() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
 				DummyField {
 					radius: 1.0,
@@ -312,13 +316,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_get_field_info_panics_on_missing_id() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.get_field_info(Uuid::new_v4());
 	}
 
 	#[test]
 	fn simulation_starts() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Force the simulation to be paused, in case the constructor is broken.
 		simulation.is_paused = true;
@@ -330,7 +334,7 @@ mod tests {
 
 	#[test]
 	fn simulation_pauses() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Force the simulation to be unpaused.
 		simulation.is_paused = false;
@@ -344,22 +348,22 @@ mod tests {
 
 	#[test]
 	fn simulation_step_increments_elapsed_ticks() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Verify that the count of elapsed ticks increases by one (without
 		//	calling get_elapsed_ticks()).
-		assert_eq!(Ticks(0), simulation.elapsed_ticks);
+		assert_eq!(physical_quantities::Ticks::new(0), simulation.elapsed_ticks);
 		simulation.step();
-		assert_eq!(Ticks(1), simulation.elapsed_ticks);
+		assert_eq!(physical_quantities::Ticks::new(1), simulation.elapsed_ticks);
 		simulation.step();
-		assert_eq!(Ticks(2), simulation.elapsed_ticks);
+		assert_eq!(physical_quantities::Ticks::new(2), simulation.elapsed_ticks);
 	}
 
 	// A trivial on_tick function for testing.
 	fn create_particle(simulation: Simulation) {
 		simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 	}
@@ -370,7 +374,7 @@ mod tests {
 		//	by having on_tick create a particle and verifying that the particle
 		//	count changed as expected.
 		let simulation = Simulation::new(
-			Time(1.0),
+			physical_quantities::Time::new(1.0),
 			None,
 			Some(create_particle)
 		);
@@ -384,30 +388,30 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "The simulation must be paused to call step().")]
 	fn simulation_step_panics_if_not_paused() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.is_paused = false;
 		simulation.step();
 	}
 
 	#[test]
 	fn simulation_gets_elapsed_ticks() {
-		let mut simulation = Simulation::new(Time(1.0), None, None);
-		simulation.elapsed_ticks = Ticks(1);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		simulation.elapsed_ticks = physical_quantities::Ticks::new(1);
 
 		let elapsed_ticks = simulation.get_elapsed_ticks();
 
-		assert_eq!(Ticks(1), elapsed_ticks);
+		assert_eq!(physical_quantities::Ticks::new(1), elapsed_ticks);
 	}
 
 	#[test]
 	fn simulation_gets_elapsed_time() {
-		let mut simulation = Simulation::new(Time(0.001), None, None);
-		simulation.elapsed_ticks = Ticks(1000);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(0.001), None, None);
+		simulation.elapsed_ticks = physical_quantities::Ticks::new(1000);
 
 		let elapsed_time = simulation.get_elapsed_time();
 
 		// elapsed time = (elapsed ticks) * (ticks duration)
-		assert_eq!(Time(1.0), elapsed_time);
+		assert_eq!(physical_quantities::Time::new(1.0), elapsed_time);
 	}
 
 	struct DeletionField {
@@ -417,11 +421,11 @@ mod tests {
 		name: String,
 	}
 
-	impl Field for DeletionField {
+	impl simulation_objects::Field for DeletionField {
 		fn effect(
 			&self,
 			simulation: &Simulation,
-			position: Displacement,
+			position: physical_quantities::Displacement,
 			particle_ids: Vec<Uuid>
 		) {
 			for p in particle_ids {
@@ -450,7 +454,7 @@ mod tests {
 	//	list of all particles within its radius when a tick (step()) occurs.
 	#[test]
 	fn simulation_field_affects_others() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: false,
@@ -458,23 +462,23 @@ mod tests {
 			name: String::from("The Destructor"),
 		};
 		let destroyer = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(field)),
 		);
 		let victim_1 = simulation.create_particle(
-			Displacement::new(1.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(1.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 		let victim_2 = simulation.create_particle(
-			Displacement::new(0.0, 1.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 1.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 		let survivor = simulation.create_particle(
-			Displacement::new(10.1, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(10.1, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -502,7 +506,7 @@ mod tests {
 	//	particle's ID.
 	#[test]
 	fn simulation_field_affects_self() {
-		let simulation = Simulation::new(Time(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: true,
@@ -510,13 +514,13 @@ mod tests {
 			name: String::from("Self Destructor"),
 		};
 		let suicide_particle = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(field)),
 		);
 		let survivor = simulation.create_particle(
-			Displacement::new(1.0, 0.0),
-			Mass::new(1.0),
+			physical_quantities::Displacement::new(1.0, 0.0),
+			physical_quantities::Mass::new(1.0),
 			Vec::new(),
 		);
 
@@ -541,14 +545,14 @@ mod tests {
 	//	and that a velocity actually causes the expected displacement.
 	#[test]
 	fn functional_single_force() {
-		let force = Force::new(1.0, 0.0);
-		let mass = Mass::new(1.0);
-		let tick_duration = Time(1.0);
+		let force = physical_quantities::Force::new(1.0, 0.0);
+		let mass = physical_quantities::Mass::new(1.0);
+		let tick_duration = physical_quantities::Time::new(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
 		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
@@ -588,19 +592,19 @@ mod tests {
 	//	reacts appropriately to the vector sum of the forces.
 	#[test]
 	fn functional_sum_of_several_forces() {
-		let f0 = Force::new(1.0, 1.0);
-		let f1 = Force::new(10.0, 10.0);
-		let f2 = Force::new(-2.0, -1.0);
-		let f3 = Force::new(-10.0, -4.0);
-		let f4 = Force::new(20.0, -1.0);
+		let f0 = physical_quantities::Force::new(1.0, 1.0);
+		let f1 = physical_quantities::Force::new(10.0, 10.0);
+		let f2 = physical_quantities::Force::new(-2.0, -1.0);
+		let f3 = physical_quantities::Force::new(-10.0, -4.0);
+		let f4 = physical_quantities::Force::new(20.0, -1.0);
 		let net_force = f0 + f1 + f2 + f3 + f4;
-		let mass = Mass::new(1.0);
-		let tick_duration = Time(1.0);
+		let mass = physical_quantities::Mass::new(1.0);
+		let tick_duration = physical_quantities::Time::new(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
 		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
@@ -644,12 +648,12 @@ mod tests {
 	//	the particles move appropriately.
 	#[test]
 	fn functional_force_applied_to_several_masses() {
-		let force = Force::new(25.123, 50.5);
-		let m0 = Mass::new(10.1);
-		let m1 = Mass::new(100.01);
-		let m2 = Mass::new(20.0);
-		let m3 = Mass::new(200.0);
-		let tick_duration = Time(0.005);
+		let force = physical_quantities::Force::new(25.123, 50.5);
+		let m0 = physical_quantities::Mass::new(10.1);
+		let m1 = physical_quantities::Mass::new(100.01);
+		let m2 = physical_quantities::Mass::new(20.0);
+		let m3 = physical_quantities::Mass::new(200.0);
+		let tick_duration = physical_quantities::Time::new(0.005);
 		let mut expected_velocity;
 		let mut d0;
 		let mut d1;
@@ -657,22 +661,22 @@ mod tests {
 		let mut d3;
 		let simulation = Simulation::new(tick_duration, None, None);
 		let p_id_0 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			m0,
 			vec!(),
 		);
 		let p_id_1 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			m1,
 			vec!(),
 		);
 		let p_id_2 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			m2,
 			vec!(),
 		);
 		let p_id_3 = simulation.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			m3,
 			vec!(),
 		);
@@ -774,12 +778,12 @@ mod tests {
 	//	tick_durations. Verify that the particles move appropriately.
 	#[test]
 	fn functional_force_applied_with_several_tick_durations() {
-		let force = Force::new(5.0, 10.0);
-		let mass = Mass::new(1.0);
-		let tick_0 = Time(0.001);
-		let tick_1 = Time(0.0002);
-		let tick_2 = Time(0.00003);
-		let tick_3 = Time(0.000004);
+		let force = physical_quantities::Force::new(5.0, 10.0);
+		let mass = physical_quantities::Mass::new(1.0);
+		let tick_0 = physical_quantities::Time::new(0.001);
+		let tick_1 = physical_quantities::Time::new(0.0002);
+		let tick_2 = physical_quantities::Time::new(0.00003);
+		let tick_3 = physical_quantities::Time::new(0.000004);
 		let mut expected_velocity;
 		let mut d0;
 		let mut d1;
@@ -790,22 +794,22 @@ mod tests {
 		let s2 = Simulation::new(tick_2, None, None);
 		let s3 = Simulation::new(tick_3, None, None);
 		let p_id_0 = s0.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
 		let p_id_1 = s1.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
 		let p_id_2 = s2.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
 		let p_id_3 = s3.create_particle(
-			Displacement::new(0.0, 0.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
 			mass,
 			vec!(),
 		);
@@ -907,8 +911,8 @@ mod tests {
 
 	// TODO: Should probably treat `error` as a percent.
 	fn displacements_are_almost_equal(
-		d1: Displacement,
-		d2: Displacement,
+		d1: physical_quantities::Displacement,
+		d2: physical_quantities::Displacement,
 		error: f64
 	) -> bool {
 		let diff = d1 - d2;
@@ -917,8 +921,8 @@ mod tests {
 
 	// TODO: Should probably treat `error` as a percent.
 	fn velocities_are_almost_equal(
-		v1: Velocity,
-		v2: Velocity,
+		v1: physical_quantities::Velocity,
+		v2: physical_quantities::Velocity,
 		error: f64
 	) -> bool {
 		let diff = v1 - v2;
@@ -927,8 +931,8 @@ mod tests {
 
 	// TODO: Should probably treat `error` as a percent.
 	fn times_are_almost_equal(
-		t1: Time,
-		t2: Time,
+		t1: physical_quantities::Time,
+		t2: physical_quantities::Time,
 		error: f64
 	) -> bool {
 		let diff = t1 - t2;
@@ -945,10 +949,10 @@ mod tests {
 	#[test]
 	fn functional_several_forces_over_several_seconds() {
 		let permissible_error = 0.0;
-		let tick_duration = Time(0.001);
-		let initial_position = Displacement::new(0.0, 0.0);
+		let tick_duration = physical_quantities::Time::new(0.001);
+		let initial_position = physical_quantities::Displacement::new(0.0, 0.0);
 		let simulation = Simulation::new(tick_duration, None, None);
-		let mass = Mass::new(5.0);
+		let mass = physical_quantities::Mass::new(5.0);
 		let particle_id = simulation.create_particle(
 			initial_position,
 			mass,
@@ -961,13 +965,13 @@ mod tests {
 		let mut force;
 		let mut expected_position = initial_position;
 		let mut actual_position = initial_position;
-		let mut expected_velocity = Velocity::new(0.0, 0.0);
-		let mut elapsed_time = Time(0.0);
-		let mut time_since_last_round = Time(0.0);
+		let mut expected_velocity = physical_quantities::Velocity::new(0.0, 0.0);
+		let mut elapsed_time = physical_quantities::Time::new(0.0);
+		let mut time_since_last_round = physical_quantities::Time::new(0.0);
         let mut expected_acceleration;
 		for i in -1..2 {
 			for j in -1..2 {
-				force = Force::new(10.0 * (i as f64), 5.0 * (j as f64));
+				force = physical_quantities::Force::new(10.0 * (i as f64), 5.0 * (j as f64));
 
 				// Run a second worth of ticks, applying the current force
 				//	the whole time.
@@ -1033,13 +1037,13 @@ mod tests {
 	#[test]
 	fn functional_trajectory() {
         let permissible_error = 0.0;
-        let tick_duration = Time(0.001);
+        let tick_duration = physical_quantities::Time::new(0.001);
         let simulation = Simulation::new(tick_duration, None, None);
-        let force = Force::new(250.0, 500.0);
-        let force_duration = Time(3.0);
-        let mass = Mass::new(5.0);
-        let mut expected_position = Displacement::new(0.0, 0.0);
-        let mut actual_position = Displacement::new(0.0, 0.0);
+        let force = physical_quantities::Force::new(250.0, 500.0);
+        let force_duration = physical_quantities::Time::new(3.0);
+        let mass = physical_quantities::Mass::new(5.0);
+        let mut expected_position = physical_quantities::Displacement::new(0.0, 0.0);
+        let mut actual_position = physical_quantities::Displacement::new(0.0, 0.0);
 		let g = -9.81;
 		let gravitational_acceleration = Acceleration::new(0.0, g);
         let gravity_field = SimpleSelfGravityField::new(
@@ -1107,7 +1111,7 @@ mod tests {
         let t_1 = (-v_yf / g) + t_f;
         // Replace the math-friendly name with a programmer-friendly name and
 		//	convert it to the Time type.
-        let expected_time_to_peak = Time(t_1);
+        let expected_time_to_peak = physical_quantities::Time::new(t_1);
 
         // Calculate the expected maximum height.
         // y_f = 0.5 * ((f_0y / m) + g) * t_f^2
@@ -1125,7 +1129,7 @@ mod tests {
 		// x_ymax is the x-position when the particle reaches its max height.
         let v_xf = ((force / mass) * actual_force_duration).x();
 		let x_ymax = v_xf * t_1;
-		let expected_peak = Displacement::new(x_ymax, y_max);
+		let expected_peak = physical_quantities::Displacement::new(x_ymax, y_max);
 
         // Calculate how long the particle should take to fall from its maximum
         //  height.
@@ -1141,7 +1145,7 @@ mod tests {
 		let t_omega = t_1 + t_2;
         // Replace the math-friendly name with a programmer-friendly name and
 		//	change the type.
-		let expected_total_flight_time = Time(t_omega);
+		let expected_total_flight_time = physical_quantities::Time::new(t_omega);
 
         // Calculate total distance the particle should travel (on the x-axis)
 		//	before falling past y = 0.
@@ -1151,17 +1155,17 @@ mod tests {
         // f_0x is the x-component of the force.
         let x_distance = 0.5 * (force.x() / mass.0) * t_f * t_f +
 			((force.x() / mass.0) * t_f) * (t_omega - t_f);
-		let expected_final_position = Displacement::new(x_distance, 0.0);
+		let expected_final_position = physical_quantities::Displacement::new(x_distance, 0.0);
 
 		// Coasting phase.
         // Step until the particle returns to y = 0, or until enough time has
         //  passed that we know it should have returned to y = 0.
-		let mut actual_peak = Displacement::new(-1.0, -1.0);
-		let mut actual_time_to_peak = Time(0.0);
+		let mut actual_peak = physical_quantities::Displacement::new(-1.0, -1.0);
+		let mut actual_time_to_peak = physical_quantities::Time::new(0.0);
 		let mut actual_velocity;
         while actual_position.y() > 0.0
 			&& expected_total_flight_time >
-				simulation.get_elapsed_time() + Time(10.0) {
+				simulation.get_elapsed_time() + physical_quantities::Time::new(10.0) {
 
             // As the particle coasts, we will assert that its position is
 			//	correct from one tick to the next, given its previous actual
@@ -1303,216 +1307,211 @@ mod tests {
 //	}
 }
 
-pub mod simulation {
-	use std::collections::HashMap;
-	use uuid::Uuid;
 
-	/// Owns all of the data that constitutes a physics simulation. Provides methods
-	/// for interacting with and running the simulation.
-	pub struct Simulation {
-		// The number of simulated seconds that elapse in a single tick.
-		//	This is effectively the resolution of the simulation.
-		tick_duration: Time,
-		// A collection that owns all particles in the simulation.
-		particles: HashMap<Uuid, Particle>,
-		// The number of ticks that have passed so far.
-		elapsed_ticks: Ticks,
-		// Speed at which the simulation will run, resources permitting. Units are
-		//	(simulated seconds) / (real world second). If None, run as fast as
-		//	possible.
+/// Owns all of the data that constitutes a physics simulation. Provides methods
+/// for interacting with and running the simulation.
+pub struct Simulation {
+	// The number of simulated seconds that elapse in a single tick.
+	//	This is effectively the resolution of the simulation.
+	tick_duration: physical_quantities::Time,
+	// A collection that owns all particles in the simulation.
+	particles: HashMap<Uuid, simulation_objects::Particle>,
+	// The number of ticks that have passed so far.
+	elapsed_ticks: physical_quantities::Ticks,
+	// Speed at which the simulation will run, resources permitting. Units are
+	//	(simulated seconds) / (real world second). If None, run as fast as
+	//	possible.
+	simulation_speed: Option<f64>,
+	// A function called on each tick. Allows user-defined logic to be driven
+	//	by the simulation.
+	on_tick: Option<fn()>,
+	// Holds forces, keyed by particle_id, to calculate on the next tick.
+	applied_forces: HashMap<Uuid, Vec<physical_quantities::Force>>,
+	is_paused: bool,
+}
+
+impl Simulation {
+	fn tick(&self) {
+		if !self.is_paused {
+			// Do stuff.
+		}
+	}
+
+	/// Creates an instance of `Simulation`.
+	///
+	/// # Arguments
+	/// * `tick_duration` - The amount of simulated time that elapses in a
+	///		single tick. Effectively the resolution of the simulation.
+	/// * `simulation_speed` - The speed at which the simulation will run,
+	///		resources permitting.
+	///		Units can be though of as, for eaxmple,
+	///		(simulated seconds) / (real world second).
+	///		If None is specified, the simulation will run as fast as possible.
+	/// * `on_tick` - A function that will be called by the simulation on each
+	///		tick. Takes the simulation itself as a parameter to allow the user
+	///		to write code that influences the simulation.
+	///
+	///	# Panics
+	/// Panics if `tick_duration` or `simulation_speed` is less than or equal to
+	/// zero.
+	pub fn new(
+		tick_duration: physical_quantities::Time,
 		simulation_speed: Option<f64>,
-		// A function called on each tick. Allows user-defined logic to be driven
-		//	by the simulation.
-		on_tick: Option<fn()>,
-		// Holds forces, keyed by particle_id, to calculate on the next tick.
-		applied_forces: HashMap<Uuid, Vec<Force>>,
-		is_paused: bool,
-	}
-
-	impl Simulation {
-		fn tick(&self) {
-			if !self.is_paused {
-				// Do stuff.
-			}
+		on_tick: Option<fn(Simulation)>,
+	) -> Self {
+	/* TODO: Uncomment this and delete the incorrect code below this.
+		// TODO: Remember to panic as described in the documentation comment.
+		Self {
+			tick_duration: tick_duration,
+			particles: HashMap::new(),
+			elapsed_ticks: physical_quantities::Ticks::new(0),
+			simulation_speed: simulation_speed,
+			on_tick: on_tick,
+			applied_forces: HashMap::new(),
+			is_paused: true,
 		}
-
-		/// Creates an instance of `Simulation`.
-		///
-		/// # Arguments
-		/// * `tick_duration` - The amount of simulated time that elapses in a
-		///		single tick. Effectively the resolution of the simulation.
-		/// * `simulation_speed` - The speed at which the simulation will run,
-		///		resources permitting.
-		///		Units can be though of as, for eaxmple,
-		///		(simulated seconds) / (real world second).
-		///		If None is specified, the simulation will run as fast as possible.
-		/// * `on_tick` - A function that will be called by the simulation on each
-		///		tick. Takes the simulation itself as a parameter to allow the user
-		///		to write code that influences the simulation.
-		///
-		///	# Panics
-		/// Panics if `tick_duration` or `simulation_speed` is less than or equal to
-		/// zero.
-		pub fn new(
-			tick_duration: Time,
-			simulation_speed: Option<f64>,
-			on_tick: Option<fn(Simulation)>,
-		) -> Self {
-		/* TODO: Uncomment this and delete the incorrect code below this.
-			// TODO: Remember to panic as described in the documentation comment.
-			Self {
-				tick_duration: tick_duration,
-				particles: HashMap::new(),
-				elapsed_ticks: Ticks(0),
-				simulation_speed: simulation_speed,
-				on_tick: on_tick,
-				applied_forces: HashMap::new(),
-				is_paused: true,
-			}
-		*/
-			Self {
-				tick_duration: Time(-1.0),
-				particles: HashMap::new(),
-				elapsed_ticks: Ticks(11234124),
-				simulation_speed: Some(-1.0),
-				on_tick: None,
-				applied_forces: HashMap::new(),
-				is_paused: false,
-			}
-		}
-
-
-		/// Creates a new particle and adds it to the simulation. Returns that
-		/// particle's unique ID.
-		///
-		/// # Arguments
-		/// * `position` - The particle's coordinates in space.
-		/// * `mass` - The particle's mass.
-		/// * `fields` - Fields to attach to the particle.
-		pub fn create_particle(
-			&self,
-			position: Displacement,
-			mass: Mass,
-			fields: Vec<Box<dyn Field>>,
-		) -> Uuid {
-			Uuid::new_v4()
-		}
-
-		/// Removes a particle from the simulation.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle to delete.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn delete_particle(&self, particle_id: Uuid) {
-		}
-
-		/// Applies a force to a specific particle for the duration of the next
-		/// tick.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle to which to apply a
-		/// 	force.
-		/// * `force` - The force vector to apply to the particle.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn apply_force(
-			&self,
-			particle_id: Uuid,
-			force: Force,
-		) {
-		}
-
-		/// Gets the mass of a specific particle.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle for which to retrieve
-		///		mass.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn get_mass(&self, particle_id: Uuid) -> Mass {
-			Mass::new(234234.0)
-		}
-
-		/// Gets the position (i.e., displacement from the origin) of a specific
-		/// particle.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle for which to retrieve
-		///		position.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn get_position(&self, particle_id: Uuid) -> Displacement {
-			Displacement::new(234.0, 2342.0)
-		}
-
-		/// Gets the velocity of a specific particle.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle for which to retrieve
-		///		velocity.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn get_velocity(&self, particle_id: Uuid) -> Velocity {
-			Velocity::new(23423.4, 234234.4)
-		}
-
-		/// Gets a collection containing information about all `Field`s attached to
-		///	a specific particle.
-		///
-		/// # Arguments
-		/// * `particle_id` - The unique ID of the particle for which to retrieve
-		///		field information.
-		///
-		/// # Panics
-		/// This method will panic if there is no particle identified by
-		/// 	`particle_id`.
-		pub fn get_field_info(&self, particle_id: Uuid) -> Vec<FieldInfo> {
-			vec!(FieldInfo {
-				radius: 0.0,
-				affects_self: false,
-				affects_others: false,
-				name: String::from("William Beauregard Jefferschmidt IV"),
-			})
-		}
-
-		/// Starts the simulation.
-		pub fn start(&self) {
-
-		}
-
-		/// Pauses the simulation.
-		pub fn pause(&self) {
-
-		}
-
-		/// While the simulation is paused, executes a single tick.
-		///
-		/// # Panics
-		/// This method will panic if the simulation is not paused.
-		pub fn step(&self) {
-		}
-
-		/// Returns the number of elapsed ticks since the start of the simulation.
-		pub fn get_elapsed_ticks(&self) -> Ticks {
-			Ticks(0)
-		}
-
-		/// Returns the returns the amount of simulated time (e.g., seconds) since
-		/// the start of the simulation.
-		pub fn get_elapsed_time(&self) -> Time {
-			Time(0.0)
+	*/
+		Self {
+			tick_duration: physical_quantities::Time::new(-1.0),
+			particles: HashMap::new(),
+			elapsed_ticks: physical_quantities::Ticks::new(11234124),
+			simulation_speed: Some(-1.0),
+			on_tick: None,
+			applied_forces: HashMap::new(),
+			is_paused: false,
 		}
 	}
 
+
+	/// Creates a new particle and adds it to the simulation. Returns that
+	/// particle's unique ID.
+	///
+	/// # Arguments
+	/// * `position` - The particle's coordinates in space.
+	/// * `mass` - The particle's mass.
+	/// * `fields` - Fields to attach to the particle.
+	pub fn create_particle(
+		&self,
+		position: physical_quantities::Displacement,
+		mass: physical_quantities::Mass,
+		fields: Vec<Box<dyn simulation_objects::Field>>,
+	) -> Uuid {
+		Uuid::new_v4()
+	}
+
+	/// Removes a particle from the simulation.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle to delete.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn delete_particle(&self, particle_id: Uuid) {
+	}
+
+	/// Applies a force to a specific particle for the duration of the next
+	/// tick.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle to which to apply a
+	/// 	force.
+	/// * `force` - The force vector to apply to the particle.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn apply_force(
+		&self,
+		particle_id: Uuid,
+		force: physical_quantities::Force,
+	) {
+	}
+
+	/// Gets the mass of a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		mass.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_mass(&self, particle_id: Uuid) -> physical_quantities::Mass {
+		physical_quantities::Mass::new(234234.0)
+	}
+
+	/// Gets the position (i.e., displacement from the origin) of a specific
+	/// particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		position.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_position(&self, particle_id: Uuid) -> physical_quantities::Displacement {
+		physical_quantities::Displacement::new(234.0, 2342.0)
+	}
+
+	/// Gets the velocity of a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		velocity.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_velocity(&self, particle_id: Uuid) -> physical_quantities::Velocity {
+		physical_quantities::Velocity::new(23423.4, 234234.4)
+	}
+
+	/// Gets a collection containing information about all `Field`s attached to
+	///	a specific particle.
+	///
+	/// # Arguments
+	/// * `particle_id` - The unique ID of the particle for which to retrieve
+	///		field information.
+	///
+	/// # Panics
+	/// This method will panic if there is no particle identified by
+	/// 	`particle_id`.
+	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<simulation_objects::FieldInfo> {
+		vec!(simulation_objects::FieldInfo {
+			radius: 0.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("William Beauregard Jefferschmidt IV"),
+		})
+	}
+
+	/// Starts the simulation.
+	pub fn start(&self) {
+
+	}
+
+	/// Pauses the simulation.
+	pub fn pause(&self) {
+
+	}
+
+	/// While the simulation is paused, executes a single tick.
+	///
+	/// # Panics
+	/// This method will panic if the simulation is not paused.
+	pub fn step(&self) {
+	}
+
+	/// Returns the number of elapsed ticks since the start of the simulation.
+	pub fn get_elapsed_ticks(&self) -> physical_quantities::Ticks {
+		physical_quantities::Ticks::new(0)
+	}
+
+	/// Returns the returns the amount of simulated time (e.g., seconds) since
+	/// the start of the simulation.
+	pub fn get_elapsed_time(&self) -> physical_quantities::Time {
+		physical_quantities::Time::new(0.0)
+	}
 }
