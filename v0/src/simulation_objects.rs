@@ -4,42 +4,8 @@ use uuid::Uuid;
 
 #[cfg(test)]
 mod tests {
+	extern crate test_utilities;
     use super::*;
-
-	struct DummyField {
-		radius: f64,
-		affects_self: bool,
-		affects_others: bool,
-		name: String,
-	}
-
-	impl Field for DummyField {
-		fn effect(
-			&self,
-			simulation: &simulation::Simulation,
-			position: physical_quantities::Displacement,
-			particle_ids: Vec<Uuid>
-		) {
-			// Does nothing.
-		}
-
-		fn get_radius(&self) -> f64 {
-			self.radius
-		}
-
-		fn affects_self(&self) -> bool {
-			self.affects_self
-		}
-
-		fn affects_others(&self) -> bool {
-			self.affects_others
-		}
-
-		fn get_name(&self) -> &String {
-			&self.name
-		}
-	}
-
 
 	/********************* Particle ********************/
 
@@ -50,7 +16,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Velocity::new(0.0, 0.0),
 			vec!(Box::new(
-				DummyField {
+				test_utilities::DummyField {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,

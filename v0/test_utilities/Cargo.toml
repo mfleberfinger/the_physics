@@ -1,11 +1,8 @@
 [package]
-name = "v0"
+name = "test_utilities"
 version = "0.1.0"
-resolver = "2"
 edition = "2024"
 
 [dependencies]
+v0 = { path = ".." }
 uuid = { version = "1.17.0", features = ["v4"] }
-
-[dev-dependencies]
-test_utilities = { path = "test_utilities" }
