@@ -97,7 +97,7 @@ impl SimpleSelfGravityField {
 	/// # Arguments
 	/// * `acceleration` - The acceleration due to gravity, "little 'g'."
 	/// * `name` - The field name. Defaults to "SimpleSelfGravityField" if None.
-	fn new(acceleration: physical_quantities::Acceleration, name: Option<String>)
+	pub fn new(acceleration: physical_quantities::Acceleration, name: Option<String>)
 		-> SimpleSelfGravityField
 	{
 		let field_name = match name {
@@ -166,6 +166,22 @@ impl FieldInfo {
 			name: name,
 		}
 	}
+
+	pub fn get_radius(&self) -> f64 {
+		self.radius
+	}
+
+	pub fn get_affects_self(&self) -> bool {
+		self.affects_self
+	}
+
+	pub fn get_affects_others(&self) -> bool {
+		self.affects_others
+	}
+
+	pub fn get_name(&self) -> &String {
+		&self.name
+	}
 }
 
 // TODO: Should this (and probably other structs) actually be public? The
@@ -199,5 +215,21 @@ impl Particle {
 			fields: Vec::new(),
 			id: Uuid::new_v4(),
 		}
+	}
+
+	pub fn get_mass(&self) -> physical_quantities::Mass {
+		self.mass
+	}
+
+	pub fn get_position(&self) -> physical_quantities::Displacement {
+		self.position
+	}
+
+	pub fn get_velocity(&self) -> physical_quantities::Velocity {
+		self.velocity
+	}
+
+	pub fn get_id(&self) -> Uuid {
+		self.id
 	}
 }

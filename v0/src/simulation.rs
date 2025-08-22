@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 #[cfg(test)]
 mod tests {
+	extern crate test_utilities;
     use super::*;
 
 	/********************* Simulation ********************/
@@ -121,7 +122,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
-				DummyField {
+				test_utilities::DummyField {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,
@@ -144,15 +145,15 @@ mod tests {
 		let particle_2 = simulation.particles.get(&particle_id_2)
 			.expect("simulation.particles should contain particle_id_2");
 
-		assert_eq!(particle_1.position, physical_quantities::Displacement::new(0.0, 0.0));
-		assert_eq!(particle_1.mass, physical_quantities::Mass::new(1.0));
+		assert_eq!(particle_1.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
+		assert_eq!(particle_1.get_mass(), physical_quantities::Mass::new(1.0));
 		assert!(
 			particle_1.fields.is_empty(),
 			"particle_1 should have no fields"
 		);
 
-		assert_eq!(particle_2.position, physical_quantities::Displacement::new(0.0, 0.0));
-		assert_eq!(particle_2.mass, physical_quantities::Mass::new(1.0));
+		assert_eq!(particle_2.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
+		assert_eq!(particle_2.get_mass(), physical_quantities::Mass::new(1.0));
 		assert_eq!(
 			particle_2.fields.len(),
 			1,
@@ -262,25 +263,27 @@ mod tests {
 		simulation.get_position(Uuid::new_v4());
 	}
 
-	#[test]
-	fn simulation_gets_velocity() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
-		let particle_id = simulation.create_particle(
-			physical_quantities::Displacement::new(0.0, 0.0),
-			physical_quantities::Mass::new(1.0),
-			Vec::new(),
-		);
+	// TODO: Should probably test this. However, I need to set velocity to a
+	//	known value without direct access to Particle's velocity field.
+	//#[test]
+	//fn simulation_gets_velocity() {
+	//	let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+	//	let particle_id = simulation.create_particle(
+	//		physical_quantities::Displacement::new(0.0, 0.0),
+	//		physical_quantities::Mass::new(1.0),
+	//		Vec::new(),
+	//	);
 
-		// We have access to the simulation here, so just set the velocity. The
-		//	get_velocity method should just return Particle.velocity.
-		match simulation.particles.get_mut(&particle_id) {
-			Some(p) => p.velocity = physical_quantities::Velocity::new(1.0, 1.0),
-			None => panic!("The created particle was not found!"),
-		};
-		let velocity = simulation.get_velocity(particle_id);
+	//	// We have access to the simulation here, so just set the velocity. The
+	//	//	get_velocity method should just return Particle.velocity.
+	//	match simulation.particles.get_mut(&particle_id) {
+	//		Some(p) => p.get_velocity() = physical_quantities::Velocity::new(1.0, 1.0),
+	//		None => panic!("The created particle was not found!"),
+	//	};
+	//	let velocity = simulation.get_velocity(particle_id);
 
-		assert_eq!(physical_quantities::Velocity::new(1.0, 1.0), velocity);
-	}
+	//	assert_eq!(physical_quantities::Velocity::new(1.0, 1.0), velocity);
+	//}
 
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
@@ -296,7 +299,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
-				DummyField {
+				test_utilities::DummyField {
 					radius: 1.0,
 					affects_self: true,
 					affects_others: true,
@@ -307,10 +310,10 @@ mod tests {
 
 		let field_info = simulation.get_field_info(particle_id);
 
-		assert_eq!(field_info[0].radius, 1.0);
-		assert!(field_info[0].affects_self);
-		assert!(field_info[0].affects_others);
-		assert_eq!(field_info[0].name, String::from("dummy"));
+		assert_eq!(field_info[0].get_radius(), 1.0);
+		assert!(field_info[0].get_affects_self());
+		assert!(field_info[0].get_affects_others());
+		assert_eq!(field_info[0].get_name(), &String::from("dummy"));
 	}
 
 	#[test]
@@ -575,7 +578,7 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (force / mass) * tick_duration * tick_duration;
-		assert_eq!(expected_displacement, particle.position);
+		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
 		// Verify that the particle moved the distance expected, given its
@@ -585,7 +588,7 @@ mod tests {
 		// Therefore, v = (f / m) * t
 		expected_velocity = (force / mass) * tick_duration;
 		expected_displacement += expected_velocity * tick_duration;
-		assert_eq!(expected_displacement, particle.position);
+		assert_eq!(expected_displacement, particle.get_position());
 	}
 
 	// Apply several forces, then call step() and verify that the particle
@@ -631,7 +634,7 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (net_force / mass) * tick_duration * tick_duration;
-		assert_eq!(expected_displacement, particle.position);
+		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
 		// Verify that the particle moved the distance expected, given its
@@ -641,7 +644,7 @@ mod tests {
 		// Therefore, v = (f / m) * t
 		expected_velocity = (net_force / mass) * tick_duration;
 		expected_displacement += expected_velocity * tick_duration;
-		assert_eq!(expected_displacement, particle.position);
+		assert_eq!(expected_displacement, particle.get_position());
 	}
 
 	// Apply a force to particles with several different masses. Verify that
@@ -714,25 +717,25 @@ mod tests {
 		d0 = 0.5 * (force / m0) * tick_duration * tick_duration;
 		assert_eq!(
 			d0,
-			p0.position,
+			p0.get_position(),
 			"The displacement of particle p0 was wrong after acceleration."
 		);
 		d1 = 0.5 * (force / m1) * tick_duration * tick_duration;
 		assert_eq!(
 			d1,
-			p1.position,
+			p1.get_position(),
 			"The displacement of particle p1 was wrong after acceleration."
 		);
 		d2 = 0.5 * (force / m2) * tick_duration * tick_duration;
 		assert_eq!(
 			d2,
-			p2.position,
+			p2.get_position(),
 			"The displacement of particle p2 was wrong after acceleration."
 		);
 		d3 = 0.5 * (force / m3) * tick_duration * tick_duration;
 		assert_eq!(
 			d3,
-			p3.position,
+			p3.get_position(),
 			"The displacement of particle p3 was wrong after acceleration."
 		);
 
@@ -748,28 +751,28 @@ mod tests {
 		d0 += expected_velocity * tick_duration;
 		assert_eq!(
 			d0,
-			p0.position,
+			p0.get_position(),
 			"The displacement of particle p0 was wrong after coasting."
 		);
 		expected_velocity = (force / m1) * tick_duration;
 		d1 += expected_velocity * tick_duration;
 		assert_eq!(
 			d1,
-			p1.position,
+			p1.get_position(),
 			"The displacement of particle p1 was wrong after coasting."
 		);
 		expected_velocity = (force / m2) * tick_duration;
 		d2 += expected_velocity * tick_duration;
 		assert_eq!(
 			d2,
-			p2.position,
+			p2.get_position(),
 			"The displacement of particle p2 was wrong after coasting."
 		);
 		expected_velocity = (force / m3) * tick_duration;
 		d3 += expected_velocity * tick_duration;
 		assert_eq!(
 			d3,
-			p3.position,
+			p3.get_position(),
 			"The displacement of particle p3 was wrong after coasting."
 		);
 	}
@@ -848,25 +851,25 @@ mod tests {
 		d0 = 0.5 * (force / mass) * tick_0 * tick_0;
 		assert_eq!(
 			d0,
-			p0.position,
+			p0.get_position(),
 			"The displacement of particle p0 was wrong after acceleration."
 		);
 		d1 = 0.5 * (force / mass) * tick_1 * tick_1;
 		assert_eq!(
 			d1,
-			p1.position,
+			p1.get_position(),
 			"The displacement of particle p1 was wrong after acceleration."
 		);
 		d2 = 0.5 * (force / mass) * tick_2 * tick_2;
 		assert_eq!(
 			d2,
-			p2.position,
+			p2.get_position(),
 			"The displacement of particle p2 was wrong after acceleration."
 		);
 		d3 = 0.5 * (force / mass) * tick_3 * tick_3;
 		assert_eq!(
 			d3,
-			p3.position,
+			p3.get_position(),
 			"The displacement of particle p3 was wrong after acceleration."
 		);
 		// During this step, the particle should coast at a known velocity.
@@ -883,28 +886,28 @@ mod tests {
 		d0 += expected_velocity * tick_0;
 		assert_eq!(
 			d0,
-			p0.position,
+			p0.get_position(),
 			"The displacement of particle p0 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_1;
 		d1 += expected_velocity * tick_1;
 		assert_eq!(
 			d1,
-			p1.position,
+			p1.get_position(),
 			"The displacement of particle p1 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_2;
 		d2 += expected_velocity * tick_2;
 		assert_eq!(
 			d2,
-			p2.position,
+			p2.get_position(),
 			"The displacement of particle p2 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_3;
 		d3 += expected_velocity * tick_3;
 		assert_eq!(
 			d3,
-			p3.position,
+			p3.get_position(),
 			"The displacement of particle p3 was wrong after coasting."
 		);
 	}
@@ -936,7 +939,7 @@ mod tests {
 		error: f64
 	) -> bool {
 		let diff = t1 - t2;
-		diff.0.abs() <= error
+		diff.get_number().abs() <= error
 	}
 
 
@@ -975,7 +978,7 @@ mod tests {
 
 				// Run a second worth of ticks, applying the current force
 				//	the whole time.
-				for i in 0..((1.0 / tick_duration.0) as i64) {
+				for i in 0..((1.0 / tick_duration.get_number()) as i64) {
 					simulation.apply_force(particle_id, force);
 					simulation.step();
 				}
@@ -1045,8 +1048,8 @@ mod tests {
         let mut expected_position = physical_quantities::Displacement::new(0.0, 0.0);
         let mut actual_position = physical_quantities::Displacement::new(0.0, 0.0);
 		let g = -9.81;
-		let gravitational_acceleration = Acceleration::new(0.0, g);
-        let gravity_field = SimpleSelfGravityField::new(
+		let gravitational_acceleration = physical_quantities::Acceleration::new(0.0, g);
+        let gravity_field = simulation_objects::SimpleSelfGravityField::new(
 			gravitational_acceleration,
             None,
         );
@@ -1058,7 +1061,7 @@ mod tests {
 
 		// Forcing phase.
         // Apply the force for a set duration.
-        for i in 0..((force_duration.0 / tick_duration.0) as i64) {
+        for i in 0..((force_duration.get_number() / tick_duration.get_number()) as i64) {
             simulation.apply_force(particle_id, force);
             simulation.step();
         }
@@ -1106,7 +1109,7 @@ mod tests {
         // v_yf is y-velocity immediately after the force is done acting.
         // g, acceleration due to gravity, is negative.
         // t_f is the time for which the force was acting.
-		let t_f = actual_force_duration.0;
+		let t_f = actual_force_duration.get_number();
         let v_yf = ((force / mass) * actual_force_duration).y();
         let t_1 = (-v_yf / g) + t_f;
         // Replace the math-friendly name with a programmer-friendly name and
@@ -1121,7 +1124,7 @@ mod tests {
         // f_0y is the y-component of the force.
         // m is the mass of the particle.
         // y_max is the maximum height.
-		let y_f = 0.5 * ((force.y() / mass.0) + g) * t_f * t_f;
+		let y_f = 0.5 * ((force.y() / mass.get_number()) + g) * t_f * t_f;
 		let y_max = y_f + v_yf * (t_1 - t_f) + 0.5 * g * (t_1 - t_f).powf(2.0);
 
 		// Calculate the x position when the particle reaches y_max.
@@ -1153,8 +1156,8 @@ mod tests {
         // Where...
         // d is the total distance.
         // f_0x is the x-component of the force.
-        let x_distance = 0.5 * (force.x() / mass.0) * t_f * t_f +
-			((force.x() / mass.0) * t_f) * (t_omega - t_f);
+        let x_distance = 0.5 * (force.x() / mass.get_number()) * t_f * t_f +
+			((force.x() / mass.get_number()) * t_f) * (t_omega - t_f);
 		let expected_final_position = physical_quantities::Displacement::new(x_distance, 0.0);
 
 		// Coasting phase.

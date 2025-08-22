@@ -711,6 +711,10 @@ impl Time {
 	pub fn new(t: f64) -> Self {
 		Self(t)
 	}
+
+	pub fn get_number(&self) -> f64 {
+		self.0
+	}
 }
 
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
@@ -804,6 +808,10 @@ impl Mass {
 		}
 
 		Self(m)
+	}
+
+	pub fn get_number(&self) -> f64 {
+		self.0
 	}
 }
 
