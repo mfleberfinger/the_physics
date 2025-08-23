@@ -4,7 +4,6 @@ use uuid::Uuid;
 
 #[cfg(test)]
 mod tests {
-	extern crate test_utilities;
     use super::*;
 
 	/********************* Particle ********************/
@@ -16,7 +15,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Velocity::new(0.0, 0.0),
 			vec!(Box::new(
-				test_utilities::DummyField {
+				DummyField {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,
@@ -82,6 +81,44 @@ pub trait Field {
 	/// adhesion force to particles without the water field.
 	fn get_name(&self) -> &String;
 }
+
+#[cfg(test)]
+pub struct DummyField {
+	pub radius: f64,
+	pub affects_self: bool,
+	pub affects_others: bool,
+	pub name: String,
+}
+
+#[cfg(test)]
+impl Field for DummyField {
+	fn effect(
+		&self,
+		simulation: &simulation::Simulation,
+		position: physical_quantities::Displacement,
+		particle_ids: Vec<Uuid>
+	) {
+		// Does nothing.
+	}
+
+	fn get_radius(&self) -> f64 {
+		self.radius
+	}
+
+	fn affects_self(&self) -> bool {
+		self.affects_self
+	}
+
+	fn affects_others(&self) -> bool {
+		self.affects_others
+	}
+
+	fn get_name(&self) -> &String {
+		&self.name
+	}
+}
+
+
 
 /// Applies "gravity" to the particle to which the field is attached.
 /// Implemented as a force that pulls the object to which it's attached in the

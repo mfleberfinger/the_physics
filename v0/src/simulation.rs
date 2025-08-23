@@ -5,7 +5,6 @@ use uuid::Uuid;
 
 #[cfg(test)]
 mod tests {
-	extern crate test_utilities;
     use super::*;
 
 	/********************* Simulation ********************/
@@ -122,7 +121,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
-				test_utilities::DummyField {
+				simulation_objects::DummyField {
 					radius: 1.0,
 					affects_self: false,
 					affects_others: false,
@@ -299,7 +298,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			physical_quantities::Mass::new(1.0),
 			vec!(Box::new(
-				test_utilities::DummyField {
+				simulation_objects::DummyField {
 					radius: 1.0,
 					affects_self: true,
 					affects_others: true,
