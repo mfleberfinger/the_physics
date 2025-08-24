@@ -271,14 +271,14 @@ impl Particle {
 	}
 
 	pub fn get_field_info(&self) -> Vec<FieldInfo> {
-		let field_info_vec: Vec<FieldInfo> = Vec::new();
+		let mut field_info_vec: Vec<FieldInfo> = Vec::new();
 
 		for field in self.fields.iter() {
 			let field_info = FieldInfo::new(
 				field.get_radius(),
-				field.get_affects_self(),
-				field.get_affects_others(),
-				field.get_name(),
+				field.affects_self(),
+				field.affects_others(),
+				field.get_name().to_string(),
 			);
 			field_info_vec.push(field_info);
 		}

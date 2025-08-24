@@ -147,14 +147,14 @@ mod tests {
 		assert_eq!(particle_1.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
 		assert_eq!(particle_1.get_mass(), physical_quantities::Mass::new(1.0));
 		assert!(
-			particle_1.fields.is_empty(),
+			particle_1.get_field_info().is_empty(),
 			"particle_1 should have no fields"
 		);
 
 		assert_eq!(particle_2.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
 		assert_eq!(particle_2.get_mass(), physical_quantities::Mass::new(1.0));
 		assert_eq!(
-			particle_2.fields.len(),
+			particle_2.get_field_info().len(),
 			1,
 			"particle_2 should have a field"
 		);
