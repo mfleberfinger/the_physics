@@ -223,7 +223,10 @@ impl FieldInfo {
 
 // TODO: Should this (and probably other structs) actually be public? The
 //	Simulation's interface is written in a way that assumes none of this
-//	struct's fields will be directly accessible by the user.
+//	struct's fields will be directly accessible by the user. It does need to be
+//	public to be accessible from other modules (e.g., the simulation module).
+//	Maybe there's a way to make it accessible from modules within the library,
+//	but inaccessible to a user of the library, if desirable.
 /// Represents an infinitesimal massive particle. Stores the particle's mass,
 /// position, velocity, and attached `Field`s.
 pub struct Particle {

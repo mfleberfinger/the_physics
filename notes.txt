@@ -32,6 +32,8 @@ Development process (not necessarily in order)
 			methods under the "Interface", section, below, might be helpful for
 			coming up with more of the design.
 	- Implement the library. ******************************************************************************
+		+ Don't forget about the design notes below, particularly the simulation ***********
+			notes and the tick() method's notes.
 	- Write the demo.
 
 Testing
