@@ -434,7 +434,7 @@ mod tests {
 	impl simulation_objects::Field for DeletionField {
 		fn effect(
 			&self,
-			simulation: &Simulation,
+			simulation: &mut Simulation,
 			position: physical_quantities::Displacement,
 			particle_ids: Vec<Uuid>
 		) {
@@ -1420,7 +1420,7 @@ impl Simulation {
 		// If v is Some, it means we already had a particle with this particle's
 		//	ID. This should not happen.
 		if v.is_some() {
-			panic!("Created a particle with a duplicated key. This probably \
+			panic!("Created a particle with an existing key. This probably \
 					means there is a bug in the physics engine.");
 		}
 
@@ -1435,7 +1435,16 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
-	pub fn delete_particle(&self, particle_id: Uuid) {
+	pub fn delete_particle(&mut self, particle_id: Uuid) {
+		let removed = self.particles.remove(&particle_id);
+
+		if removed.is_none() {
+			panic!(
+				"Simulation.delete_particle(): \
+					the provided particle ID was not found: {}",
+				particle_id,
+			);
+		}
 	}
 
 	/// Applies a force to a specific particle for the duration of the next
