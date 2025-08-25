@@ -246,13 +246,11 @@ impl Particle {
 		velocity: physical_quantities::Velocity,
 		fields: Vec<Box<dyn Field>>,
 	) -> Self {
-		// TODO: Intentionally incorrect placeholder code. Write tests, then
-		//	replace.
 		Self {
-			mass: physical_quantities::Mass::new(2384928.0),
-			position: physical_quantities::Displacement::new(45345.0, 43434.0),
-			velocity: physical_quantities::Velocity::new(45345.0, 43434.0),
-			fields: Vec::new(),
+			mass: mass,
+			position: position,
+			velocity: velocity,
+			fields: fields,
 			id: Uuid::new_v4(),
 		}
 	}

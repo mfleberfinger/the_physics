@@ -9,7 +9,7 @@ mod tests {
 
 	/********************* Simulation ********************/
 
-	fn dummy_function(simulation: Simulation) {
+	fn dummy_function(simulation: &mut Simulation) {
 		// Will just test that on_tick is Some. Not testing it any further.:
         //
         //  Mutating a static variable is unsafe because multiple
@@ -1334,7 +1334,7 @@ pub struct Simulation {
 	simulation_speed: Option<f64>,
 	// A function called on each tick. Allows user-defined logic to be driven
 	//	by the simulation.
-	on_tick: Option<fn(Simulation)>,
+	on_tick: Option<fn(&mut Simulation)>,
 	// Holds forces, keyed by particle_id, to calculate on the next tick.
 	applied_forces: HashMap<Uuid, Vec<physical_quantities::Force>>,
 	is_paused: bool,
@@ -1367,7 +1367,7 @@ impl Simulation {
 	pub fn new(
 		tick_duration: physical_quantities::Time,
 		simulation_speed: Option<f64>,
-		on_tick: Option<fn(Simulation)>,
+		on_tick: Option<fn(&mut Simulation)>,
 	) -> Self {
 
 		if tick_duration <= physical_quantities::Time::new(0.0) {
