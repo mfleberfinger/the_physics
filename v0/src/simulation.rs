@@ -224,7 +224,7 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_apply_force_panics_on_missing_id() {
-		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.apply_force(Uuid::new_v4(), physical_quantities::Force::new(1.0, 1.0));
 	}
 
@@ -1459,10 +1459,25 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn apply_force(
-		&self,
+		&mut self,
 		particle_id: Uuid,
 		force: physical_quantities::Force,
 	) {
+		if (!self.particles.contains_key(&particle_id)) {
+			panic!(
+				"Simulation.apply_force(): \
+					the provided particle ID was not found: {}",
+				particle_id,
+			);
+		}
+
+		// Create a Vec of Forces if needed.
+		if (!self.applied_forces.contains_key(&particle_id)) {
+			self.applied_forces.insert(Vec::new());
+		}
+
+		// Log the new force so it can be applied on the next tick.
+		self.applied_forces(particle_id, force);
 	}
 
 	/// Gets the mass of a specific particle.
