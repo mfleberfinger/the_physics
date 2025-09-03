@@ -1463,7 +1463,7 @@ impl Simulation {
 		particle_id: Uuid,
 		force: physical_quantities::Force,
 	) {
-		if (!self.particles.contains_key(&particle_id)) {
+		if !self.particles.contains_key(&particle_id) {
 			panic!(
 				"Simulation.apply_force(): \
 					the provided particle ID was not found: {}",
@@ -1471,13 +1471,14 @@ impl Simulation {
 			);
 		}
 
-		// Create a Vec of Forces if needed.
-		if (!self.applied_forces.contains_key(&particle_id)) {
-			self.applied_forces.insert(Vec::new());
+		// Log the new force so it can be applied on the next tick, creating a
+		//	new Vec of Forces if needed.
+		match self.applied_forces.get_mut(&particle_id) {
+			Some(vec) => vec.push(force),
+			None => {
+				self.applied_forces.insert(particle_id, vec![force]);
+			},
 		}
-
-		// Log the new force so it can be applied on the next tick.
-		self.applied_forces(particle_id, force);
 	}
 
 	/// Gets the mass of a specific particle.
