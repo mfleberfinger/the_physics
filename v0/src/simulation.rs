@@ -566,7 +566,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particle = simulation.particles
+		simulation.particles
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -585,6 +585,9 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (force / mass) * tick_duration * tick_duration;
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle should still exist.");
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
@@ -618,7 +621,7 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particle = simulation.particles
+		simulation.particles
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -641,6 +644,9 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (net_force / mass) * tick_duration * tick_duration;
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle should still exist.");
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
@@ -690,16 +696,16 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let p0 = simulation.particles
+		simulation.particles
 			.get(&p_id_0)
 			.expect("The particle (p_id_0) that was just created should exist.");
-		let p1 = simulation.particles
+		simulation.particles
 			.get(&p_id_1)
 			.expect("The particle (p_id_1) that was just created should exist.");
-		let p2 = simulation.particles
+		simulation.particles
 			.get(&p_id_2)
 			.expect("The particle (p_id_2) that was just created should exist.");
-		let p3 = simulation.particles
+		simulation.particles
 			.get(&p_id_3)
 			.expect("The particle (p_id_3) that was just created should exist.");
 
@@ -712,6 +718,19 @@ mod tests {
 		// During this step, the particles should accelerate as the force is
 		//	simulated.
 		simulation.step();
+
+		let p0 = simulation.particles
+			.get(&p_id_0)
+			.expect("The particle (p_id_0) should still exist.");
+		let p1 = simulation.particles
+			.get(&p_id_1)
+			.expect("The particle (p_id_1) should still exist.");
+		let p2 = simulation.particles
+			.get(&p_id_2)
+			.expect("The particle (p_id_2) should still exist.");
+		let p3 = simulation.particles
+			.get(&p_id_3)
+			.expect("The particle (p_id_3) should still exist.");
 
 		// Verify that the particles moved the distance expected during their
 		//	acceleration, based on the particles' masses, force vector, and
@@ -823,16 +842,16 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let p0 = s0.particles
+		s0.particles
 			.get(&p_id_0)
 			.expect("The particle that was just created in s0 should exist.");
-		let p1 = s1.particles
+		s1.particles
 			.get(&p_id_1)
 			.expect("The particle that was just created in s1 should exist.");
-		let p2 = s2.particles
+		s2.particles
 			.get(&p_id_2)
 			.expect("The particle that was just created in s2 should exist.");
-		let p3 = s3.particles
+		s3.particles
 			.get(&p_id_3)
 			.expect("The particle that was just created in s3 should exist.");
 
@@ -847,6 +866,20 @@ mod tests {
 		s1.step();
 		s2.step();
 		s3.step();
+
+		let p0 = s0.particles
+			.get(&p_id_0)
+			.expect("The particle in s0 should still exist.");
+		let p1 = s1.particles
+			.get(&p_id_1)
+			.expect("The particle in s1 should still exist.");
+		let p2 = s2.particles
+			.get(&p_id_2)
+			.expect("The particle in s2 should still exist.");
+		let p3 = s3.particles
+			.get(&p_id_3)
+			.expect("The particle in s3 should still exist.");
+
 		// Verify that the particle moved the distance expected during its
 		//	acceleration, based on the particle's mass, force vector, and force
 		//	duration. The actual displacement should be exactly as calculated by
