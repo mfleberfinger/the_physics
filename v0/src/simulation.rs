@@ -989,6 +989,13 @@ mod tests {
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
+
+	// TODO: This started "passing" after implementing Simulation.get_position().
+	//	It should still fail. Is position always (0, 0)? Are we comparing some
+	//	position variable to itself instead of the actual position of a
+	//	particle? Something else?
+	//	It may be worth learning how to run this in a debugger to see exactly
+	//	what is happening.
 	#[test]
 	fn functional_several_forces_over_several_seconds() {
 		let permissible_error = 0.0;
@@ -1524,7 +1531,15 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_mass(&self, particle_id: Uuid) -> physical_quantities::Mass {
-		physical_quantities::Mass::new(234234.0)
+		match self.particles.get(&particle_id) {
+			Some(particle) => return particle.get_mass(),
+			None =>
+				panic!(
+					"Simulation.get_mass(): \
+						the provided particle ID was not found: {}",
+					particle_id,
+				),
+		}
 	}
 
 	/// Gets the position (i.e., displacement from the origin) of a specific
@@ -1538,7 +1553,15 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_position(&self, particle_id: Uuid) -> physical_quantities::Displacement {
-		physical_quantities::Displacement::new(234.0, 2342.0)
+		match self.particles.get(&particle_id) {
+			Some(particle) => return particle.get_position(),
+			None =>
+				panic!(
+					"Simulation.get_position(): \
+						the provided particle ID was not found: {}",
+					particle_id,
+				),
+		}
 	}
 
 	/// Gets the velocity of a specific particle.
