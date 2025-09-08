@@ -996,6 +996,20 @@ mod tests {
 	//	particle? Something else?
 	//	It may be worth learning how to run this in a debugger to see exactly
 	//	what is happening.
+	//	2025-09-08: Simulation.get_elapsed_time() currently will always return
+	//	0 seconds. If position never changes from 0 and elapsed time never
+	//	changes from 0, this will probably "pass" because no movement would be
+	//	expected if no time has elapsed. I probably don't need to worry about
+	//	changing the test if that's the case. If get_elapsed_time() is returning
+	//	the wrong value, its own unit tests should catch it. This test would
+	//	then beging failing when get_elapsed_time() is fixed.
+	//		- After implementing get_elapsed_time(), this still erroneously
+	//			passses. Need to examine further.
+	//			+ Simulation.step() is not implemented. The tick counter will ***********************
+	//				not increase when it is called. Therefore, no time is
+	//				elapsing. Do not attempt to debug the "funcitonal" tests
+	//				until everything is implemented and all of the actual unit
+	//				tests are passing.
 	#[test]
 	fn functional_several_forces_over_several_seconds() {
 		let permissible_error = 0.0;
@@ -1621,6 +1635,6 @@ impl Simulation {
 	/// Returns the returns the amount of simulated time (e.g., seconds) since
 	/// the start of the simulation.
 	pub fn get_elapsed_time(&self) -> physical_quantities::Time {
-		physical_quantities::Time::new(0.0)
+		self.tick_duration * self.elapsed_ticks.get_number() as f64
 	}
 }

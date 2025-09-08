@@ -68,6 +68,13 @@ mod tests {
         assert_eq!(Time(0.0), Time(-1.0) - Time(-1.0));
 	}
 
+	#[test]
+	fn time_gets_number() {
+		assert_eq!(Time(-1.0).get_number(), -1.0);
+		assert_eq!(Time(0.0).get_number(), 0.0);
+		assert_eq!(Time(1.0).get_number(), 1.0);
+	}
+
 	
 	/********************* Vector2 ********************/
 
@@ -667,6 +674,12 @@ mod tests {
 		assert_ne!(Ticks(1), Ticks(0));
 		assert_ne!(Ticks(0), Ticks(1));
 	}
+
+	#[test]
+	fn ticks_gets_number() {
+		assert_eq!(Ticks(0).get_number(), 0);
+		assert_eq!(Ticks(1).get_number(), 1);
+	}
 }
 
 
@@ -712,6 +725,7 @@ impl Time {
 		Self(t)
 	}
 
+	/// Gets the raw f64 value representing the number of time units.
 	pub fn get_number(&self) -> f64 {
 		self.0
 	}
@@ -1069,5 +1083,10 @@ pub struct Ticks(u64);
 impl Ticks {
 	pub fn new(t: u64) -> Self {
 		Self(t)
+	}
+
+	/// Gets the raw u64 value representing the number of ticks.
+	pub fn get_number(&self) -> u64 {
+		self.0
 	}
 }
