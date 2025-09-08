@@ -1397,7 +1397,7 @@ pub struct Simulation {
 impl Simulation {
 	fn tick(&self) {
 		if !self.is_paused {
-			// Do stuff.
+			// TODO: Do stuff.
 		}
 	}
 
@@ -1588,7 +1588,15 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_velocity(&self, particle_id: Uuid) -> physical_quantities::Velocity {
-		physical_quantities::Velocity::new(23423.4, 234234.4)
+		match self.particles.get(&particle_id) {
+			Some(particle) => return particle.get_velocity(),
+			None =>
+				panic!(
+					"Simulation.get_velocity(): \
+						the provided particle ID was not found: {}",
+					particle_id,
+				),
+		}
 	}
 
 	/// Gets a collection containing information about all `Field`s attached to
@@ -1602,22 +1610,25 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<simulation_objects::FieldInfo> {
-		vec!(simulation_objects::FieldInfo::new (
-			0.0,
-			false,
-			false,
-			String::from("William Beauregard Jefferschmidt IV"),
-		))
+		match self.particles.get(&particle_id) {
+			Some(particle) => return particle.get_field_info(),
+			None =>
+				panic!(
+					"Simulation.get_info(): \
+						the provided particle ID was not found: {}",
+					particle_id,
+				),
+		}
 	}
 
 	/// Starts the simulation.
-	pub fn start(&self) {
-
+	pub fn start(&mut self) {
+		self.is_paused = false;
 	}
 
 	/// Pauses the simulation.
-	pub fn pause(&self) {
-
+	pub fn pause(&mut self) {
+		self.is_paused = true;
 	}
 
 	/// While the simulation is paused, executes a single tick.
@@ -1625,11 +1636,13 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
 	pub fn step(&self) {
+		// TODO: Implement this. It should probably just call tick() after
+		//	verifying that the simulation is paused.
 	}
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
 	pub fn get_elapsed_ticks(&self) -> physical_quantities::Ticks {
-		physical_quantities::Ticks::new(0)
+		self.elapsed_ticks
 	}
 
 	/// Returns the returns the amount of simulated time (e.g., seconds) since
