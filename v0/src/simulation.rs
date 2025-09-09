@@ -383,7 +383,7 @@ mod tests {
 		// Verifies that the on_tick function pointer gets called. This is done
 		//	by having on_tick create a particle and verifying that the particle
 		//	count changed as expected.
-		let simulation = Simulation::new(
+		let mut simulation = Simulation::new(
 			physical_quantities::Time::new(1.0),
 			None,
 			Some(create_particle)
@@ -591,6 +591,11 @@ mod tests {
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
+
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle should still exist.");
+
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
 		// a = f / m
@@ -650,6 +655,11 @@ mod tests {
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
+
+		let particle = simulation.particles
+			.get(&particle_id)
+			.expect("The particle should still exist.");
+
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
 		// a = f / m
@@ -767,6 +777,19 @@ mod tests {
 
 		// During this step, the particles should coast at known velocities.
 		simulation.step();
+
+		let p0 = simulation.particles
+			.get(&p_id_0)
+			.expect("The particle (p_id_0) should still exist.");
+		let p1 = simulation.particles
+			.get(&p_id_1)
+			.expect("The particle (p_id_1) should still exist.");
+		let p2 = simulation.particles
+			.get(&p_id_2)
+			.expect("The particle (p_id_2) should still exist.");
+		let p3 = simulation.particles
+			.get(&p_id_3)
+			.expect("The particle (p_id_3) should still exist.");
 
 		// Verify that the particles moved the distance expected, given their
 		//	expected velocities.
@@ -917,6 +940,20 @@ mod tests {
 		s1.step();
 		s2.step();
 		s3.step();
+		
+		let p0 = s0.particles
+			.get(&p_id_0)
+			.expect("The particle in s0 should still exist.");
+		let p1 = s1.particles
+			.get(&p_id_1)
+			.expect("The particle in s1 should still exist.");
+		let p2 = s2.particles
+			.get(&p_id_2)
+			.expect("The particle in s2 should still exist.");
+		let p3 = s3.particles
+			.get(&p_id_3)
+			.expect("The particle in s3 should still exist.");
+
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
 		// a = f / m
@@ -1395,7 +1432,7 @@ pub struct Simulation {
 }
 
 impl Simulation {
-	fn tick(&self) {
+	fn tick(&mut self) {
 		if !self.is_paused {
 			// TODO: Do stuff.
 		}
@@ -1635,9 +1672,12 @@ impl Simulation {
 	///
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
-	pub fn step(&self) {
-		// TODO: Implement this. It should probably just call tick() after
-		//	verifying that the simulation is paused.
+	pub fn step(&mut self) {
+		if !self.is_paused {
+			panic!("The simulation must be paused to call step().");
+		}
+
+		self.tick();
 	}
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
