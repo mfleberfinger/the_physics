@@ -271,6 +271,36 @@ impl Particle {
 		self.id
 	}
 
+	// TODO: Directly setting physical quantities could be fun, but might cause
+	//	issues. Reconsider later.
+	//pub fn set_mass(&mut self, mass: physical_quantities::Mass) {
+	//	self.mass = mass;
+	//}
+
+	//pub fn set_position(&mut self, position: physical_quantities::Displacement) {
+	//	self.position = position;
+	//}
+
+	//pub fn set_velocity(&mut self, velocity: physical_quantities::Velocity) {
+	//	self.velocity = velocity;
+	//}
+
+	// Given an acceleration and an amount of time, set the particle's new
+	//	velocity.
+	pub fn accelerate(
+		&mut self,
+		acceleration: physical_quantities::Acceleration,
+		time: physical_quantities::Time
+	) {
+		self.velocity += acceleration * time;
+	}
+
+	// Given an amount of time, set the particle's new position based on its
+	//	velocity.
+	pub fn move(&mut self, time: physical_quantities::Time) {
+		self.position += self.velocity * time;
+	}
+
 	pub fn get_field_info(&self) -> Vec<FieldInfo> {
 		let mut field_info_vec: Vec<FieldInfo> = Vec::new();
 

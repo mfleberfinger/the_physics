@@ -1433,9 +1433,22 @@ pub struct Simulation {
 
 impl Simulation {
 	fn tick(&mut self) {
-		if !self.is_paused {
-			// TODO: Do stuff.
-		}
+		// Call the on_tick fn pointer.
+
+		// Apply field effects...
+
+		// Find every particle with a field.
+
+		// For each field, find all particles within that field and apply the
+		//	field's effect to each of those particles.
+
+		// For each particle, get the list of forces from applied_forces, add
+		//	them up, and calculate acceleration by dividing the sum by that
+		//	particle's mass. Calculate and set the new velocity:
+		// TODO: Remember to use Particle.accelerate().
+
+		// For each particle, change the particle's position, based on its
+		// TODO: Remember to use Particle.move().
 	}
 
 	/// Creates an instance of `Simulation`.
@@ -1661,11 +1674,13 @@ impl Simulation {
 	/// Starts the simulation.
 	pub fn start(&mut self) {
 		self.is_paused = false;
+		// TODO: Start some kind of timer to call tick() regularly.
 	}
 
 	/// Pauses the simulation.
 	pub fn pause(&mut self) {
 		self.is_paused = true;
+		// TODO: Stop whatever timer is calling tick().
 	}
 
 	/// While the simulation is paused, executes a single tick.
