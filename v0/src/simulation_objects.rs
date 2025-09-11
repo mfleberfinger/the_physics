@@ -58,8 +58,6 @@ pub trait Field {
 		particle_ids: Vec<Uuid>
 	);
 
-	// This is a method instead of a field because there is no way to specify
-	//	that a trait implementation must have a field.
 	/// Called by the simulation to get the field's radius.
 	fn get_radius(&self) -> f64;
 
@@ -271,6 +269,22 @@ impl Particle {
 		self.id
 	}
 
+	pub fn get_field_info(&self) -> Vec<FieldInfo> {
+		let mut field_info_vec: Vec<FieldInfo> = Vec::new();
+
+		for field in self.fields.iter() {
+			let field_info = FieldInfo::new(
+				field.get_radius(),
+				field.affects_self(),
+				field.affects_others(),
+				field.get_name().to_string(),
+			);
+			field_info_vec.push(field_info);
+		}
+
+		field_info_vec
+	}
+
 	// TODO: Directly setting physical quantities could be fun, but might cause
 	//	issues. Reconsider later.
 	//pub fn set_mass(&mut self, mass: physical_quantities::Mass) {
@@ -297,23 +311,7 @@ impl Particle {
 
 	// Given an amount of time, set the particle's new position based on its
 	//	velocity.
-	pub fn move(&mut self, time: physical_quantities::Time) {
+	pub fn coast(&mut self, time: physical_quantities::Time) {
 		self.position += self.velocity * time;
-	}
-
-	pub fn get_field_info(&self) -> Vec<FieldInfo> {
-		let mut field_info_vec: Vec<FieldInfo> = Vec::new();
-
-		for field in self.fields.iter() {
-			let field_info = FieldInfo::new(
-				field.get_radius(),
-				field.affects_self(),
-				field.affects_others(),
-				field.get_name().to_string(),
-			);
-			field_info_vec.push(field_info);
-		}
-
-		field_info_vec
 	}
 }

@@ -1433,14 +1433,59 @@ pub struct Simulation {
 
 impl Simulation {
 	fn tick(&mut self) {
-		// Call the on_tick fn pointer.
+		// Call the on_tick fn pointer, if it exists.
+		match self.on_tick {
+			Some(f) => f(self),
+			None => (),
+		}
 
 		// Apply field effects...
 
 		// Find every particle with a field.
+		let mut particles_with_fields = Vec::new();
+		for particle in self.particles.values() {
+			particles_with_fields.push(particle);
+		}
 
 		// For each field, find all particles within that field and apply the
 		//	field's effect to each of those particles.
+		// TODO: This is a naive way to find the particles. There are data
+		//	structures that encode spacial relationships and can be used to find
+		//	particles near each other more efficiently. Consider researching and
+		//	switching to one of those once everything else is working.
+		for field_owner in particles_with_fields.iter() {
+			for field in field_owner.get_field().iter() {
+				let affected_particles = Vec::new();
+				if field.affects_self() {
+					affected_particles.push(field_owner.get_id());
+				}
+				for particle in self.particles.values() {
+					let is_in_field =
+						utilities::is_within_radius(
+							particle.get_position(),
+							field.get_radius(),
+							field_owner.get_position(),
+						);
+					let is_affected_by_field =
+						(
+							field_owner.get_id() != particle.get_id()
+							&& field.get_affects_others()
+						);
+
+
+					if is_in_field && is_affected_by_field {
+						// TODO: Add particles and fields to a collection to apply
+						//	field effects after done searching for fields or
+						//	apply field effects in each iteration of this loop?
+						//	What happens if a field does something that interferes
+						//	with finding other particles within this loop (e.g.,
+						//	deleting a particle)? What happens if it does
+						//	something later to interfere with the application of
+						//	field effects after this loop?
+					}
+				}
+			}
+		}
 
 		// For each particle, get the list of forces from applied_forces, add
 		//	them up, and calculate acceleration by dividing the sum by that

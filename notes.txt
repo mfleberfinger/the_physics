@@ -2,6 +2,8 @@ TODO:
 	
 	See asterisks below.
 
+	Clean up warnings that appear when running cargo check or cargo test.
+
 	When done, search the code for any remaining "TODO" comments.
 
 
