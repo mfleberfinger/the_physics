@@ -1454,7 +1454,7 @@ impl Simulation {
 		//	particles near each other more efficiently. Consider researching and
 		//	switching to one of those once everything else is working.
 		for field_owner in particles_with_fields.iter() {
-			for field in field_owner.get_field().iter() {
+			for field in field_owner.get_fields().iter() {
 				let affected_particles = Vec::new();
 				if field.affects_self() {
 					affected_particles.push(field_owner.get_id());
@@ -1469,19 +1469,13 @@ impl Simulation {
 					let is_affected_by_field =
 						(
 							field_owner.get_id() != particle.get_id()
-							&& field.get_affects_others()
+							&& field.affects_others()
 						);
 
 
 					if is_in_field && is_affected_by_field {
-						// TODO: Add particles and fields to a collection to apply
-						//	field effects after done searching for fields or
-						//	apply field effects in each iteration of this loop?
-						//	What happens if a field does something that interferes
-						//	with finding other particles within this loop (e.g.,
-						//	deleting a particle)? What happens if it does
-						//	something later to interfere with the application of
-						//	field effects after this loop?
+						// TODO: See "Add particles and fields to a collection
+						//	to apply field..." in notes.txt.
 					}
 				}
 			}

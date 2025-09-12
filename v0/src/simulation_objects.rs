@@ -285,6 +285,10 @@ impl Particle {
 		field_info_vec
 	}
 
+	pub(crate) fn get_fields(&self) -> &Vec<Box<dyn Field>> {
+		&self.fields
+	}
+
 	// TODO: Directly setting physical quantities could be fun, but might cause
 	//	issues. Reconsider later.
 	//pub fn set_mass(&mut self, mass: physical_quantities::Mass) {

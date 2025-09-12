@@ -2,6 +2,9 @@ TODO:
 	
 	See asterisks below.
 
+	Use Rust's pub(restricted) feature (probably pub(crate)) to hide things that
+		need to be public within the library from users of the library.
+
 	Clean up warnings that appear when running cargo check or cargo test.
 
 	When done, search the code for any remaining "TODO" comments.
@@ -205,6 +208,57 @@ Simulation Struct
 					the field affects the owning particle) and call the field's
 					apply_effect() method, passing in references to (or
 					particle_ids of?) the affected particles.
+				- Add particles and fields to a collection to apply field
+					effects after done searching for fields or apply field
+					effects in each iteration of the loop that finds the fields?
+					+ What happens if a field does something that interferes		[bad things (non-determinism)]
+						with finding other particles within this loop (e.g.,
+						deleting a particle)?
+					+ What happens if a field does with the application of field	[bad things (non-determinism)]
+						effects after the loop that finds the fields?
+						-> Interfering with finding particles within the loop is
+							probably less potentially disruptive than
+							interfering with effects being applied later. For
+							example, deleting a particle while searching for
+							fields just means the deleted particle won't be
+							found. Deleting a particle after adding its ID to
+							a collection, then attempting to apply effects to
+							that particle by ID later would cause a panic.
+							However, the panic could be avoided by just checking
+							that each particle still exists before attempting
+							to apply effects.
+					+ Running field effects while finding fields or just adding
+						them to a collection and allowing them to interfere
+						with each other's execution will both result in
+						non-deterministic behavior within a tick. In either
+						case, there's no accounting for the order in which
+						particles will be, for example, deleted. Sometimes
+						forces may be applied by particles deleted in the
+						current tick and sometimes particles will be deleted
+						before their forces are applied.
+						-> The only reasonable thing to do is to come up with	*************************
+							some way to make sure that all effects of all
+							fields that existed at the start of a tick will be
+							applied on the current tick.
+							- The design of the simulation's interface already
+								calls for forcing a user of the library to
+								take any action that affects the simulation
+								through methods of the simulation. The way to
+								handle this is probably just to make all of
+								these methods add their actions to collections,
+								in the same way that forces are added to a
+								collection. Then have tick() execute all of the
+								collected actions in an appropriate order. For
+								example, create_particle() would add something
+								to a list of create actions and delete_particle
+								would add something to a list of delete actions.
+								Neither would actually create or delete
+								anything. The tick() method would then iterate
+								through the collections of create and delete
+								requests and perform the actual creation and
+								deletion at appropriate points within the tick
+								(probably after all forces are executed in the
+								case of create/delete).
 			-> Apply forces, setting acceleration, possibly by calling a method
 				of Particle.
 				- Iterate through all particles, calculating a = (f / m) for
