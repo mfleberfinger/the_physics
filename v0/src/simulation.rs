@@ -1426,8 +1426,14 @@ pub struct Simulation {
 	// A function called on each tick. Allows user-defined logic to be driven
 	//	by the simulation.
 	on_tick: Option<fn(&mut Simulation)>,
-	// Holds forces, keyed by particle_id, to calculate on the next tick.
+	// Holds forces, keyed by particle_id, to simulate when appropriate.
 	applied_forces: HashMap<Uuid, Vec<physical_quantities::Force>>,
+	// Stores the IDs of particles to delete when appropriate.
+	particle_ids_to_delete: Vec<Uuid>,
+	// Stores particles to add to the simulation when appropriate.
+	particles_to_add: Vec<simulation_objects::Particle>,
+	// If true, the simulation should be paused. If false, the simulation should
+	//	be running.
 	is_paused: bool,
 }
 
@@ -1452,7 +1458,9 @@ impl Simulation {
 		// TODO: This is a naive way to find the particles. There are data
 		//	structures that encode spacial relationships and can be used to find
 		//	particles near each other more efficiently. Consider researching and
-		//	switching to one of those once everything else is working.
+		//	switching to one of those once everything else is working. Also see
+		//	the section of notes.txt about this. It was probably intended to be
+		//	done in a later version of the physics engine.
 		for field_owner in particles_with_fields.iter() {
 			for field in field_owner.get_fields().iter() {
 				let affected_particles = Vec::new();
@@ -1474,8 +1482,8 @@ impl Simulation {
 
 
 					if is_in_field && is_affected_by_field {
-						// TODO: See "Add particles and fields to a collection
-						//	to apply field..." in notes.txt.
+						// Apply field effects. More precisely, log field
+						//	effects so they can be applied later in the tick.
 					}
 				}
 			}

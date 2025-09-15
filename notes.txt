@@ -243,24 +243,30 @@ Simulation Struct
 							- The design of the simulation's interface already
 								calls for forcing a user of the library to
 								take any action that affects the simulation
-								through methods of the simulation. The way to
-								handle this is probably just to make all of
-								these methods add their actions to collections,
-								in the same way that forces are added to a
-								collection. Then have tick() execute all of the
-								collected actions in an appropriate order. For
-								example, create_particle() would add something
-								to a list of create actions and delete_particle
-								would add something to a list of delete actions.
-								Neither would actually create or delete
-								anything. The tick() method would then iterate
-								through the collections of create and delete
-								requests and perform the actual creation and
-								deletion at appropriate points within the tick
+								through methods of Simulation. The way to handle
+								this is probably just to make all of these methods
+								add their actions to collections, in the same way
+								that forces are added to a collection. Then have
+								tick() execute all of the collected actions in an
+								appropriate order. For example, create_particle()
+								would add something to a list of create actions
+								and delete_particle would add something to a list
+								of delete actions. Neither would actually create
+								or delete anything. The tick() method would then
+								iterate through the collections of create and
+								delete requests and perform the actual creation
+								and deletion at appropriate points within the tick
 								(probably after all forces are executed in the
 								case of create/delete).
-			-> Apply forces, setting acceleration, possibly by calling a method
-				of Particle.
+								+ Remember to modify the particle creation and
+									deletion tests. Currently, the create and
+									delete tests expect particles to be
+									immediately created or deleted. Now it will
+									be necessary to check that the simulation is
+									carrying out the actual creates and deletes
+									when a tick occurs.
+						-> Apply forces, setting acceleration, possibly by
+							calling a method of Particle.
 				- Iterate through all particles, calculating a = (f / m) for
 					each.
 				- a = (sum(f0, f1, f2...)/m)
