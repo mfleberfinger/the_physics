@@ -1455,39 +1455,52 @@ impl Simulation {
 
 		// For each field, find all particles within that field and apply the
 		//	field's effect to each of those particles.
-		// TODO: This is a naive way to find the particles. There are data
-		//	structures that encode spacial relationships and can be used to find
-		//	particles near each other more efficiently. Consider researching and
-		//	switching to one of those once everything else is working. Also see
-		//	the section of notes.txt about this. It was probably intended to be
-		//	done in a later version of the physics engine.
 		for field_owner in particles_with_fields.iter() {
 			for field in field_owner.get_fields().iter() {
+
 				let affected_particles = Vec::new();
+
+				// Add the field owner if the field affects it.
 				if field.affects_self() {
 					affected_particles.push(field_owner.get_id());
 				}
-				for particle in self.particles.values() {
-					let is_in_field =
-						utilities::is_within_radius(
-							particle.get_position(),
-							field.get_radius(),
-							field_owner.get_position(),
-						);
-					let is_affected_by_field =
-						(
-							field_owner.get_id() != particle.get_id()
-							&& field.affects_others()
-						);
 
+				// Add all particles, other than the field owner, that are
+				//	within the field, if this field affects particles other than
+				//	the particle to which its attached.
+				if field.affects_others() {
+					for particle in self.particles.values() {
 
-					if is_in_field && is_affected_by_field {
-						// Apply field effects. More precisely, log field
-						//	effects so they can be applied later in the tick.
+						let is_in_field =
+							utilities::is_within_radius(
+								particle.get_position(),
+								field.get_radius(),
+								field_owner.get_position(),
+							);
+
+						let is_affected_by_field =
+							(
+								field_owner.get_id() != particle.get_id()
+							);
+
+						if is_in_field && is_affected_by_field {
+							affected_particles.push(particle.get_id());
+						}
 					}
 				}
+
+				// Add this Field's effects to the lists of actions to take.
+				field.effect(
+					&mut self,
+					field_owner.get_position(),
+					affected_particles,
+				);
 			}
 		}
+
+		// Delete any particles that were staged for deletion. Doing this before
+		//	applying forces avoids having to iterate through particles that are
+		//	being deleted anyway.
 
 		// For each particle, get the list of forces from applied_forces, add
 		//	them up, and calculate acceleration by dividing the sum by that
@@ -1495,7 +1508,12 @@ impl Simulation {
 		// TODO: Remember to use Particle.accelerate().
 
 		// For each particle, change the particle's position, based on its
+		//	velocity.
 		// TODO: Remember to use Particle.move().
+
+		// Add any newly created particles to the simulation. Doing this after
+		//	applying forces avoids iterating through particles that can't have
+		//	forces applied on this tick anyway.
 	}
 
 	/// Creates an instance of `Simulation`.

@@ -61,6 +61,15 @@ pub trait Field {
 	/// Called by the simulation to get the field's radius.
 	fn get_radius(&self) -> f64;
 
+	// TODO: It would probably be better to give effect() a parameter to
+	//	accept the particle to which it's attached. Then effect() could decide
+	//	whether or not to affect that particle and would be able to take
+	//	different actions for the particle to which it's attached than for any
+	//	other particles it might effect. For example, maybe effect() could
+	//	delete any other particles that enter the field and increase the mass
+	//	of the particle to which the field is attached for each particle deleted
+	//	to simulate it "absorbing" other particles. Maybe save this change for
+	//	a later version. It doesn't seem important.
 	/// Called by the simulation to determine whether this field affects the
 	///	particle to which it's attached.
 	fn affects_self(&self) -> bool;
