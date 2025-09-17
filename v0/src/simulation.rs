@@ -1499,17 +1499,29 @@ impl Simulation {
 		}
 
 		// Delete any particles that were staged for deletion. Doing this before
-		//	applying forces avoids having to iterate through particles that are
-		//	being deleted anyway.
+		//	applying forces avoids having to do calculations for particles that
+		//	are being deleted anyway.
+		for particle_id in self.particle_ids_to_delete {
+			self.particles.remove(particle_id);
+		}
+		self.particle_ids_to_delete.clear();
 
-		// For each particle, get the list of forces from applied_forces, add
-		//	them up, and calculate acceleration by dividing the sum by that
-		//	particle's mass. Calculate and set the new velocity:
-		// TODO: Remember to use Particle.accelerate().
+		// For each particle, get the list of forces from applied_forces, and
+		//	calculate and set the new velocity:
+		for (particle_id, forces) in self.applied_forces.iter() {
+			for force in forces {
+				match self.particles.get_mut(particle_id) {
+					Some(particle) => particle.accelerate(force),
+					None => (),
+				}
+			}
+		}
+		self.applied_forces.clear();
 
 		// For each particle, change the particle's position, based on its
 		//	velocity.
-		// TODO: Remember to use Particle.move().
+		// TODO: Remember to use Particle.coast().
+
 
 		// Add any newly created particles to the simulation. Doing this after
 		//	applying forces avoids iterating through particles that can't have

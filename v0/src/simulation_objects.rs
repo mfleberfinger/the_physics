@@ -312,13 +312,23 @@ impl Particle {
 	//	self.velocity = velocity;
 	//}
 
-	// Given an acceleration and an amount of time, set the particle's new
+	// Given a list of forces and an amount of time; add up the forces,
+	//	calculate acceleration by dividing the sum by this particle's mass,
+	//	calculate the change in velocity, and add it to this particle's current
 	//	velocity.
 	pub fn accelerate(
 		&mut self,
-		acceleration: physical_quantities::Acceleration,
+		forces: &Vec<physical_quantities::Force>,
 		time: physical_quantities::Time
 	) {
+		let mut x = 0.0;
+		let mut y = 0.0;
+		for force in forces {
+			x += force.x();
+			y += force.y();
+		}
+		let total_force = physical_quantities::Force::new(x, y);
+		let acceleration = total_force / self.mass;
 		self.velocity += acceleration * time;
 	}
 
