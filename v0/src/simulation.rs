@@ -119,6 +119,7 @@ mod tests {
 	//	parameters and that it is added to the particles collection.
 	#[test]
 	fn simulation_creates_particle() {
+		panic!("TODO: Modify to take into account the fact that particles are now created on the next tick.");
 		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
@@ -170,6 +171,7 @@ mod tests {
 
 	#[test]
 	fn simulation_deletes_particle() {
+		panic!("TODO: Modify to take into account the fact that particles are now deleted on the next tick.");
 		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
@@ -1455,6 +1457,10 @@ impl Simulation {
 
 		// For each field, find all particles within that field and apply the
 		//	field's effect to each of those particles.
+		// TODO (for v1): There are algorithms and data structures to more
+		//	efficiently find things based on spatial relationships (e.g.,
+		//	distance). Do some research and optimize this so searching for
+		//	nearby particles isn't so inefficient.
 		for field_owner in particles_with_fields.iter() {
 			for field in field_owner.get_fields().iter() {
 
@@ -1479,9 +1485,7 @@ impl Simulation {
 							);
 
 						let is_affected_by_field =
-							(
-								field_owner.get_id() != particle.get_id()
-							);
+								field_owner.get_id() != particle.get_id();
 
 						if is_in_field && is_affected_by_field {
 							affected_particles.push(particle.get_id());
@@ -1502,30 +1506,38 @@ impl Simulation {
 		//	applying forces avoids having to do calculations for particles that
 		//	are being deleted anyway.
 		for particle_id in self.particle_ids_to_delete {
-			self.particles.remove(particle_id);
+			self.particles.remove(&particle_id);
 		}
 		self.particle_ids_to_delete.clear();
 
-		// For each particle, get the list of forces from applied_forces, and
-		//	calculate and set the new velocity:
-		for (particle_id, forces) in self.applied_forces.iter() {
-			for force in forces {
-				match self.particles.get_mut(particle_id) {
-					Some(particle) => particle.accelerate(force),
-					None => (),
-				}
+		// Calculate and set the new velocity for all particles upon which a
+		//	force is acting during this tick.
+		for (particle_id, particle) in self.particles.iter_mut() {
+			match self.applied_forces.get(particle_id) {
+				Some(forces) => particle.accelerate(forces, self.tick_duration),
+				None => (),
 			}
 		}
 		self.applied_forces.clear();
 
 		// For each particle, change the particle's position, based on its
 		//	velocity.
-		// TODO: Remember to use Particle.coast().
-
+		for particle in self.particles.values_mut() {
+			particle.coast(self.tick_duration);
+		}
 
 		// Add any newly created particles to the simulation. Doing this after
 		//	applying forces avoids iterating through particles that can't have
 		//	forces applied on this tick anyway.
+		for particle in self.particles_to_add.drain(..) {
+			let v = self.particles.insert(particle.get_id(), particle);
+			// If v is Some, it means we already had a particle with this
+			//	particle's ID. This should not happen.
+			if v.is_some() {
+				panic!("Created a particle with an existing key. This probably \
+						means there is a bug in the physics engine.");
+			}
+		}
 	}
 
 	/// Creates an instance of `Simulation`.
@@ -1568,6 +1580,8 @@ impl Simulation {
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
 			applied_forces: HashMap::new(),
+			particle_ids_to_delete: Vec::new(),
+			particles_to_add: Vec::new(),
 			is_paused: true,
 		}
 	}

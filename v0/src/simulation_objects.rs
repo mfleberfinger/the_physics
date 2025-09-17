@@ -160,7 +160,7 @@ impl Field for SimpleSelfGravityField {
 	fn effect(
 		&self,
 		simulation: &mut simulation::Simulation,
-		position: physical_quantities::Displacement,
+		_position: physical_quantities::Displacement,
 		particle_ids: Vec<Uuid>
 	) {
 		// There should only ever be one thing in the Vec (the particle to
