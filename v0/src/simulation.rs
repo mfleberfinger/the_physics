@@ -1,4 +1,4 @@
-use crate::{physical_quantities, simulation_objects};
+use crate::{physical_quantities, simulation_objects, utilities};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -1464,7 +1464,7 @@ impl Simulation {
 		for field_owner in particles_with_fields.iter() {
 			for field in field_owner.get_fields().iter() {
 
-				let affected_particles = Vec::new();
+				let mut affected_particles = Vec::new();
 
 				// Add the field owner if the field affects it.
 				if field.affects_self() {
@@ -1495,7 +1495,7 @@ impl Simulation {
 
 				// Add this Field's effects to the lists of actions to take.
 				field.effect(
-					&mut self,
+					self,
 					field_owner.get_position(),
 					affected_particles,
 				);
