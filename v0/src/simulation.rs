@@ -1447,21 +1447,13 @@ impl Simulation {
 			None => (),
 		}
 
-		// Apply field effects...
-
-		// Find every particle with a field.
-		let mut particles_with_fields = Vec::new();
-		for particle in self.particles.values() {
-			particles_with_fields.push(particle);
-		}
-
 		// For each field, find all particles within that field and apply the
 		//	field's effect to each of those particles.
 		// TODO (for v1): There are algorithms and data structures to more
 		//	efficiently find things based on spatial relationships (e.g.,
 		//	distance). Do some research and optimize this so searching for
 		//	nearby particles isn't so inefficient.
-		for field_owner in particles_with_fields.iter() {
+		for field_owner in self.particles.values() {
 			for field in field_owner.get_fields().iter() {
 
 				let mut affected_particles = Vec::new();
@@ -1493,6 +1485,11 @@ impl Simulation {
 					}
 				}
 
+				// TODO: To solve the borrow checker errors, I might need to
+				//	make a collection containing all field owners, as
+				//	well as all affected particles, then iterate through all of
+				//	those (field owner, affected particles) pairs and call the
+				//	effect methods after this loop ends.
 				// Add this Field's effects to the lists of actions to take.
 				field.effect(
 					self,
