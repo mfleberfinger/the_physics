@@ -1453,14 +1453,18 @@ impl Simulation {
 		//	efficiently find things based on spatial relationships (e.g.,
 		//	distance). Do some research and optimize this so searching for
 		//	nearby particles isn't so inefficient.
+		// Vec of (field owner, field, affected particles).
+		let mut field_parameters:
+			Vec<(Uuid, &Box<dyn simulation_objects::Field>, Vec<Uuid>)> =
+			Vec::new();
 		for field_owner in self.particles.values() {
 			for field in field_owner.get_fields().iter() {
 
-				let mut affected_particles = Vec::new();
+				let mut affected_particle_ids = Vec::new();
 
 				// Add the field owner if the field affects it.
 				if field.affects_self() {
-					affected_particles.push(field_owner.get_id());
+					affected_particle_ids.push(field_owner.get_id());
 				}
 
 				// Add all particles, other than the field owner, that are
@@ -1476,33 +1480,50 @@ impl Simulation {
 								field_owner.get_position(),
 							);
 
-						let is_affected_by_field =
+						let is_not_owner =
 								field_owner.get_id() != particle.get_id();
 
-						if is_in_field && is_affected_by_field {
-							affected_particles.push(particle.get_id());
+						if is_in_field && is_not_owner {
+							affected_particle_ids.push(particle.get_id());
 						}
 					}
 				}
+
+				field_parameters.push(
+					(field_owner.get_id(), field, affected_particle_ids)
+				);
 
 				// TODO: To solve the borrow checker errors, I might need to
 				//	make a collection containing all field owners, as
 				//	well as all affected particles, then iterate through all of
 				//	those (field owner, affected particles) pairs and call the
 				//	effect methods after this loop ends.
+				//	2025-09-25: This change (adding the "field_parameters" Vec,
+				//		populating it here, and iterating over it outside of this
+				//		loop) did not fix the borrow error. See this forum post for
+				//		advice: https://users.rust-lang.org/t/iterating-over-a-self-some-vec-while-mutating-self/51135
 				// Add this Field's effects to the lists of actions to take.
-				field.effect(
-					self,
-					field_owner.get_position(),
-					affected_particles,
-				);
+//				field.effect(
+//					self,
+//					field_owner.get_position(),
+//					affected_particle_ids,
+//				);
 			}
+		}
+
+		// Run the collected field effect functions on the appropriate particles.
+		for (owner_id, field, affected_particle_ids) in field_parameters {
+			field.effect(
+				self,
+				self.get_position(owner_id),
+				affected_particle_ids,
+			);
 		}
 
 		// Delete any particles that were staged for deletion. Doing this before
 		//	applying forces avoids having to do calculations for particles that
 		//	are being deleted anyway.
-		for particle_id in self.particle_ids_to_delete {
+		for particle_id in &self.particle_ids_to_delete {
 			self.particles.remove(&particle_id);
 		}
 		self.particle_ids_to_delete.clear();

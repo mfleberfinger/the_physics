@@ -62,7 +62,7 @@ pub trait Field {
 	fn get_radius(&self) -> f64;
 
 	// TODO: It would probably be better to give effect() a parameter to
-	//	accept the particle to which it's attached. Then effect() could decide
+	//	accept the ID of the particle to which it's attached. Then effect() could decide
 	//	whether or not to affect that particle and would be able to take
 	//	different actions for the particle to which it's attached than for any
 	//	other particles it might effect. For example, maybe effect() could
