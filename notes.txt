@@ -270,6 +270,30 @@ Simulation Struct
 				- Iterate through all particles, calculating a = (f / m) for
 					each.
 				- a = (sum(f0, f1, f2...)/m)
+				- Problem: The Simulation "self" is borrowed immutably in each
+					iteration of the loop that iterates through the particle
+					collection to find particles with fields and later borrowed
+					mutably to actually apply the field effects. This is a
+					borrow error. It seems like the only good(?) way to solve
+					this is to implement interior mutability on all of the data
+					owned by Simulation.
+					+ The only other option is probably to completely redesign		[don't do this]
+						and rewrite the physics engine in some way that doesn't
+						rely on structs owning mutable data?
+					+ Forum post discussing borrow issues in loops:
+						https://users.rust-lang.org/t/iterating-over-a-self-some-vec-while-mutating-self/51135
+					+ Interior mutability:
+						https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
+						-> RefCell will cause a compile-time error in a
+							"multithreaded context." However, if I do make a
+							multithreaded version of this, there is a way to get
+							similar functionality to RefCell (apparently in
+							chapter 16 of The Book).
+					+ It seems like I need to modify all of the methods that ******************************
+						take a mutable reference to a Simulation to instead take
+						an immutable reference. The data members used by those
+						methods would be moved into RefCells and the methods
+						would take mutable borrows from the RefCells.
 			-> Apply acceleration, changing velocity, possibly by calling a
 				method of Particle.
 				- Iterate through all particles, calculating
