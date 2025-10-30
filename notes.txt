@@ -289,7 +289,7 @@ Simulation Struct
 							multithreaded version of this, there is a way to get
 							similar functionality to RefCell (apparently in
 							chapter 16 of The Book).
-					+ It seems like I need to modify all of the methods that ******************************
+					+ It seems like I need to modify all of the methods that
 						take a mutable reference to a Simulation to instead take
 						an immutable reference. The data members used by those
 						methods would be moved into RefCells and the methods
