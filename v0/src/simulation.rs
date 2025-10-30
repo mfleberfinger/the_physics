@@ -1,5 +1,6 @@
 use crate::{physical_quantities, simulation_objects, utilities};
 use std::collections::HashMap;
+use std::cell::RefCell;
 use uuid::Uuid;
 
 
@@ -9,7 +10,7 @@ mod tests {
 
 	/********************* Simulation ********************/
 
-	fn dummy_function(simulation: &mut Simulation) {
+	fn dummy_function(simulation: &Simulation) {
 		// Will just test that on_tick is Some. Not testing it any further.:
         //
         //  Mutating a static variable is unsafe because multiple
@@ -48,7 +49,7 @@ mod tests {
 			"Incorrect tick_duration.",
 		);
 		assert_eq!(
-			simulation.elapsed_ticks,
+			*simulation.elapsed_ticks.borrow(),
 			physical_quantities::Ticks::new(0),
 			"Incorrect elapsed_ticks."
 		);
@@ -61,7 +62,7 @@ mod tests {
 			"Incorrect on_tick."
 		);
 		assert!(
-			simulation.is_paused,
+			*simulation.is_paused.borrow(),
 			"The simulation should be paused when instantiated."
 		);
 
@@ -76,7 +77,7 @@ mod tests {
 			"Incorrect tick_duration."
 		);
 		assert_eq!(
-			simulation.elapsed_ticks,
+			*simulation.elapsed_ticks.borrow(),
 			physical_quantities::Ticks::new(0),
 			"Incorrect elapsed_ticks."
 		);
@@ -90,7 +91,7 @@ mod tests {
             "The on_tick function pointer should be set."
         );
 		assert!(
-			simulation.is_paused,
+			*simulation.is_paused.borrow(),
 			"The simulation should be paused when instantiated."
 		);
     }
@@ -120,6 +121,7 @@ mod tests {
 	#[test]
 	fn simulation_creates_particle() {
 		panic!("TODO: Modify to take into account the fact that particles are now created on the next tick.");
+		/*
 		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
@@ -167,11 +169,13 @@ mod tests {
 			1,
 			"particle_2 should have a field"
 		);
+		*/
 	}
 
 	#[test]
 	fn simulation_deletes_particle() {
 		panic!("TODO: Modify to take into account the fact that particles are now deleted on the next tick.");
+		/*
 		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
@@ -190,12 +194,13 @@ mod tests {
 			!simulation.particles.contains_key(&particle_id),
 			"The particles collection should not contain a deleted particle.",
 		);
+		*/
 	}
 
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_delete_particle_panics_on_missing_id() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.delete_particle(Uuid::new_v4());
 	}
 
@@ -203,7 +208,11 @@ mod tests {
 	//	collection of forces to simulate on the next tick.
 	#[test]
 	fn simulation_applies_force() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(0.0, 0.0),
@@ -212,12 +221,12 @@ mod tests {
 
 		simulation.apply_force(particle_id, physical_quantities::Force::new(1.0, 1.0));
 		assert!(
-			simulation.applied_forces.contains_key(&particle_id),
+			simulation.applied_forces.borrow().contains_key(&particle_id),
 			"Applied forces should appear in the applied_forces collection.",
 		);
 
 		assert_eq!(
-			simulation.applied_forces[&particle_id][0],
+			simulation.applied_forces.borrow()[&particle_id][0],
 			physical_quantities::Force::new(1.0, 1.0),
 			"The force in applied_forces is incorrect.",
 		);
@@ -226,13 +235,13 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "the provided particle ID was not found: ")]
 	fn simulation_apply_force_panics_on_missing_id() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		simulation.apply_force(Uuid::new_v4(), physical_quantities::Force::new(1.0, 1.0));
 	}
 
 	#[test]
 	fn simulation_gets_mass() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(0.0, 0.0),
@@ -253,7 +262,7 @@ mod tests {
 	
 	#[test]
 	fn simulation_gets_position() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(-1.23, 123.0),
@@ -334,45 +343,54 @@ mod tests {
 
 	#[test]
 	fn simulation_starts() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Force the simulation to be paused, in case the constructor is broken.
-		simulation.is_paused = true;
+		*simulation.is_paused.borrow_mut() = true;
 		
 		simulation.start();
 
-		assert!(!simulation.is_paused, "The simulation should have unpaused.");
+		assert!(!(*simulation.is_paused.borrow()), "The simulation should have unpaused.");
 	}
 
 	#[test]
 	fn simulation_pauses() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Force the simulation to be unpaused.
-		simulation.is_paused = false;
+		*simulation.is_paused.borrow_mut() = false;
 		
 		simulation.pause();
 
-		assert!(simulation.is_paused, "The simulation should have paused.");
+		assert!(*simulation.is_paused.borrow(), "The simulation should have paused.");
 	}
 
 	// Simulation.step()...
 
 	#[test]
 	fn simulation_step_increments_elapsed_ticks() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 
 		// Verify that the count of elapsed ticks increases by one (without
 		//	calling get_elapsed_ticks()).
-		assert_eq!(physical_quantities::Ticks::new(0), simulation.elapsed_ticks);
+		assert_eq!(
+			physical_quantities::Ticks::new(0),
+			*simulation.elapsed_ticks.borrow(),
+		);
 		simulation.step();
-		assert_eq!(physical_quantities::Ticks::new(1), simulation.elapsed_ticks);
+		assert_eq!(
+			physical_quantities::Ticks::new(1),
+			*simulation.elapsed_ticks.borrow(),
+		);
 		simulation.step();
-		assert_eq!(physical_quantities::Ticks::new(2), simulation.elapsed_ticks);
+		assert_eq!(
+			physical_quantities::Ticks::new(2),
+			*simulation.elapsed_ticks.borrow(),
+		);
 	}
 
 	// A trivial on_tick function for testing.
-	fn create_particle(simulation: &mut Simulation) {
+	fn create_particle(simulation: &Simulation) {
 		simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(0.0, 0.0),
@@ -385,30 +403,39 @@ mod tests {
 		// Verifies that the on_tick function pointer gets called. This is done
 		//	by having on_tick create a particle and verifying that the particle
 		//	count changed as expected.
-		let mut simulation = Simulation::new(
+		let simulation = Simulation::new(
 			physical_quantities::Time::new(1.0),
 			None,
 			Some(create_particle)
 		);
 
 		simulation.step();
-		assert_eq!(simulation.particles.len(), 1);
+		assert_eq!(simulation.particles.borrow().len(), 1);
 		simulation.step();
-		assert_eq!(simulation.particles.len(), 2);
+		assert_eq!(simulation.particles.borrow().len(), 2);
 	}
 
 	#[test]
 	#[should_panic(expected = "The simulation must be paused to call step().")]
 	fn simulation_step_panics_if_not_paused() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
-		simulation.is_paused = false;
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		*simulation.is_paused.borrow_mut() = false;
 		simulation.step();
 	}
 
 	#[test]
 	fn simulation_gets_elapsed_ticks() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
-		simulation.elapsed_ticks = physical_quantities::Ticks::new(1);
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		*simulation.elapsed_ticks.borrow_mut() =
+			physical_quantities::Ticks::new(1);
 
 		let elapsed_ticks = simulation.get_elapsed_ticks();
 
@@ -417,8 +444,13 @@ mod tests {
 
 	#[test]
 	fn simulation_gets_elapsed_time() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(0.001), None, None);
-		simulation.elapsed_ticks = physical_quantities::Ticks::new(1000);
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(0.001),
+			None,
+			None,
+		);
+		*simulation.elapsed_ticks.borrow_mut() =
+			physical_quantities::Ticks::new(1000);
 
 		let elapsed_time = simulation.get_elapsed_time();
 
@@ -436,7 +468,7 @@ mod tests {
 	impl simulation_objects::Field for DeletionField {
 		fn effect(
 			&self,
-			simulation: &mut Simulation,
+			simulation: &Simulation,
 			position: physical_quantities::Displacement,
 			particle_ids: Vec<Uuid>
 		) {
@@ -466,7 +498,7 @@ mod tests {
 	//	list of all particles within its radius when a tick (step()) occurs.
 	#[test]
 	fn simulation_field_affects_others() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: false,
@@ -497,19 +529,19 @@ mod tests {
 		simulation.step();
 
 		assert!(
-			!simulation.particles.contains_key(&victim_1),
+			!simulation.particles.borrow().contains_key(&victim_1),
 			"The victim_1 particle should have been deleted.",
 		);
 		assert!(
-			!simulation.particles.contains_key(&victim_2),
+			!simulation.particles.borrow().contains_key(&victim_2),
 			"The victim_2 particle should have been deleted.",
 		);
 		assert!(
-			simulation.particles.contains_key(&destroyer),
+			simulation.particles.borrow().contains_key(&destroyer),
 			"The destroyer particle should still exist.",
 		);
 		assert!(
-			simulation.particles.contains_key(&survivor),
+			simulation.particles.borrow().contains_key(&survivor),
 			"The survivor particle should still exist.",
 		);
 	}
@@ -518,7 +550,11 @@ mod tests {
 	//	particle's ID.
 	#[test]
 	fn simulation_field_affects_self() {
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
 		let field = DeletionField {
 			radius: 10.0,
 			affects_self: true,
@@ -536,16 +572,16 @@ mod tests {
 			Vec::new(),
 		);
 
-		assert!(simulation.particles.contains_key(&suicide_particle));
+		assert!(simulation.particles.borrow().contains_key(&suicide_particle));
 
 		simulation.step();
 
 		assert!(
-			!simulation.particles.contains_key(&suicide_particle),
+			!simulation.particles.borrow().contains_key(&suicide_particle),
 			"The suicide_particle should have been deleted.",
 		);
 		assert!(
-			!simulation.particles.contains_key(&suicide_particle),
+			!simulation.particles.borrow().contains_key(&suicide_particle),
 			"The survivor particle should still exist.",
 		);
 	}
@@ -562,13 +598,15 @@ mod tests {
 		let tick_duration = physical_quantities::Time::new(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
-		let mut simulation = Simulation::new(tick_duration, None, None);
+		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
 			mass,
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		simulation.particles
+		let particles = simulation.particles.borrow();
+		
+		particles
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -587,14 +625,15 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (force / mass) * tick_duration * tick_duration;
-		let particle = simulation.particles
-			.get(&particle_id)
+
+
+		let particle = particles.get(&particle_id)
 			.expect("The particle should still exist.");
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
 
-		let particle = simulation.particles
+		let particle = particles
 			.get(&particle_id)
 			.expect("The particle should still exist.");
 
@@ -622,13 +661,15 @@ mod tests {
 		let tick_duration = physical_quantities::Time::new(1.0);
 		let expected_velocity;
 		let mut expected_displacement;
-		let mut simulation = Simulation::new(tick_duration, None, None);
+		let simulation = Simulation::new(tick_duration, None, None);
 		let particle_id = simulation.create_particle(
 			mass,
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		simulation.particles
+		let particles = simulation.particles.borrow();
+
+		particles
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -651,14 +692,14 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (net_force / mass) * tick_duration * tick_duration;
-		let particle = simulation.particles
+		let particle = particles
 			.get(&particle_id)
 			.expect("The particle should still exist.");
 		assert_eq!(expected_displacement, particle.get_position());
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
 
-		let particle = simulation.particles
+		let particle = particles
 			.get(&particle_id)
 			.expect("The particle should still exist.");
 
@@ -708,16 +749,18 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		simulation.particles
+		let particles = simulation.particles.borrow();
+
+		particles
 			.get(&p_id_0)
 			.expect("The particle (p_id_0) that was just created should exist.");
-		simulation.particles
+		particles
 			.get(&p_id_1)
 			.expect("The particle (p_id_1) that was just created should exist.");
-		simulation.particles
+		particles
 			.get(&p_id_2)
 			.expect("The particle (p_id_2) that was just created should exist.");
-		simulation.particles
+		particles
 			.get(&p_id_3)
 			.expect("The particle (p_id_3) that was just created should exist.");
 
@@ -731,16 +774,16 @@ mod tests {
 		//	simulated.
 		simulation.step();
 
-		let p0 = simulation.particles
+		let p0 = particles
 			.get(&p_id_0)
 			.expect("The particle (p_id_0) should still exist.");
-		let p1 = simulation.particles
+		let p1 = particles
 			.get(&p_id_1)
 			.expect("The particle (p_id_1) should still exist.");
-		let p2 = simulation.particles
+		let p2 = particles
 			.get(&p_id_2)
 			.expect("The particle (p_id_2) should still exist.");
-		let p3 = simulation.particles
+		let p3 = particles
 			.get(&p_id_3)
 			.expect("The particle (p_id_3) should still exist.");
 
@@ -780,16 +823,16 @@ mod tests {
 		// During this step, the particles should coast at known velocities.
 		simulation.step();
 
-		let p0 = simulation.particles
+		let p0 = particles
 			.get(&p_id_0)
 			.expect("The particle (p_id_0) should still exist.");
-		let p1 = simulation.particles
+		let p1 = particles
 			.get(&p_id_1)
 			.expect("The particle (p_id_1) should still exist.");
-		let p2 = simulation.particles
+		let p2 = particles
 			.get(&p_id_2)
 			.expect("The particle (p_id_2) should still exist.");
-		let p3 = simulation.particles
+		let p3 = particles
 			.get(&p_id_3)
 			.expect("The particle (p_id_3) should still exist.");
 
@@ -843,10 +886,10 @@ mod tests {
 		let mut d1;
 		let mut d2;
 		let mut d3;
-		let mut s0 = Simulation::new(tick_0, None, None);
-		let mut s1 = Simulation::new(tick_1, None, None);
-		let mut s2 = Simulation::new(tick_2, None, None);
-		let mut s3 = Simulation::new(tick_3, None, None);
+		let s0 = Simulation::new(tick_0, None, None);
+		let s1 = Simulation::new(tick_1, None, None);
+		let s2 = Simulation::new(tick_2, None, None);
+		let s3 = Simulation::new(tick_3, None, None);
 		let p_id_0 = s0.create_particle(
 			mass,
 			physical_quantities::Displacement::new(0.0, 0.0),
@@ -867,16 +910,21 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		s0.particles
+		let particles0 = s0.particles.borrow();
+		let particles1 = s1.particles.borrow();
+		let particles2 = s2.particles.borrow();
+		let particles3 = s3.particles.borrow();
+
+		particles0
 			.get(&p_id_0)
 			.expect("The particle that was just created in s0 should exist.");
-		s1.particles
+		particles1
 			.get(&p_id_1)
 			.expect("The particle that was just created in s1 should exist.");
-		s2.particles
+		particles2
 			.get(&p_id_2)
 			.expect("The particle that was just created in s2 should exist.");
-		s3.particles
+		particles3
 			.get(&p_id_3)
 			.expect("The particle that was just created in s3 should exist.");
 
@@ -892,16 +940,16 @@ mod tests {
 		s2.step();
 		s3.step();
 
-		let p0 = s0.particles
+		let p0 = particles0
 			.get(&p_id_0)
 			.expect("The particle in s0 should still exist.");
-		let p1 = s1.particles
+		let p1 = particles1
 			.get(&p_id_1)
 			.expect("The particle in s1 should still exist.");
-		let p2 = s2.particles
+		let p2 = particles2
 			.get(&p_id_2)
 			.expect("The particle in s2 should still exist.");
-		let p3 = s3.particles
+		let p3 = particles3
 			.get(&p_id_3)
 			.expect("The particle in s3 should still exist.");
 
@@ -943,16 +991,16 @@ mod tests {
 		s2.step();
 		s3.step();
 		
-		let p0 = s0.particles
+		let p0 = particles0
 			.get(&p_id_0)
 			.expect("The particle in s0 should still exist.");
-		let p1 = s1.particles
+		let p1 = particles1
 			.get(&p_id_1)
 			.expect("The particle in s1 should still exist.");
-		let p2 = s2.particles
+		let p2 = particles2
 			.get(&p_id_2)
 			.expect("The particle in s2 should still exist.");
-		let p3 = s3.particles
+		let p3 = particles3
 			.get(&p_id_3)
 			.expect("The particle in s3 should still exist.");
 
@@ -1054,7 +1102,7 @@ mod tests {
 		let permissible_error = 0.0;
 		let tick_duration = physical_quantities::Time::new(0.001);
 		let initial_position = physical_quantities::Displacement::new(0.0, 0.0);
-		let mut simulation = Simulation::new(tick_duration, None, None);
+		let simulation = Simulation::new(tick_duration, None, None);
 		let mass = physical_quantities::Mass::new(5.0);
 		let particle_id = simulation.create_particle(
 			mass,
@@ -1141,7 +1189,7 @@ mod tests {
 	fn functional_trajectory() {
         let permissible_error = 0.0;
         let tick_duration = physical_quantities::Time::new(0.001);
-        let mut simulation = Simulation::new(tick_duration, None, None);
+        let simulation = Simulation::new(tick_duration, None, None);
         let force = physical_quantities::Force::new(250.0, 500.0);
         let force_duration = physical_quantities::Time::new(3.0);
         let mass = physical_quantities::Mass::new(5.0);
@@ -1313,7 +1361,7 @@ mod tests {
 			);
 
             // Save the time and position of the highest point in the trajectory.
-			if (actual_position.y() > actual_peak.y()) {
+			if actual_position.y() > actual_peak.y() {
 				actual_peak = actual_position;
 				actual_time_to_peak = simulation.get_elapsed_time();
 			}
@@ -1418,29 +1466,29 @@ pub struct Simulation {
 	//	This is effectively the resolution of the simulation.
 	tick_duration: physical_quantities::Time,
 	// A collection that owns all particles in the simulation.
-	particles: HashMap<Uuid, simulation_objects::Particle>,
+	particles: RefCell<HashMap<Uuid, simulation_objects::Particle>>,
 	// The number of ticks that have passed so far.
-	elapsed_ticks: physical_quantities::Ticks,
+	elapsed_ticks: RefCell<physical_quantities::Ticks>,
 	// Speed at which the simulation will run, resources permitting. Units are
 	//	(simulated seconds) / (real world second). If None, run as fast as
 	//	possible.
 	simulation_speed: Option<f64>,
 	// A function called on each tick. Allows user-defined logic to be driven
 	//	by the simulation.
-	on_tick: Option<fn(&mut Simulation)>,
+	on_tick: Option<fn(&Simulation)>,
 	// Holds forces, keyed by particle_id, to simulate when appropriate.
-	applied_forces: HashMap<Uuid, Vec<physical_quantities::Force>>,
+	applied_forces: RefCell<HashMap<Uuid, Vec<physical_quantities::Force>>>,
 	// Stores the IDs of particles to delete when appropriate.
-	particle_ids_to_delete: Vec<Uuid>,
+	particle_ids_to_delete: RefCell<Vec<Uuid>>,
 	// Stores particles to add to the simulation when appropriate.
-	particles_to_add: Vec<simulation_objects::Particle>,
+	particles_to_add: RefCell<Vec<simulation_objects::Particle>>,
 	// If true, the simulation should be paused. If false, the simulation should
 	//	be running.
-	is_paused: bool,
+	is_paused: RefCell<bool>,
 }
 
 impl Simulation {
-	fn tick(&mut self) {
+	fn tick(&self) {
 		// Call the on_tick fn pointer, if it exists.
 		match self.on_tick {
 			Some(f) => f(self),
@@ -1457,7 +1505,7 @@ impl Simulation {
 		let mut field_parameters:
 			Vec<(Uuid, &Box<dyn simulation_objects::Field>, Vec<Uuid>)> =
 			Vec::new();
-		for field_owner in self.particles.values() {
+		for field_owner in self.particles.borrow().values() {
 			for field in field_owner.get_fields().iter() {
 
 				let mut affected_particle_ids = Vec::new();
@@ -1471,7 +1519,7 @@ impl Simulation {
 				//	within the field, if this field affects particles other than
 				//	the particle to which its attached.
 				if field.affects_others() {
-					for particle in self.particles.values() {
+					for particle in self.particles.borrow().values() {
 
 						let is_in_field =
 							utilities::is_within_radius(
@@ -1489,9 +1537,9 @@ impl Simulation {
 					}
 				}
 
-				field_parameters.push(
-					(field_owner.get_id(), field, affected_particle_ids)
-				);
+//				field_parameters.push(
+//					(field_owner.get_id(), field, affected_particle_ids)
+//				);
 
 				// TODO: To solve the borrow checker errors, I might need to
 				//	make a collection containing all field owners, as
@@ -1503,52 +1551,52 @@ impl Simulation {
 				//		loop) did not fix the borrow error. See this forum post for
 				//		advice: https://users.rust-lang.org/t/iterating-over-a-self-some-vec-while-mutating-self/51135
 				// Add this Field's effects to the lists of actions to take.
-//				field.effect(
-//					self,
-//					field_owner.get_position(),
-//					affected_particle_ids,
-//				);
+				field.effect(
+					self,
+					field_owner.get_position(),
+					affected_particle_ids,
+				);
 			}
 		}
 
 		// Run the collected field effect functions on the appropriate particles.
-		for (owner_id, field, affected_particle_ids) in field_parameters {
-			field.effect(
-				self,
-				self.get_position(owner_id),
-				affected_particle_ids,
-			);
-		}
+//		for (owner_id, field, affected_particle_ids) in field_parameters {
+//			field.effect(
+//				self,
+//				self.get_position(owner_id),
+//				affected_particle_ids,
+//			);
+//		}
 
 		// Delete any particles that were staged for deletion. Doing this before
 		//	applying forces avoids having to do calculations for particles that
 		//	are being deleted anyway.
-		for particle_id in &self.particle_ids_to_delete {
-			self.particles.remove(&particle_id);
+		for particle_id in &*self.particle_ids_to_delete.borrow() {
+			self.particles.borrow_mut().remove(&particle_id);
 		}
-		self.particle_ids_to_delete.clear();
+		self.particle_ids_to_delete.borrow_mut().clear();
 
 		// Calculate and set the new velocity for all particles upon which a
 		//	force is acting during this tick.
-		for (particle_id, particle) in self.particles.iter_mut() {
-			match self.applied_forces.get(particle_id) {
+		for (particle_id, particle) in self.particles.borrow_mut().iter_mut() {
+			match self.applied_forces.borrow().get(particle_id) {
 				Some(forces) => particle.accelerate(forces, self.tick_duration),
 				None => (),
 			}
 		}
-		self.applied_forces.clear();
+		self.applied_forces.borrow_mut().clear();
 
 		// For each particle, change the particle's position, based on its
 		//	velocity.
-		for particle in self.particles.values_mut() {
+		for particle in self.particles.borrow_mut().values_mut() {
 			particle.coast(self.tick_duration);
 		}
 
 		// Add any newly created particles to the simulation. Doing this after
 		//	applying forces avoids iterating through particles that can't have
 		//	forces applied on this tick anyway.
-		for particle in self.particles_to_add.drain(..) {
-			let v = self.particles.insert(particle.get_id(), particle);
+		for particle in self.particles_to_add.borrow_mut().drain(..) {
+			let v = self.particles.borrow_mut().insert(particle.get_id(), particle);
 			// If v is Some, it means we already had a particle with this
 			//	particle's ID. This should not happen.
 			if v.is_some() {
@@ -1578,7 +1626,7 @@ impl Simulation {
 	pub fn new(
 		tick_duration: physical_quantities::Time,
 		simulation_speed: Option<f64>,
-		on_tick: Option<fn(&mut Simulation)>,
+		on_tick: Option<fn(&Simulation)>,
 	) -> Self {
 
 		if tick_duration <= physical_quantities::Time::new(0.0) {
@@ -1593,14 +1641,14 @@ impl Simulation {
 
 		Self {
 			tick_duration: tick_duration,
-			particles: HashMap::new(),
-			elapsed_ticks: physical_quantities::Ticks::new(0),
+			particles: RefCell::new(HashMap::new()),
+			elapsed_ticks: RefCell::new(physical_quantities::Ticks::new(0)),
 			simulation_speed: simulation_speed,
 			on_tick: on_tick,
-			applied_forces: HashMap::new(),
-			particle_ids_to_delete: Vec::new(),
-			particles_to_add: Vec::new(),
-			is_paused: true,
+			applied_forces: RefCell::new(HashMap::new()),
+			particle_ids_to_delete: RefCell::new(Vec::new()),
+			particles_to_add: RefCell::new(Vec::new()),
+			is_paused: RefCell::new(true),
 		}
 	}
 
@@ -1613,7 +1661,7 @@ impl Simulation {
 	/// * `mass` - The particle's mass.
 	/// * `fields` - Fields to attach to the particle.
 	pub fn create_particle(
-		&mut self,
+		&self,
 		mass: physical_quantities::Mass,
 		position: physical_quantities::Displacement,
 		fields: Vec<Box<dyn simulation_objects::Field>>,
@@ -1628,7 +1676,7 @@ impl Simulation {
 		// Get the return value before handing off ownership of the particle.
 		let id = particle.get_id();
 
-		let v = self.particles.insert(id, particle);
+		let v = self.particles.borrow_mut().insert(id, particle);
 
 		// If v is Some, it means we already had a particle with this particle's
 		//	ID. This should not happen.
@@ -1648,8 +1696,8 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
-	pub fn delete_particle(&mut self, particle_id: Uuid) {
-		let removed = self.particles.remove(&particle_id);
+	pub fn delete_particle(&self, particle_id: Uuid) {
+		let removed = self.particles.borrow_mut().remove(&particle_id);
 
 		if removed.is_none() {
 			panic!(
@@ -1672,11 +1720,11 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn apply_force(
-		&mut self,
+		&self,
 		particle_id: Uuid,
 		force: physical_quantities::Force,
 	) {
-		if !self.particles.contains_key(&particle_id) {
+		if !self.particles.borrow().contains_key(&particle_id) {
 			panic!(
 				"Simulation.apply_force(): \
 					the provided particle ID was not found: {}",
@@ -1686,10 +1734,11 @@ impl Simulation {
 
 		// Log the new force so it can be applied on the next tick, creating a
 		//	new Vec of Forces if needed.
-		match self.applied_forces.get_mut(&particle_id) {
+		let mut applied_forces = self.applied_forces.borrow_mut();
+		match applied_forces.get_mut(&particle_id) {
 			Some(vec) => vec.push(force),
 			None => {
-				self.applied_forces.insert(particle_id, vec![force]);
+				applied_forces.insert(particle_id, vec![force]);
 			},
 		}
 	}
@@ -1704,7 +1753,7 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_mass(&self, particle_id: Uuid) -> physical_quantities::Mass {
-		match self.particles.get(&particle_id) {
+		match self.particles.borrow().get(&particle_id) {
 			Some(particle) => return particle.get_mass(),
 			None =>
 				panic!(
@@ -1726,7 +1775,7 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_position(&self, particle_id: Uuid) -> physical_quantities::Displacement {
-		match self.particles.get(&particle_id) {
+		match self.particles.borrow().get(&particle_id) {
 			Some(particle) => return particle.get_position(),
 			None =>
 				panic!(
@@ -1747,7 +1796,7 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_velocity(&self, particle_id: Uuid) -> physical_quantities::Velocity {
-		match self.particles.get(&particle_id) {
+		match self.particles.borrow().get(&particle_id) {
 			Some(particle) => return particle.get_velocity(),
 			None =>
 				panic!(
@@ -1769,7 +1818,7 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn get_field_info(&self, particle_id: Uuid) -> Vec<simulation_objects::FieldInfo> {
-		match self.particles.get(&particle_id) {
+		match self.particles.borrow().get(&particle_id) {
 			Some(particle) => return particle.get_field_info(),
 			None =>
 				panic!(
@@ -1781,14 +1830,14 @@ impl Simulation {
 	}
 
 	/// Starts the simulation.
-	pub fn start(&mut self) {
-		self.is_paused = false;
+	pub fn start(&self) {
+		*self.is_paused.borrow_mut() = false;
 		// TODO: Start some kind of timer to call tick() regularly.
 	}
 
 	/// Pauses the simulation.
-	pub fn pause(&mut self) {
-		self.is_paused = true;
+	pub fn pause(&self) {
+		*self.is_paused.borrow_mut() = true;
 		// TODO: Stop whatever timer is calling tick().
 	}
 
@@ -1796,8 +1845,8 @@ impl Simulation {
 	///
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
-	pub fn step(&mut self) {
-		if !self.is_paused {
+	pub fn step(&self) {
+		if !(*self.is_paused.borrow()) {
 			panic!("The simulation must be paused to call step().");
 		}
 
@@ -1806,12 +1855,12 @@ impl Simulation {
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
 	pub fn get_elapsed_ticks(&self) -> physical_quantities::Ticks {
-		self.elapsed_ticks
+		*self.elapsed_ticks.borrow()
 	}
 
 	/// Returns the returns the amount of simulated time (e.g., seconds) since
 	/// the start of the simulation.
 	pub fn get_elapsed_time(&self) -> physical_quantities::Time {
-		self.tick_duration * self.elapsed_ticks.get_number() as f64
+		self.tick_duration * self.elapsed_ticks.borrow().get_number() as f64
 	}
 }

@@ -53,7 +53,7 @@ pub trait Field {
 	///		by the simulation.
 	fn effect(
 		&self,
-		simulation: &mut simulation::Simulation,
+		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
 		particle_ids: Vec<Uuid>
 	);
@@ -101,7 +101,7 @@ pub struct DummyField {
 impl Field for DummyField {
 	fn effect(
 		&self,
-		simulation: &mut simulation::Simulation,
+		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
 		particle_ids: Vec<Uuid>
 	) {
@@ -159,7 +159,7 @@ impl SimpleSelfGravityField {
 impl Field for SimpleSelfGravityField {
 	fn effect(
 		&self,
-		simulation: &mut simulation::Simulation,
+		simulation: &simulation::Simulation,
 		_position: physical_quantities::Displacement,
 		particle_ids: Vec<Uuid>
 	) {
