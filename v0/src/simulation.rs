@@ -686,11 +686,6 @@ mod tests {
 		expected_displacement =
 			0.5 * (force / mass) * tick_duration * tick_duration;
 
-
-		let particle = simulation.particles
-			.borrow()
-			.get(&particle_id)
-			.expect("The particle should still exist.");
 		assert_eq!(
 			expected_displacement,
 			simulation.particles

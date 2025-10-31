@@ -1,4 +1,19 @@
 TODO:
+
+	Change how acceleration and displacement ("coasting") are handled in tick().
+		Currently, we are (incorrectly) setting the velocity to what it should
+		be at the very end of the tick, then changing position based on that new
+		velocity. This ignores the smaller change in position that should happen
+		as a particle is being accelerated, instead calculating the entire
+		change in position based on the peak velocity that would occur during
+		that tick. Acceleration and displacement need to be handled together to
+		calculate the change in position due to velocity at the start of the
+		tick and velocity throughout the tick due to acceleration.
+		- Actually, forces should also be applied for the duration of the tick,
+			so we need to account for changing acceleration and changing
+			velocity to correctly calculate. There are probably equations of
+			motion (or a way to combine them) to easily calculate velocity and
+			displacement based on a constant force applied for a set time.
 	
 	See asterisks below.
 
