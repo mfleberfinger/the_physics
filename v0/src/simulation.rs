@@ -120,9 +120,7 @@ mod tests {
 	//	parameters and that it is added to the particles collection.
 	#[test]
 	fn simulation_creates_particle() {
-		panic!("TODO: Modify to take into account the fact that particles are now created on the next tick.");
-		/*
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id_1 = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(0.0, 0.0),
@@ -141,60 +139,98 @@ mod tests {
 			)),
 		);
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		assert!(
-			simulation.particles.contains_key(&particle_id_1),
+			simulation.particles.borrow().contains_key(&particle_id_1),
 			"particle_id_1 is not in the particles collection."
 		);
 		assert!(
-			simulation.particles.contains_key(&particle_id_2),
+			simulation.particles.borrow().contains_key(&particle_id_2),
 			"particle_id_2 is not in the particles collection."
 		);
 
-		let particle_1 = simulation.particles.get(&particle_id_1)
-			.expect("simulation.particles should contain particle_id_1");
-		let particle_2 = simulation.particles.get(&particle_id_2)
-			.expect("simulation.particles should contain particle_id_2");
-
-		assert_eq!(particle_1.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
-		assert_eq!(particle_1.get_mass(), physical_quantities::Mass::new(1.0));
-		assert!(
-			particle_1.get_field_info().is_empty(),
-			"particle_1 should have no fields"
-		);
-
-		assert_eq!(particle_2.get_position(), physical_quantities::Displacement::new(0.0, 0.0));
-		assert_eq!(particle_2.get_mass(), physical_quantities::Mass::new(1.0));
 		assert_eq!(
-			particle_2.get_field_info().len(),
-			1,
-			"particle_2 should have a field"
+			simulation.particles
+				.borrow()
+				.get(&particle_id_1)
+				.expect("simulation.particles should contain particle_id_1")
+				.get_position(),
+			physical_quantities::Displacement::new(0.0, 0.0)
 		);
-		*/
+		assert_eq!(
+			simulation.particles
+				.borrow()
+				.get(&particle_id_1)
+				.expect("simulation.particles should contain particle_id_1")
+				.get_mass(),
+			physical_quantities::Mass::new(1.0)
+		);
+		assert!(
+			simulation.particles
+				.borrow()
+				.get(&particle_id_1)
+				.expect("simulation.particles should contain particle_id_1")
+				.get_field_info()
+				.is_empty(),
+				"particle 1 should have no fields"
+		);
+
+		assert_eq!(
+			simulation.particles
+				.borrow()
+				.get(&particle_id_2)
+				.expect("simulation.particles should contain particle_id_2")
+				.get_position(),
+			physical_quantities::Displacement::new(0.0, 0.0)
+		);
+		assert_eq!(
+			simulation.particles
+				.borrow()
+				.get(&particle_id_2)
+				.expect("simulation.particles should contain particle_id_2")
+				.get_mass(),
+			physical_quantities::Mass::new(1.0)
+		);
+		assert_eq!(
+			simulation.particles
+				.borrow()
+				.get(&particle_id_2)
+				.expect("simulation.particles should contain particle_id_2")
+				.get_field_info()
+				.len(),
+			1,
+			"particle 2 should have a field"
+		);
 	}
 
 	#[test]
 	fn simulation_deletes_particle() {
-		panic!("TODO: Modify to take into account the fact that particles are now deleted on the next tick.");
-		/*
-		let mut simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
+		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let particle_id = simulation.create_particle(
 			physical_quantities::Mass::new(1.0),
 			physical_quantities::Displacement::new(0.0, 0.0),
 			Vec::new(),
 		);
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		assert!(
-			simulation.particles.contains_key(&particle_id),
+			simulation.particles.borrow().contains_key(&particle_id),
 			"Cannot test particle deletion if the particle was not created.",
 		);
 
 		simulation.delete_particle(particle_id);
 
+		// Advance the simulation by a tick to allow the particle to be removed.
+		simulation.step();
+
 		assert!(
-			!simulation.particles.contains_key(&particle_id),
+			!simulation.particles.borrow().contains_key(&particle_id),
 			"The particles collection should not contain a deleted particle.",
 		);
-		*/
 	}
 
 	#[test]
@@ -218,6 +254,9 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			Vec::new(),
 		);
+
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
 
 		simulation.apply_force(particle_id, physical_quantities::Force::new(1.0, 1.0));
 		assert!(
@@ -248,6 +287,9 @@ mod tests {
 			Vec::new(),
 		);
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		let mass = simulation.get_mass(particle_id);
 
 		assert_eq!(physical_quantities::Mass::new(1.0), mass);
@@ -268,6 +310,9 @@ mod tests {
 			physical_quantities::Displacement::new(-1.23, 123.0),
 			Vec::new(),
 		);
+
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
 
 		let position = simulation.get_position(particle_id);
 
@@ -325,6 +370,9 @@ mod tests {
 				}
 			)),
 		);
+
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
 
 		let field_info = simulation.get_field_info(particle_id);
 
@@ -526,6 +574,10 @@ mod tests {
 			Vec::new(),
 		);
 
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
+		// Advance the simulation again to allow the new particles to be
+		//	affected by the field.
 		simulation.step();
 
 		assert!(
@@ -572,8 +624,13 @@ mod tests {
 			Vec::new(),
 		);
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		assert!(simulation.particles.borrow().contains_key(&suicide_particle));
 
+		// Advance the simulation again to allow the new particle to be
+		//	affected by its field.
 		simulation.step();
 
 		assert!(
@@ -605,6 +662,9 @@ mod tests {
 			vec!(),
 		);
 		
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		simulation.particles
 			.borrow()
 			.get(&particle_id)
@@ -678,6 +738,9 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
+
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
 
 		simulation.particles.borrow()
 			.get(&particle_id)
@@ -771,6 +834,9 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
+
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
 
 		// Apply a force.
 		simulation.apply_force(p_id_0, force);
@@ -916,6 +982,12 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
+
+		// Advance the simulations by a tick to allow the particles to be added.
+		s0.step();
+		s1.step();
+		s2.step();
+		s3.step();
 
 		s0.particles
 			.borrow()
@@ -1114,6 +1186,9 @@ mod tests {
 			Vec::new(),
 		);
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		// Nine combinations of positive, negative, and 0:
 		//	(-, -), (-, 0), (-, +), (0, -), (0, 0), (0, +), (+, -), (+, 0),
 		//	(+, +)
@@ -1121,7 +1196,7 @@ mod tests {
 		let mut expected_position = initial_position;
 		let mut actual_position = initial_position;
 		let mut expected_velocity = physical_quantities::Velocity::new(0.0, 0.0);
-		let mut elapsed_time = physical_quantities::Time::new(0.0);
+		let mut elapsed_time = physical_quantities::Time::new(0.0) - tick_duration;
 		let mut time_since_last_round = physical_quantities::Time::new(0.0);
         let mut expected_acceleration;
 		for i in -1..2 {
@@ -1211,6 +1286,9 @@ mod tests {
             vec!(Box::new(gravity_field)),
         );
 
+		// Advance the simulation by a tick to allow the particle to be added.
+		simulation.step();
+
 		// Forcing phase.
         // Apply the force for a set duration.
         for i in 0..((force_duration.get_number() / tick_duration.get_number()) as i64) {
@@ -1220,7 +1298,8 @@ mod tests {
 
         // Find out how long the force was actually applied for and where the
         //  particle was at the end of the acceleration period.
-        let actual_force_duration = simulation.get_elapsed_time();
+        let actual_force_duration =
+			simulation.get_elapsed_time() - tick_duration;
 
         // Calculate the expected position after the acceleration period.
         // a = f / m
@@ -1320,7 +1399,9 @@ mod tests {
 		let mut actual_velocity;
         while actual_position.y() > 0.0
 			&& expected_total_flight_time >
-				simulation.get_elapsed_time() + physical_quantities::Time::new(10.0) {
+				simulation.get_elapsed_time()
+				- tick_duration
+				+ physical_quantities::Time::new(10.0) {
 
             // As the particle coasts, we will assert that its position is
 			//	correct from one tick to the next, given its previous actual
@@ -1367,7 +1448,7 @@ mod tests {
             // Save the time and position of the highest point in the trajectory.
 			if actual_position.y() > actual_peak.y() {
 				actual_peak = actual_position;
-				actual_time_to_peak = simulation.get_elapsed_time();
+				actual_time_to_peak = simulation.get_elapsed_time() - tick_duration;
 			}
         }
 
@@ -1409,7 +1490,7 @@ mod tests {
         // Assert that the actual time and position of the zero-crossing (i.e.,
 		//	current time and position) were correct when compared to the
 		//	expected/calculated time and position, within permissible error.
-		let actual_total_flight_time = simulation.get_elapsed_time();
+		let actual_total_flight_time = simulation.get_elapsed_time() - tick_duration;
 		assert!(
 			times_are_almost_equal(
 				expected_total_flight_time,
@@ -1608,6 +1689,8 @@ impl Simulation {
 						means there is a bug in the physics engine.");
 			}
 		}
+
+		*self.elapsed_ticks.borrow_mut() += physical_quantities::Ticks::new(1);
 	}
 
 	/// Creates an instance of `Simulation`.

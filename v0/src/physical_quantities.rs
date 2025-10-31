@@ -680,6 +680,32 @@ mod tests {
 		assert_eq!(Ticks(0).get_number(), 0);
 		assert_eq!(Ticks(1).get_number(), 1);
 	}
+
+	#[test]
+	fn ticks_supports_add_assign() {
+		let mut ticks = Ticks(0);
+		ticks += Ticks(1);
+		assert_eq!(ticks, Ticks(1));
+		ticks += Ticks(1);
+		assert_eq!(ticks, Ticks(2));
+		ticks += Ticks(10);
+		assert_eq!(ticks, Ticks(12));
+	}
+
+	#[test]
+	fn ticks_supports_addition() {
+        assert_eq!(Ticks(0), Ticks(0) + Ticks(0));
+        assert_eq!(Ticks(1), Ticks(0) + Ticks(1));
+        assert_eq!(Ticks(1), Ticks(1) + Ticks(0));
+        assert_eq!(Ticks(2), Ticks(1) + Ticks(1));
+	}
+
+	#[test]
+	fn ticks_supports_subtraction() {
+        assert_eq!(Ticks(0), Ticks(0) - Ticks(0));
+        assert_eq!(Ticks(1), Ticks(1) - Ticks(0));
+        assert_eq!(Ticks(0), Ticks(1) - Ticks(1));
+	}
 }
 
 
@@ -1088,5 +1114,26 @@ impl Ticks {
 	/// Gets the raw u64 value representing the number of ticks.
 	pub fn get_number(&self) -> u64 {
 		self.0
+	}
+}
+
+impl ops::AddAssign for Ticks {
+	fn add_assign(&mut self, other: Self) {
+		*self = *self + other;
+	}
+}
+impl ops::Add for Ticks {
+	type Output = Self;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(self.0 + rhs.0)
+	}
+}
+
+impl ops::Sub for Ticks {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		Self(self.0 - rhs.0)
 	}
 }
