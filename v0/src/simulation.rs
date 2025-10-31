@@ -604,9 +604,9 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particles = simulation.particles.borrow();
 		
-		particles
+		simulation.particles
+			.borrow()
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -627,16 +627,20 @@ mod tests {
 			0.5 * (force / mass) * tick_duration * tick_duration;
 
 
-		let particle = particles.get(&particle_id)
-			.expect("The particle should still exist.");
-		assert_eq!(expected_displacement, particle.get_position());
-		// During this step, the particle should coast at a known velocity.
-		simulation.step();
-
-		let particle = particles
+		let particle = simulation.particles
+			.borrow()
 			.get(&particle_id)
 			.expect("The particle should still exist.");
-
+		assert_eq!(
+			expected_displacement,
+			simulation.particles
+				.borrow()
+				.get(&particle_id)
+				.expect("The particle should still exist.")
+				.get_position()
+		);
+		// During this step, the particle should coast at a known velocity.
+		simulation.step();
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
 		// a = f / m
@@ -644,7 +648,14 @@ mod tests {
 		// Therefore, v = (f / m) * t
 		expected_velocity = (force / mass) * tick_duration;
 		expected_displacement += expected_velocity * tick_duration;
-		assert_eq!(expected_displacement, particle.get_position());
+		assert_eq!(
+			expected_displacement,
+			simulation.particles
+				.borrow()
+				.get(&particle_id)
+				.expect("The particle should still exist.")
+				.get_position()
+		);
 	}
 
 	// Apply several forces, then call step() and verify that the particle
@@ -667,9 +678,8 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particles = simulation.particles.borrow();
 
-		particles
+		simulation.particles.borrow()
 			.get(&particle_id)
 			.expect("The particle that was just created should exist.");
 
@@ -679,9 +689,11 @@ mod tests {
 		simulation.apply_force(particle_id, f2);
 		simulation.apply_force(particle_id, f3);
 		simulation.apply_force(particle_id, f4);
+
 		// During this step, the particle should accelerate as the force is
 		//	simulated.
 		simulation.step();
+
 		// Verify that the particle moved the distance expected during its
 		//	acceleration, based on the particle's mass, force vector, and force
 		//	duration. The actual displacement should be exactly as calculated by
@@ -692,16 +704,18 @@ mod tests {
 		// Therefore, d = (1 / 2) * (f / m) * t^2
 		expected_displacement =
 			0.5 * (net_force / mass) * tick_duration * tick_duration;
-		let particle = particles
-			.get(&particle_id)
-			.expect("The particle should still exist.");
-		assert_eq!(expected_displacement, particle.get_position());
+
+		assert_eq!(
+			expected_displacement,
+			simulation.particles
+				.borrow()
+				.get(&particle_id)
+				.expect("The particle should still exist.")
+				.get_position()
+		);
+
 		// During this step, the particle should coast at a known velocity.
 		simulation.step();
-
-		let particle = particles
-			.get(&particle_id)
-			.expect("The particle should still exist.");
 
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
@@ -710,7 +724,15 @@ mod tests {
 		// Therefore, v = (f / m) * t
 		expected_velocity = (net_force / mass) * tick_duration;
 		expected_displacement += expected_velocity * tick_duration;
-		assert_eq!(expected_displacement, particle.get_position());
+
+		assert_eq!(
+			expected_displacement,
+			simulation.particles
+				.borrow()
+				.get(&particle_id)
+				.expect("The particle should still exist.")
+				.get_position()
+		);
 	}
 
 	// Apply a force to particles with several different masses. Verify that
@@ -749,20 +771,6 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particles = simulation.particles.borrow();
-
-		particles
-			.get(&p_id_0)
-			.expect("The particle (p_id_0) that was just created should exist.");
-		particles
-			.get(&p_id_1)
-			.expect("The particle (p_id_1) that was just created should exist.");
-		particles
-			.get(&p_id_2)
-			.expect("The particle (p_id_2) that was just created should exist.");
-		particles
-			.get(&p_id_3)
-			.expect("The particle (p_id_3) that was just created should exist.");
 
 		// Apply a force.
 		simulation.apply_force(p_id_0, force);
@@ -773,19 +781,6 @@ mod tests {
 		// During this step, the particles should accelerate as the force is
 		//	simulated.
 		simulation.step();
-
-		let p0 = particles
-			.get(&p_id_0)
-			.expect("The particle (p_id_0) should still exist.");
-		let p1 = particles
-			.get(&p_id_1)
-			.expect("The particle (p_id_1) should still exist.");
-		let p2 = particles
-			.get(&p_id_2)
-			.expect("The particle (p_id_2) should still exist.");
-		let p3 = particles
-			.get(&p_id_3)
-			.expect("The particle (p_id_3) should still exist.");
 
 		// Verify that the particles moved the distance expected during their
 		//	acceleration, based on the particles' masses, force vector, and
@@ -798,43 +793,42 @@ mod tests {
 		d0 = 0.5 * (force / m0) * tick_duration * tick_duration;
 		assert_eq!(
 			d0,
-			p0.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_0)
+			.expect("The particle (p_id_0) should still exist.").get_position(),
 			"The displacement of particle p0 was wrong after acceleration."
 		);
 		d1 = 0.5 * (force / m1) * tick_duration * tick_duration;
 		assert_eq!(
 			d1,
-			p1.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_1)
+			.expect("The particle (p_id_1) should still exist.").get_position(),
 			"The displacement of particle p1 was wrong after acceleration."
 		);
 		d2 = 0.5 * (force / m2) * tick_duration * tick_duration;
 		assert_eq!(
 			d2,
-			p2.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_2)
+			.expect("The particle (p_id_2) should still exist.").get_position(),
 			"The displacement of particle p2 was wrong after acceleration."
 		);
 		d3 = 0.5 * (force / m3) * tick_duration * tick_duration;
 		assert_eq!(
 			d3,
-			p3.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_3)
+			.expect("The particle (p_id_3) should still exist.").get_position(),
 			"The displacement of particle p3 was wrong after acceleration."
 		);
 
 		// During this step, the particles should coast at known velocities.
 		simulation.step();
-
-		let p0 = particles
-			.get(&p_id_0)
-			.expect("The particle (p_id_0) should still exist.");
-		let p1 = particles
-			.get(&p_id_1)
-			.expect("The particle (p_id_1) should still exist.");
-		let p2 = particles
-			.get(&p_id_2)
-			.expect("The particle (p_id_2) should still exist.");
-		let p3 = particles
-			.get(&p_id_3)
-			.expect("The particle (p_id_3) should still exist.");
 
 		// Verify that the particles moved the distance expected, given their
 		//	expected velocities.
@@ -845,28 +839,40 @@ mod tests {
 		d0 += expected_velocity * tick_duration;
 		assert_eq!(
 			d0,
-			p0.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_0)
+			.expect("The particle (p_id_0) should still exist.").get_position(),
 			"The displacement of particle p0 was wrong after coasting."
 		);
 		expected_velocity = (force / m1) * tick_duration;
 		d1 += expected_velocity * tick_duration;
 		assert_eq!(
 			d1,
-			p1.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_1)
+			.expect("The particle (p_id_1) should still exist.").get_position(),
 			"The displacement of particle p1 was wrong after coasting."
 		);
 		expected_velocity = (force / m2) * tick_duration;
 		d2 += expected_velocity * tick_duration;
 		assert_eq!(
 			d2,
-			p2.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_2)
+			.expect("The particle (p_id_2) should still exist.").get_position(),
 			"The displacement of particle p2 was wrong after coasting."
 		);
 		expected_velocity = (force / m3) * tick_duration;
 		d3 += expected_velocity * tick_duration;
 		assert_eq!(
 			d3,
-			p3.get_position(),
+			simulation.particles
+			.borrow()
+			.get(&p_id_3)
+			.expect("The particle (p_id_3) should still exist.").get_position(),
 			"The displacement of particle p3 was wrong after coasting."
 		);
 	}
@@ -910,21 +916,21 @@ mod tests {
 			physical_quantities::Displacement::new(0.0, 0.0),
 			vec!(),
 		);
-		let particles0 = s0.particles.borrow();
-		let particles1 = s1.particles.borrow();
-		let particles2 = s2.particles.borrow();
-		let particles3 = s3.particles.borrow();
 
-		particles0
+		s0.particles
+			.borrow()
 			.get(&p_id_0)
 			.expect("The particle that was just created in s0 should exist.");
-		particles1
+		s1.particles
+			.borrow()
 			.get(&p_id_1)
 			.expect("The particle that was just created in s1 should exist.");
-		particles2
+		s2.particles
+			.borrow()
 			.get(&p_id_2)
 			.expect("The particle that was just created in s2 should exist.");
-		particles3
+		s3.particles
+			.borrow()
 			.get(&p_id_3)
 			.expect("The particle that was just created in s3 should exist.");
 
@@ -940,19 +946,6 @@ mod tests {
 		s2.step();
 		s3.step();
 
-		let p0 = particles0
-			.get(&p_id_0)
-			.expect("The particle in s0 should still exist.");
-		let p1 = particles1
-			.get(&p_id_1)
-			.expect("The particle in s1 should still exist.");
-		let p2 = particles2
-			.get(&p_id_2)
-			.expect("The particle in s2 should still exist.");
-		let p3 = particles3
-			.get(&p_id_3)
-			.expect("The particle in s3 should still exist.");
-
 		// Verify that the particle moved the distance expected during its
 		//	acceleration, based on the particle's mass, force vector, and force
 		//	duration. The actual displacement should be exactly as calculated by
@@ -964,25 +957,37 @@ mod tests {
 		d0 = 0.5 * (force / mass) * tick_0 * tick_0;
 		assert_eq!(
 			d0,
-			p0.get_position(),
+			s0.particles
+			.borrow()
+			.get(&p_id_0)
+			.expect("The particle in s0 should still exist.").get_position(),
 			"The displacement of particle p0 was wrong after acceleration."
 		);
 		d1 = 0.5 * (force / mass) * tick_1 * tick_1;
 		assert_eq!(
 			d1,
-			p1.get_position(),
+			s1.particles
+			.borrow()
+			.get(&p_id_1)
+			.expect("The particle in s1 should still exist.").get_position(),
 			"The displacement of particle p1 was wrong after acceleration."
 		);
 		d2 = 0.5 * (force / mass) * tick_2 * tick_2;
 		assert_eq!(
 			d2,
-			p2.get_position(),
+			s2.particles
+			.borrow()
+			.get(&p_id_2)
+			.expect("The particle in s2 should still exist.").get_position(),
 			"The displacement of particle p2 was wrong after acceleration."
 		);
 		d3 = 0.5 * (force / mass) * tick_3 * tick_3;
 		assert_eq!(
 			d3,
-			p3.get_position(),
+			s3.particles
+			.borrow()
+			.get(&p_id_3)
+			.expect("The particle in s3 should still exist.").get_position(),
 			"The displacement of particle p3 was wrong after acceleration."
 		);
 		// During this step, the particle should coast at a known velocity.
@@ -991,19 +996,6 @@ mod tests {
 		s2.step();
 		s3.step();
 		
-		let p0 = particles0
-			.get(&p_id_0)
-			.expect("The particle in s0 should still exist.");
-		let p1 = particles1
-			.get(&p_id_1)
-			.expect("The particle in s1 should still exist.");
-		let p2 = particles2
-			.get(&p_id_2)
-			.expect("The particle in s2 should still exist.");
-		let p3 = particles3
-			.get(&p_id_3)
-			.expect("The particle in s3 should still exist.");
-
 		// Verify that the particle moved the distance expected, given its
 		//	expected velocity.
 		// a = f / m
@@ -1013,28 +1005,40 @@ mod tests {
 		d0 += expected_velocity * tick_0;
 		assert_eq!(
 			d0,
-			p0.get_position(),
+			s0.particles
+			.borrow()
+			.get(&p_id_0)
+			.expect("The particle in s0 should still exist.").get_position(),
 			"The displacement of particle p0 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_1;
 		d1 += expected_velocity * tick_1;
 		assert_eq!(
 			d1,
-			p1.get_position(),
+			s1.particles
+			.borrow()
+			.get(&p_id_1)
+			.expect("The particle in s1 should still exist.").get_position(),
 			"The displacement of particle p1 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_2;
 		d2 += expected_velocity * tick_2;
 		assert_eq!(
 			d2,
-			p2.get_position(),
+			s2.particles
+			.borrow()
+			.get(&p_id_2)
+			.expect("The particle in s2 should still exist.").get_position(),
 			"The displacement of particle p2 was wrong after coasting."
 		);
 		expected_velocity = (force / mass) * tick_3;
 		d3 += expected_velocity * tick_3;
 		assert_eq!(
 			d3,
-			p3.get_position(),
+			s3.particles
+			.borrow()
+			.get(&p_id_3)
+			.expect("The particle in s3 should still exist.").get_position(),
 			"The displacement of particle p3 was wrong after coasting."
 		);
 	}
@@ -1502,9 +1506,9 @@ impl Simulation {
 		//	distance). Do some research and optimize this so searching for
 		//	nearby particles isn't so inefficient.
 		// Vec of (field owner, field, affected particles).
-		let mut field_parameters:
-			Vec<(Uuid, &Box<dyn simulation_objects::Field>, Vec<Uuid>)> =
-			Vec::new();
+//		let mut field_parameters:
+//			Vec<(Uuid, &Box<dyn simulation_objects::Field>, Vec<Uuid>)> =
+//			Vec::new();
 		for field_owner in self.particles.borrow().values() {
 			for field in field_owner.get_fields().iter() {
 
@@ -1517,7 +1521,7 @@ impl Simulation {
 
 				// Add all particles, other than the field owner, that are
 				//	within the field, if this field affects particles other than
-				//	the particle to which its attached.
+				//	the particle to which it's attached.
 				if field.affects_others() {
 					for particle in self.particles.borrow().values() {
 
@@ -1653,8 +1657,8 @@ impl Simulation {
 	}
 
 
-	/// Creates a new particle and adds it to the simulation. Returns that
-	/// particle's unique ID.
+	/// Creates a new particle to be added to the simulation during the next
+	///	tick. Returns that particle's unique ID.
 	///
 	/// # Arguments
 	/// * `position` - The particle's coordinates in space.
@@ -1676,11 +1680,9 @@ impl Simulation {
 		// Get the return value before handing off ownership of the particle.
 		let id = particle.get_id();
 
-		let v = self.particles.borrow_mut().insert(id, particle);
+		let v = self.particles_to_add.borrow_mut().push(particle);
 
-		// If v is Some, it means we already had a particle with this particle's
-		//	ID. This should not happen.
-		if v.is_some() {
+		if self.particles.borrow().contains_key(&id) {
 			panic!("Created a particle with an existing key. This probably \
 					means there is a bug in the physics engine.");
 		}
@@ -1697,15 +1699,15 @@ impl Simulation {
 	/// This method will panic if there is no particle identified by
 	/// 	`particle_id`.
 	pub fn delete_particle(&self, particle_id: Uuid) {
-		let removed = self.particles.borrow_mut().remove(&particle_id);
-
-		if removed.is_none() {
+		if !self.particles.borrow().contains_key(&particle_id) {
 			panic!(
 				"Simulation.delete_particle(): \
 					the provided particle ID was not found: {}",
 				particle_id,
 			);
 		}
+
+		self.particle_ids_to_delete.borrow_mut().push(particle_id);
 	}
 
 	/// Applies a force to a specific particle for the duration of the next
