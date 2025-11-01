@@ -1,19 +1,4 @@
 TODO:
-
-	Change how acceleration and displacement ("coasting") are handled in tick().
-		Currently, we are (incorrectly) setting the velocity to what it should
-		be at the very end of the tick, then changing position based on that new
-		velocity. This ignores the smaller change in position that should happen
-		as a particle is being accelerated, instead calculating the entire
-		change in position based on the peak velocity that would occur during
-		that tick. Acceleration and displacement need to be handled together to
-		calculate the change in position due to velocity at the start of the
-		tick and velocity throughout the tick due to acceleration.
-		- Actually, forces should also be applied for the duration of the tick,
-			so we need to account for changing acceleration and changing
-			velocity to correctly calculate. There are probably equations of
-			motion (or a way to combine them) to easily calculate velocity and
-			displacement based on a constant force applied for a set time.
 	
 	See asterisks below.
 
@@ -51,9 +36,10 @@ Development process (not necessarily in order)
 		+ Starting to write these while working on the design, based on the
 			methods under the "Interface", section, below, might be helpful for
 			coming up with more of the design.
-	- Implement the library. ******************************************************************************
-		+ Don't forget about the design notes below, particularly the simulation ***********
+	- Implement the library.
+		+ Don't forget about the design notes below, particularly the simulation
 			notes and the tick() method's notes.
+		+ Make sure the tests pass. ****************************************************************
 	- Write the demo.
 
 Testing
@@ -251,7 +237,7 @@ Simulation Struct
 						forces may be applied by particles deleted in the
 						current tick and sometimes particles will be deleted
 						before their forces are applied.
-						-> The only reasonable thing to do is to come up with	*************************
+						-> The only reasonable thing to do is to come up with
 							some way to make sure that all effects of all
 							fields that existed at the start of a tick will be
 							applied on the current tick.
@@ -507,3 +493,22 @@ To remember for future iterations:
 		not in the number of elements it holds. See the HashMap.shrink_to_fit()
 		method's documentation if considering shrinking the map after a number
 		of deletions.
+
+
+DONE:
+
+	Change how acceleration and displacement ("coasting") are handled in tick().
+		Currently, we are (incorrectly) setting the velocity to what it should
+		be at the very end of the tick, then changing position based on that new
+		velocity. This ignores the smaller change in position that should happen
+		as a particle is being accelerated, instead calculating the entire
+		change in position based on the peak velocity that would occur during
+		that tick. Acceleration and displacement need to be handled together to
+		calculate the change in position due to velocity at the start of the
+		tick and velocity throughout the tick due to acceleration.
+		- To calculate the new velocity:
+			v = v_0 + a * t
+			v = v_0 + (f / m) * t
+		- To calculate the new position:
+			d = d_0 + v_0 * t + 0.5 * a * t^2
+			d = d_0 + v_0 * t + 0.5 * (f / m) * t^2

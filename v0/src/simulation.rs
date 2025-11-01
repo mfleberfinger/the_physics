@@ -1656,25 +1656,19 @@ impl Simulation {
 		}
 		self.particle_ids_to_delete.borrow_mut().clear();
 
-		// Calculate and set the new velocity for all particles upon which a
-		//	force is acting during this tick.
+		// For each particle, calculate and apply any change in velocity or
+		//	position that should occur during this tick.
 		for (particle_id, particle) in self.particles.borrow_mut().iter_mut() {
 			match self.applied_forces.borrow().get(particle_id) {
 				Some(forces) => particle.accelerate(forces, self.tick_duration),
-				None => (),
+				None => particle.coast(self.tick_duration),
 			}
 		}
 		self.applied_forces.borrow_mut().clear();
 
-		// For each particle, change the particle's position, based on its
-		//	velocity.
-		for particle in self.particles.borrow_mut().values_mut() {
-			particle.coast(self.tick_duration);
-		}
-
 		// Add any newly created particles to the simulation. Doing this after
-		//	applying forces avoids iterating through particles that can't have
-		//	forces applied on this tick anyway.
+		//	applying changes in velocity and position avoids iterating through
+		//	particles that can't have changes during this tick anyway.
 		for particle in self.particles_to_add.borrow_mut().drain(..) {
 			let v = self.particles.borrow_mut().insert(particle.get_id(), particle);
 			// If v is Some, it means we already had a particle with this
