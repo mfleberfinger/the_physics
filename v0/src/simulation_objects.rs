@@ -47,7 +47,7 @@ pub trait Field {
 	/// Determines what happens when the field is triggered.
 	/// # Arguments
 	/// * `simulation` - The Simulation that called the effect function.
-	/// # `position` - The position of the particle to which this field is
+	/// * `position` - The position of the particle to which this field is
 	///		attached. The center of the field.
 	/// * `particle_ids` - IDs of all particles affected by the field. Determined
 	///		by the simulation.
