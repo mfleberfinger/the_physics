@@ -774,6 +774,29 @@ impl Vector2 {
 			y: y,
 		}
 	}
+
+	pub fn x(&self) -> f64 {
+		self.x
+	}
+
+	pub fn y(&self) -> f64 {
+		self.y
+	}
+
+	/// Gets the magnitude of this vector.
+	pub fn get_magnitude(self) -> f64 {
+		(self.x.powf(2.0) + self.y.powf(2.0)).sqrt()
+	}
+
+	/// Gets a unit vector pointing in the same direction as this vector.
+	pub fn get_unit_vector(self) -> Self {
+		let magnitude = self.get_magnitude();
+
+		Self {
+			x: self.x / magnitude,
+			y: self.y / magnitude,
+		}
+	}
 }
 
 // Scalar multiplication of a vector.
@@ -885,6 +908,10 @@ impl Displacement {
 
 	pub fn y(&self) -> f64 {
 		self.0.y
+	}
+
+	pub fn get_vector(&self) -> Vector2 {
+		self.0
 	}
 }
 

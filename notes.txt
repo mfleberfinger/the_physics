@@ -4,6 +4,16 @@ TODO:
 		- Check below.
 		- Done? Need to test this somehow.
 	
+	Write unit tests for:
+		- utilities::is_within_radius()
+		- utilities::measure_distance()
+		- utilities::get_displacement_vector()
+		- Vector2.get_unit_vector()
+		- Vector2.get_magnitude()
+		- Vector2.x()
+		- Vector2.y()
+		- Displacement.get_vector()
+	
 	Simulation.get_position() should not panic if a particle doesn't exist. It
 		Should return an Option::None. Otherwise, having a field delete a
 		particle, then attempting to find that particle (for example, in

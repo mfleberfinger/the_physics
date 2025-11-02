@@ -1,4 +1,4 @@
-use crate::{physical_quantities, simulation};
+use crate::{physical_quantities, simulation, utilities};
 use uuid::Uuid;
 
 
@@ -51,11 +51,14 @@ pub trait Field {
 	///		attached. The center of the field.
 	/// * `particle_ids` - IDs of all particles affected by the field. Determined
 	///		by the simulation.
+	/// * `field_owner_id` - The ID of the particle to which this field is
+	///		attached.
 	fn effect(
 		&self,
 		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>
+		particle_ids: Vec<Uuid>,
+		field_owner_id: Uuid,
 	);
 
 	/// Called by the simulation to get the field's radius.
@@ -103,7 +106,8 @@ impl Field for DummyField {
 		&self,
 		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>
+		particle_ids: Vec<Uuid>,
+		field_owner_id: Uuid,
 	) {
 		// Does nothing.
 	}
@@ -140,7 +144,7 @@ impl SimpleSelfGravityField {
 	///
 	/// # Arguments
 	/// * `acceleration` - The acceleration due to gravity, "little 'g'."
-	/// * `name` - The field name. Defaults to "SimpleSelfGravityField" if None.
+	/// * `name` - The field name. Defaults to "SimpleSelfGravityField" if `None`.
 	pub fn new(acceleration: physical_quantities::Acceleration, name: Option<String>)
 		-> SimpleSelfGravityField
 	{
@@ -161,7 +165,8 @@ impl Field for SimpleSelfGravityField {
 		&self,
 		simulation: &simulation::Simulation,
 		_position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>
+		particle_ids: Vec<Uuid>,
+		_field_owner_id: Uuid,
 	) {
 		// There should only ever be one thing in the Vec (the particle to
 		//  which this field is attached).
@@ -181,6 +186,105 @@ impl Field for SimpleSelfGravityField {
 
 	fn affects_others(&self) -> bool {
 		false
+	}
+
+	fn get_name(&self) -> &String {
+		&self.name
+	}
+}
+
+/// Makes a particle apply a gravitational pull to other particles within the
+/// field's radius.
+pub struct UniversalGravitationField {
+	radius: f64,
+	gravitational_constant: f64,
+	name: String,
+}
+
+impl UniversalGravitationField {
+
+	/// Creates an instance of `UniversalGravitationField`.
+	///
+	/// # Arguments
+	/// * `gravitational_constant` - The gravitational constant, G. If this is
+	///		`None`, the real world value of 6.6743e−11 will be used.
+	/// * `name` - The field name. Defaults to "UniversalGravitationField" if
+	///		`None`.
+	pub fn new(
+		radius: f64,
+		gravitational_constant: Option<f64>,
+		name: Option<String>)
+		-> UniversalGravitationField
+	{
+		let field_name = match name {
+			Some(s) => s,
+			None => String::from("UniversalGravitationField"),
+		};
+
+		let big_g = match gravitational_constant {
+			Some(g) => g,
+			None => 6.6743e-11,
+		};
+
+		UniversalGravitationField {
+			radius: radius,
+			gravitational_constant: big_g,
+			name: field_name,
+		}
+	}
+}
+
+impl Field for UniversalGravitationField {
+	fn effect(
+		&self,
+		simulation: &simulation::Simulation,
+		position: physical_quantities::Displacement,
+		particle_ids: Vec<Uuid>,
+		field_owner_id: Uuid,
+	) {
+		for id in particle_ids {
+			// We want to calculate
+			// F = G * ((m_1 * m_2) / |r_12|^2) * ru_12
+			// Where r_12 is the vector from the other particle to this field's
+			//	owner particle and ru_12 is the unit vector derived from r_12.
+			let other_position = simulation.get_position(id);
+			let displacement_vector = utilities::get_displacement_vector(
+				other_position,
+				position,
+			);
+			let unit_vector = displacement_vector.get_vector().get_unit_vector();
+			// Magnitude = sqrt(x^2 + y^2) => Magnitude^2 = x^2 + y^2
+			let magnitude_squared = displacement_vector.x().powf(2.0) + displacement_vector.y().powf(2.0);
+
+			// Don't divide by 0. If we ever encounter this situation, it seems
+			//	extremely unlikely that it would last for more than one tick if
+			//	things are allowed to move (i.e., the user isn't intentionally
+			//	pinning two particles to the same location).
+			if magnitude_squared > 0.0 {
+				let force_vector =
+					self.gravitational_constant
+					* (
+					(simulation.get_mass(field_owner_id).get_number() * simulation.get_mass(id).get_number())
+					/ magnitude_squared) * unit_vector;
+
+				let force =
+					physical_quantities::Force::new(force_vector.x(), force_vector.y());
+
+				simulation.apply_force(id, force);
+			}
+		}
+	}
+
+	fn get_radius(&self) -> f64 {
+		self.radius
+	}
+
+	fn affects_self(&self) -> bool {
+		false
+	}
+
+	fn affects_others(&self) -> bool {
+		true
 	}
 
 	fn get_name(&self) -> &String {

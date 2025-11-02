@@ -527,7 +527,8 @@ mod tests {
 			&self,
 			simulation: &Simulation,
 			position: physical_quantities::Displacement,
-			particle_ids: Vec<Uuid>
+			particle_ids: Vec<Uuid>,
+			_particle_owner_id: Uuid,
 		) {
 			for p in particle_ids {
 				simulation.delete_particle(p);
@@ -1607,9 +1608,6 @@ impl Simulation {
 		//	distance). Do some research and optimize this so searching for
 		//	nearby particles isn't so inefficient.
 		// Vec of (field owner, field, affected particles).
-//		let mut field_parameters:
-//			Vec<(Uuid, &Box<dyn simulation_objects::Field>, Vec<Uuid>)> =
-//			Vec::new();
 		for field_owner in self.particles.borrow().values() {
 			for field in field_owner.get_fields().iter() {
 
@@ -1642,36 +1640,15 @@ impl Simulation {
 					}
 				}
 
-//				field_parameters.push(
-//					(field_owner.get_id(), field, affected_particle_ids)
-//				);
-
-				// TODO: To solve the borrow checker errors, I might need to
-				//	make a collection containing all field owners, as
-				//	well as all affected particles, then iterate through all of
-				//	those (field owner, affected particles) pairs and call the
-				//	effect methods after this loop ends.
-				//	2025-09-25: This change (adding the "field_parameters" Vec,
-				//		populating it here, and iterating over it outside of this
-				//		loop) did not fix the borrow error. See this forum post for
-				//		advice: https://users.rust-lang.org/t/iterating-over-a-self-some-vec-while-mutating-self/51135
 				// Add this Field's effects to the lists of actions to take.
 				field.effect(
 					self,
 					field_owner.get_position(),
 					affected_particle_ids,
+					field_owner.get_id(),
 				);
 			}
 		}
-
-		// Run the collected field effect functions on the appropriate particles.
-//		for (owner_id, field, affected_particle_ids) in field_parameters {
-//			field.effect(
-//				self,
-//				self.get_position(owner_id),
-//				affected_particle_ids,
-//			);
-//		}
 
 		// Delete any particles that were staged for deletion. Doing this before
 		//	applying forces avoids having to do calculations for particles that

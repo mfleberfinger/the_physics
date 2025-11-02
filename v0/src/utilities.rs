@@ -22,11 +22,33 @@ pub fn is_within_radius(
 	center_of_radius: physical_quantities::Displacement,
 ) -> bool {
 	// distance = sqrt((x2 - x1)^2 + (y2 - y1)^2)
-	let distance =
-		(
-			(point.x() - center_of_radius.x()).powf(2.0)
-			+ (point.y() - center_of_radius.y()).powf(2.0)
-		).sqrt();
-	
+	let distance = measure_distance(point, center_of_radius);
 	distance <= radius.abs()
+}
+
+/// Gets the distance between two points (`Displacements`) as an `f64`.
+///
+/// # Arguments
+/// * `point1` - One point.
+/// * `point2` - The other point.
+pub fn measure_distance(
+	point1: physical_quantities::Displacement,
+	point2: physical_quantities::Displacement,
+) -> f64 {
+	(
+		(point1.x() - point2.x()).powf(2.0)
+		+ (point1.y() - point2.y()).powf(2.0)
+	).sqrt()
+}
+
+/// Gets the displacement vector from one point to another.
+///
+/// # Arguments
+/// * `from` - The point from which we're measuring/displacing.
+/// * `to` - The point to which the vector will point.
+pub fn get_displacement_vector(
+	from: physical_quantities::Displacement,
+	to: physical_quantities::Displacement,
+) -> physical_quantities::Displacement {
+	to - from
 }
