@@ -4,6 +4,14 @@ TODO:
 		- Check below.
 		- Done? Need to test this somehow.
 	
+	Simulation.get_position() should not panic if a particle doesn't exist. It
+		Should return an Option::None. Otherwise, having a field delete a
+		particle, then attempting to find that particle (for example, in
+		animation code) will cause a panic.
+		- I should probably also add a method to get a collection containing the
+			IDs of all existing particles, rather than forcing a user of the
+			Simulation to keep track of the particles itself.
+	
 	Use Rust's pub(restricted) feature (probably pub(crate)) to hide things that
 		need to be public within the library from users of the library.
 

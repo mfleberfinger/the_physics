@@ -1582,10 +1582,18 @@ pub struct Simulation {
 	// If true, the simulation should be paused. If false, the simulation should
 	//	be running.
 	is_paused: RefCell<bool>,
+	// Keeps track of when the last tick started, in real world time. This
+	//	allows start() and step_synchronized() to call tick at the appropriate
+	//	rate.
+	previous_tick_instant: RefCell<Instant>,
+	// How long start() and step_synchronize should wait between calls to tick.
+	tick_wait_duration: Duration,
 }
 
 impl Simulation {
 	fn tick(&self) {
+		*self.previous_tick_instant.borrow_mut() = Instant::now();
+
 		// Call the on_tick fn pointer, if it exists.
 		match self.on_tick {
 			Some(f) => f(self),
@@ -1732,6 +1740,15 @@ impl Simulation {
 			}
 		}
 
+		// Calculate how long to wait between calls to tick() based on
+		//	simulation speed and tick duration.
+		let wait_duration;
+		match simulation_speed {
+			Some(speed) => wait_duration =
+				Duration::from_secs_f64(tick_duration.get_number() / speed),
+			None => wait_duration = Duration::from_secs_f64(0.0),
+		}
+
 		Self {
 			tick_duration: tick_duration,
 			particles: RefCell::new(HashMap::new()),
@@ -1742,6 +1759,8 @@ impl Simulation {
 			particle_ids_to_delete: RefCell::new(Vec::new()),
 			particles_to_add: RefCell::new(Vec::new()),
 			is_paused: RefCell::new(true),
+			previous_tick_instant: RefCell::new(Instant::now()),
+			tick_wait_duration: wait_duration,
 		}
 	}
 
@@ -1924,20 +1943,7 @@ impl Simulation {
 	///		timer and calls tick(). For later versions, it will probably create
 	///		its own thread.
 	pub fn start(&self) {
-		let wait_duration;
-
 		*self.is_paused.borrow_mut() = false;
-
-		// Calculate how long to wait between calls to tick() based on
-		//	simulation speed and tick duration.
-		match self.simulation_speed {
-			Some(speed) => wait_duration =
-				Duration::from_secs_f64(self.tick_duration.get_number() / speed),
-			None => wait_duration = Duration::from_secs_f64(0.0),
-		}
-
-		// Start timer.
-		let mut previous = Instant::now();
 
 		// Run until paused.
 		// TODO: Consider sleeping between ticks instead of constantly polling.
@@ -1947,9 +1953,9 @@ impl Simulation {
 		//	CPU thread for other programs.
 		while !*self.is_paused.borrow() {
 			if self.simulation_speed.is_none()
-				|| previous.elapsed() >= wait_duration
+				|| self.previous_tick_instant.borrow().elapsed()
+					>= self.tick_wait_duration
 			{
-				previous = Instant::now();
 				self.tick();
 			}
 		}
@@ -1967,11 +1973,31 @@ impl Simulation {
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
 	pub fn step(&self) {
-		if !(*self.is_paused.borrow()) {
+		if !*self.is_paused.borrow() {
 			panic!("The simulation must be paused to call step().");
 		}
 
 		self.tick();
+	}
+
+	/// While the simulation is paused, executes a single tick, if and only if
+	///		sufficient time has elapsed based on the tick duration and
+	///		simulation speed. This is here to support animation frameworks that
+	///		insist on blocking as part of their operation, making the start()
+	///		method unusable.
+	/// # Panics
+	/// This method will panic if the simulation is not paused.
+	pub fn step_synchronized(&self) {
+		if !*self.is_paused.borrow() {
+			panic!("The simulation must be paused to call step_synchronized().");
+		}
+
+		if self.simulation_speed.is_none()
+			|| self.previous_tick_instant.borrow().elapsed()
+				>= self.tick_wait_duration
+		{
+			self.tick();
+		}
 	}
 
 	/// Returns the number of elapsed ticks since the start of the simulation.
