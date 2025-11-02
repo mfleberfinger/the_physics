@@ -1,6 +1,7 @@
 use crate::{physical_quantities, simulation_objects, utilities};
 use std::collections::HashMap;
 use std::cell::RefCell;
+use std::time::{Duration, Instant};
 use uuid::Uuid;
 
 
@@ -389,6 +390,9 @@ mod tests {
 		simulation.get_field_info(Uuid::new_v4());
 	}
 
+	/*
+	// This can't be tested so easily in v0 because start() runs an endless loop
+	//	and pause must be called from either on_tick or a field effect method.
 	#[test]
 	fn simulation_starts() {
 		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
@@ -400,7 +404,11 @@ mod tests {
 
 		assert!(!(*simulation.is_paused.borrow()), "The simulation should have unpaused.");
 	}
+	*/
 
+	/*
+	// This can't be tested so easily in v0 because start() runs an endless loop
+	//	and pause must be called from either on_tick or a field effect method.
 	#[test]
 	fn simulation_pauses() {
 		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
@@ -412,6 +420,7 @@ mod tests {
 
 		assert!(*simulation.is_paused.borrow(), "The simulation should have paused.");
 	}
+	*/
 
 	// Simulation.step()...
 
@@ -1558,7 +1567,7 @@ pub struct Simulation {
 	// The number of ticks that have passed so far.
 	elapsed_ticks: RefCell<physical_quantities::Ticks>,
 	// Speed at which the simulation will run, resources permitting. Units are
-	//	(simulated seconds) / (real world second). If None, run as fast as
+	//	(simulated seconds) / (real world seconds). If None, run as fast as
 	//	possible.
 	simulation_speed: Option<f64>,
 	// A function called on each tick. Allows user-defined logic to be driven
@@ -1760,7 +1769,7 @@ impl Simulation {
 		// Get the return value before handing off ownership of the particle.
 		let id = particle.get_id();
 
-		let v = self.particles_to_add.borrow_mut().push(particle);
+		self.particles_to_add.borrow_mut().push(particle);
 
 		if self.particles.borrow().contains_key(&id) {
 			panic!("Created a particle with an existing key. This probably \
@@ -1911,16 +1920,46 @@ impl Simulation {
 		}
 	}
 
-	/// Starts the simulation.
+	/// Starts the simulation. For v0, this will just start a loop that polls a
+	///		timer and calls tick(). For later versions, it will probably create
+	///		its own thread.
 	pub fn start(&self) {
+		let wait_duration;
+
 		*self.is_paused.borrow_mut() = false;
-		// TODO: Start some kind of timer to call tick() regularly.
+
+		// Calculate how long to wait between calls to tick() based on
+		//	simulation speed and tick duration.
+		match self.simulation_speed {
+			Some(speed) => wait_duration =
+				Duration::from_secs_f64(self.tick_duration.get_number() / speed),
+			None => wait_duration = Duration::from_secs_f64(0.0),
+		}
+
+		// Start timer.
+		let mut previous = Instant::now();
+
+		// Run until paused.
+		// TODO: Consider sleeping between ticks instead of constantly polling.
+		//	Maybe make sleep behavior a parameter in the constructor. The
+		//	tradeoff is that sleeping may make it harder for the simulation to
+		//	run at exactly the desired rate but not sleeping may block a
+		//	CPU thread for other programs.
+		while !*self.is_paused.borrow() {
+			if self.simulation_speed.is_none()
+				|| previous.elapsed() >= wait_duration
+			{
+				previous = Instant::now();
+				self.tick();
+			}
+		}
 	}
 
-	/// Pauses the simulation.
+	/// Pauses the simulation. In v0, it will only be possible to call this
+	///		from on_tick or a field effect, not from outside the simulation,
+	///		because start() will start a blocking, neverending loop.
 	pub fn pause(&self) {
 		*self.is_paused.borrow_mut() = true;
-		// TODO: Stop whatever timer is calling tick().
 	}
 
 	/// While the simulation is paused, executes a single tick.

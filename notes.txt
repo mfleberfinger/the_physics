@@ -1,11 +1,9 @@
 TODO:
 	
-	Once I have all of the tests passing, I need to figure out how to
-		synchronize the simulation with real time. Do I have notes on this?
-		Check below.
+	Add code to run the simulation in real time. Do I have notes on this?
+		- Check below.
+		- Done? Need to test this somehow.
 	
-	See asterisks below.
-
 	Use Rust's pub(restricted) feature (probably pub(crate)) to hide things that
 		need to be public within the library from users of the library.
 
