@@ -1,0 +1,92 @@
+use macroquad::prelude::*;
+use v0::physical_quantities::*;
+use v0::simulation::Simulation;
+use v0::simulation_objects::*;
+#[macroquad::main("Physics Demo")]
+async fn main() {
+	let sim = Simulation::new(
+		Time::new(0.03333),
+		Some(1.0),
+		None,
+	);
+
+	let mut particles = Vec::new();
+
+	for i in 1..16 {
+		for j in 1..16 {
+			//let mass_mult = (((i * j * 10) % 500) + 1)   as f64;
+			let mass_mult = 1.0;
+			let p_id = sim.create_particle(
+				Mass::new(3.5e13 * mass_mult),
+				Displacement::new(50.0 * (j as f64), -50.0 * (i as f64)),
+				vec! [Box::new(UniversalGravitationField::new(
+					10000.0,
+					//Some(5e-2),
+					None,
+					None,
+				))],
+			);
+
+			particles.push(p_id);
+		}
+	}
+
+	// Step once to get the simulation to actually add the new particles.
+	sim.step();
+
+	// Set the window size.
+	request_new_screen_size(1500.0, 1000.0);
+	//set_fullscreen(true);
+	let window_width = screen_width();
+	let window_height = screen_height();
+
+	let mut elapsed_sim_time;
+	let mut position;
+	let mut mass;
+	let mut force;
+	let return_multiplier = 0.0;//10.0;
+	loop {
+		elapsed_sim_time = sim.get_elapsed_time();
+
+		// Apply a force for a while.
+		if elapsed_sim_time.get_number() <= 0.5 {
+			//sim.apply_force(particles[0], Force::new(1.0e12, -1.0e12));
+		}
+
+		sim.step_synchronized();
+
+		clear_background(BLACK);
+
+		for p_id in &particles {
+			position = sim.get_position(*p_id);
+			mass = sim.get_mass(*p_id);
+
+			// If a particle reaches the edge of the window, try to knock it
+			//	back towards the center.
+			if position.x() < 0.0 {
+				force = Force::new(mass.get_number() * return_multiplier, 0.0);
+				sim.apply_force(*p_id, force);
+			}
+			if (position.y() as f32) < -window_height {
+				force = Force::new(0.0, mass.get_number() * return_multiplier);
+				sim.apply_force(*p_id, force);
+			}
+			if (position.x() as f32) > window_width {
+				force = Force::new(-mass.get_number() * return_multiplier, 0.0);
+				sim.apply_force(*p_id, force);
+			}
+			if position.y() > 0.0 {
+				force = Force::new(0.0, -mass.get_number() * return_multiplier);
+				sim.apply_force(*p_id, force);
+			}
+
+			// Draw the particles.
+			//let radius = (mass.get_number() * 3.5e-14) as f32;
+			let radius = 5.0;
+			draw_circle(position.x() as f32, -position.y() as f32, radius, BLUE);
+		}
+
+
+		next_frame().await
+	}
+}
