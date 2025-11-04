@@ -11,6 +11,20 @@ TODO:
 			step_synchronized() to track how much real time has elapsed between
 			ticks and either call tick multiple times to catch up or skip calls
 			to it to let real time catch up.
+			+ If changing how many ticks a single call to step_synchronized
+				performs, any calls to methods like apply_force() that take
+				place outside of the simulation's control (like the forces I'm
+				applying in the demos) will result in non-deterministic
+				behavior.
+				-> I either need to find some way to make this work or avoid
+					calling any methods that affect the simulation outside of
+					Field.effect() or simulation.on_tick.
+				-> Is there already something wrong with calling apply_force()
+					from outside the simulation? Is it actually necessary to
+					make step_synchronized() call tick() more than once? It
+					currently doesn't make the tick() call each time it's
+					called. Is that causing apply_force() to behave differently
+					based on tick duration when called from outside?
 	
 	Write unit tests for:
 		- utilities::is_within_radius()
