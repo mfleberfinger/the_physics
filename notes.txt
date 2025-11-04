@@ -25,6 +25,18 @@ TODO:
 					currently doesn't make the tick() call each time it's
 					called. Is that causing apply_force() to behave differently
 					based on tick duration when called from outside?
+					- Yes, calling apply_force() from outside the simulation
+						can cause non-determinism in the current implementation.
+						If step_synchronized() doesn't call tick() each time
+						it's called, apply_force() will be called multiple
+						times in a single tick. It's either necessary to
+						somehow have step_synchronized() compensate for this
+						(may be hard) or document it in all of the methods
+						that may experience non-deterministic behavior and
+						inform that user that it is necessary to compensate for
+						it (by checking Simulation.get_elapsed_ticks() or
+						whatever I called it) or avoid making such calls from
+						outside the simulation (outside on_tick and effect()).
 	
 	Write unit tests for:
 		- utilities::is_within_radius()
