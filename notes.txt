@@ -2,7 +2,15 @@ TODO:
 	
 	Add code to run the simulation in real time. Do I have notes on this?
 		- Check below.
-		- Done? Need to test this somehow.
+		- From playing with the physics engine to make demos, it seems like
+			there is something wrong with how step_synchronized() (and,
+			presumably, start()) calls tick(). It's probably not actually
+			synchronizing with real time correctly. The unit tests that call
+			step() pass, so the issue is probably related to how often tick is
+			actually getting called. I should probably add code to start() and
+			step_synchronized() to track how much real time has elapsed between
+			ticks and either call tick multiple times to catch up or skip calls
+			to it to let real time catch up.
 	
 	Write unit tests for:
 		- utilities::is_within_radius()

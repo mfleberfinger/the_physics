@@ -2,26 +2,28 @@ use macroquad::prelude::*;
 use v0::physical_quantities::*;
 use v0::simulation::Simulation;
 use v0::simulation_objects::*;
+use std::time::{Instant, Duration};
 
 #[macroquad::main("Physics Demo")]
 async fn main() {
+	let sim_speed = 1.0;
 	let sim = Simulation::new(
-		Time::new(0.01),
-		Some(1.0),
+		Time::new(0.001),
+		Some(sim_speed),
 		None,
 	);
 	let p_id1 = sim.create_particle(
 		Mass::new(3.5e15),
 		Displacement::new(400.0, -300.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1000.0,
+			10000.0,
 			None,
 			None,
 		))],
 	);
 	let p_id2 = sim.create_particle(
 		Mass::new(5000.0),
-		Displacement::new(50.0, -400.0),
+		Displacement::new(400.0, -400.0),
 		vec! [Box::new(UniversalGravitationField::new(
 			1000.0,
 			None,
@@ -29,19 +31,19 @@ async fn main() {
 		))],
 	);
 	let p_id3 = sim.create_particle(
-		Mass::new(5000.0),
+		Mass::new(0.001),
 		Displacement::new(100.0, -250.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1000.0,
+			1.0, // *************************************************
 			None,
 			None,
 		))],
 	);
 	let p_id4 = sim.create_particle(
-		Mass::new(5000.0),
+		Mass::new(0.001),
 		Displacement::new(150.0, -200.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1000.0,
+			1.0, // ****************************************************
 			None,
 			None,
 		))],
@@ -61,14 +63,17 @@ async fn main() {
 	// Add a tracer segment endpoint every time this many simulated seconds pass.
 	let segment_time = Time::new(0.25);
 	let mut last_seg_time = Time::new(0.0);
+	let mut timer = Instant::now();
+	let mut prev_frame_time = 0.0;
+	//for i in 0..1000 {
 	loop {
 		elapsed_sim_time = sim.get_elapsed_time();
 
 		// Apply a force for a few seconds.
 		if elapsed_sim_time.get_number() <= 0.5 {
-			sim.apply_force(p_id2, Force::new(3.0e5, 0.0));
-			sim.apply_force(p_id3, Force::new(3.0e5, 0.0));
-			sim.apply_force(p_id4, Force::new(3.0e5, 0.0));
+			sim.apply_force(p_id2, Force::new(3.0e3, 0.0));
+			sim.apply_force(p_id3, Force::new(3.0e3, 0.0));
+			sim.apply_force(p_id4, Force::new(3.0e3, 0.0));
 		}
 		sim.step_synchronized();
 
@@ -139,6 +144,16 @@ async fn main() {
 			}
 		}
 
-		next_frame().await
+		
+		// Don't await the next animation frame until at least 1/60 of a second
+		//	(more or less to respect the simulation speed setting). has elapsed
+		//	in the simulation. Otherwise, we're limiting the number of times we
+		//	can call step_synchronized based on framerate, which seems to max
+		//	out at around 60fps.
+		if elapsed_sim_time.get_number() >= prev_frame_time + (0.01666667 * sim_speed) {
+			prev_frame_time = elapsed_sim_time.get_number();
+			next_frame().await
+		}
 	}
+	print!("1000 loops took {0} seconds.", timer.elapsed().as_secs());
 }
