@@ -25,25 +25,25 @@ async fn main() {
 		Mass::new(5000.0),
 		Displacement::new(400.0, -400.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1000.0,
+			10000.0,
 			None,
 			None,
 		))],
 	);
 	let p_id3 = sim.create_particle(
-		Mass::new(0.001),
-		Displacement::new(100.0, -250.0),
+		Mass::new(5000.0),
+		Displacement::new(400.0, -450.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1.0, // *************************************************
+			10000.0,
 			None,
 			None,
 		))],
 	);
 	let p_id4 = sim.create_particle(
-		Mass::new(0.001),
-		Displacement::new(150.0, -200.0),
+		Mass::new(5000.0),
+		Displacement::new(400.0, -500.0),
 		vec! [Box::new(UniversalGravitationField::new(
-			1.0, // ****************************************************
+			10000.0,
 			None,
 			None,
 		))],
@@ -65,15 +65,21 @@ async fn main() {
 	let mut last_seg_time = Time::new(0.0);
 	let mut timer = Instant::now();
 	let mut prev_frame_time = 0.0;
+	let mut last_tick;
+	let mut last_force_tick = Ticks::new(0);
 	//for i in 0..1000 {
 	loop {
 		elapsed_sim_time = sim.get_elapsed_time();
+		last_tick = sim.get_elapsed_ticks();
 
-		// Apply a force for a few seconds.
-		if elapsed_sim_time.get_number() <= 0.5 {
-			sim.apply_force(p_id2, Force::new(3.0e3, 0.0));
-			sim.apply_force(p_id3, Force::new(3.0e3, 0.0));
-			sim.apply_force(p_id4, Force::new(3.0e3, 0.0));
+		// Apply a force for a few seconds. Need to avoid doing this more than
+		//	once per tick, to avoid non-determinism.
+		if elapsed_sim_time.get_number() <= 0.5
+			&& last_tick.get_number() > last_force_tick.get_number() {
+			last_force_tick = last_tick;
+			sim.apply_force(p_id2, Force::new(4.0e5, 0.0));
+			sim.apply_force(p_id3, Force::new(4.0e5, 0.0));
+			sim.apply_force(p_id4, Force::new(3.0e5, 0.0));
 		}
 		sim.step_synchronized();
 

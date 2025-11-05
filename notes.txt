@@ -1,4 +1,6 @@
 TODO:
+
+	Implement comparison operators (partialOrd, others?) for Ticks.
 	
 	Write unit tests for:
 		- utilities::is_within_radius()
@@ -17,6 +19,12 @@ TODO:
 		- I should probably also add a method to get a collection containing the
 			IDs of all existing particles, rather than forcing a user of the
 			Simulation to keep track of the particles itself.
+	
+	It is probably necessary to somehow give the on_tick callback some way to
+		store information between calls, similar to how Unity makes the user
+		implement an entire class, which can be used to store any variables the
+		user wants, to use the Update() method. Otherwise, on_tick may be very
+		limited.
 	
 	Use Rust's pub(restricted) feature (probably pub(crate)) to hide things that
 		need to be public within the library from users of the library.
