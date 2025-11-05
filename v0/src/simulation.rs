@@ -1961,7 +1961,33 @@ impl Simulation {
 	///		sufficient time has elapsed based on the tick duration and
 	///		simulation speed. This is here to support animation frameworks that
 	///		insist on blocking as part of their operation, making the start()
-	///		method unusable.
+	///		method unusable. Be aware that, in order to make the simulation run
+	///		at the desired speed, system performance permitting, this method
+	///		must be called at least as frequently as ticks must occur to achieve
+	///		the desired speed. For example, if 60 ticks per second are desired,
+	///		this must be called at least 60 times per second.
+	///
+	/// <div class="warning">
+	///
+	/// Calling this method instead of using start() will allow the simulation
+	///		to be manipulated (by calling, for example, `apply_force`) from the
+	///		calling code, while still trying to run a specific number of ticks
+	///		in a given amount of real-world time. This means that not every call
+	///		to `step_synchronized` will cause a tick to occur. Therefore, care
+	///		must be taken to keep track of how many ticks actually elapse when
+	///		attempting to use methods, like `apply_force`, that cause something
+	///		to happen during a tick. For example, calling `apply_force` multiple
+	///		times during a tick will apply multiple forces. If this is done
+	///		without regard for how many ticks have actually elapsed, a
+	///		non-deterministic amount of force may be applied. If using
+	///		`step_synchronized`, either avoid manipulating the simulation from
+	///		outside of the `on_tick` and `Field::effect` callbacks or check
+	///		`get_elapsed_ticks` and use that information to determine when to
+	///		actually perform tick-dependent operations (like `apply_force`) from
+	///		outside the simulation instance.
+	///
+	/// </div>
+	///
 	/// # Panics
 	/// This method will panic if the simulation is not paused.
 	pub fn step_synchronized(&self) {
