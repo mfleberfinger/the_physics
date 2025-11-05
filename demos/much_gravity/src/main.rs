@@ -4,16 +4,17 @@ use v0::simulation::Simulation;
 use v0::simulation_objects::*;
 #[macroquad::main("Physics Demo")]
 async fn main() {
+	let sim_speed = 1.0;
 	let sim = Simulation::new(
 		Time::new(0.03333),
-		Some(1.0),
+		Some(sim_speed),
 		None,
 	);
 
 	let mut particles = Vec::new();
 
-	for i in 1..16 {
-		for j in 1..16 {
+	for i in 1..15 {
+		for j in 1..15 {
 			//let mass_mult = (((i * j * 10) % 500) + 1)   as f64;
 			let mass_mult = 1.0;
 			let p_id = sim.create_particle(
@@ -44,6 +45,7 @@ async fn main() {
 	let mut position;
 	let mut mass;
 	let mut force;
+	let mut prev_frame_time = 0.0;
 	let return_multiplier = 0.0;//10.0;
 	loop {
 		elapsed_sim_time = sim.get_elapsed_time();
@@ -87,6 +89,14 @@ async fn main() {
 		}
 
 
-		next_frame().await
+		// Don't await the next animation frame until at least 1/60 of a second
+		//	(more or less to respect the simulation speed setting) has elapsed
+		//	in the simulation. Otherwise, we're limiting the number of times we
+		//	can call step_synchronized based on framerate, which seems to max
+		//	out at around 60fps.
+		if elapsed_sim_time.get_number() >= prev_frame_time + (0.01666667 * sim_speed) {
+			prev_frame_time = elapsed_sim_time.get_number();
+			next_frame().await
+		}
 	}
 }

@@ -48,6 +48,24 @@ async fn main() {
 			None,
 		))],
 	);
+	let p_id5 = sim.create_particle(
+		Mass::new(5000.0),
+		Displacement::new(400.0, -550.0),
+		vec! [Box::new(UniversalGravitationField::new(
+			10000.0,
+			None,
+			None,
+		))],
+	);
+	let p_id6 = sim.create_particle(
+		Mass::new(5000.0),
+		Displacement::new(400.0, -600.0),
+		vec! [Box::new(UniversalGravitationField::new(
+			10000.0,
+			None,
+			None,
+		))],
+	);
 
 	// Step once to get the simulation to actually add the new particles.
 	sim.step();
@@ -56,10 +74,14 @@ async fn main() {
 	let mut position2;
 	let mut position3;
 	let mut position4;
+	let mut position5;
+	let mut position6;
 	let mut elapsed_sim_time;
 	let mut segment_points2 = Vec::new();
 	let mut segment_points3 = Vec::new();
 	let mut segment_points4 = Vec::new();
+	let mut segment_points5 = Vec::new();
+	let mut segment_points6 = Vec::new();
 	// Add a tracer segment endpoint every time this many simulated seconds pass.
 	let segment_time = Time::new(0.25);
 	let mut last_seg_time = Time::new(0.0);
@@ -80,6 +102,8 @@ async fn main() {
 			sim.apply_force(p_id2, Force::new(4.0e5, 0.0));
 			sim.apply_force(p_id3, Force::new(4.0e5, 0.0));
 			sim.apply_force(p_id4, Force::new(3.0e5, 0.0));
+			sim.apply_force(p_id5, Force::new(3.0e5, 0.0));
+			sim.apply_force(p_id6, Force::new(2.0e5, 0.0));
 		}
 		sim.step_synchronized();
 
@@ -89,12 +113,16 @@ async fn main() {
 		position2 = sim.get_position(p_id2);
 		position3 = sim.get_position(p_id3);
 		position4 = sim.get_position(p_id4);
+		position5 = sim.get_position(p_id5);
+		position6 = sim.get_position(p_id6);
 
 
 		if elapsed_sim_time - last_seg_time >= segment_time {
 			segment_points2.push(position2);
 			segment_points3.push(position3);
 			segment_points4.push(position4);
+			segment_points5.push(position5);
+			segment_points6.push(position6);
 			last_seg_time = elapsed_sim_time;
 		}
 
@@ -103,6 +131,8 @@ async fn main() {
 		draw_circle(position2.x() as f32, -position2.y() as f32, 5.0, RED);
 		draw_circle(position3.x() as f32, -position3.y() as f32, 5.0, VIOLET);
 		draw_circle(position4.x() as f32, -position4.y() as f32, 5.0, LIGHTGRAY);
+		draw_circle(position5.x() as f32, -position5.y() as f32, 5.0, LIME);
+		draw_circle(position6.x() as f32, -position6.y() as f32, 5.0, YELLOW);
 
 		// Draw a tracer.
 		for i in 0..segment_points2.len() {
@@ -146,6 +176,36 @@ async fn main() {
 					-segment_points4[i].y() as f32,
 					3.0,
 					GRAY,
+				);
+			}
+		}
+		// Draw a tracer.
+		for i in 0..segment_points5.len() {
+			// Each time we encounter a point with an odd index, we can add a
+			//	new line segment.
+			if i % 2 != 0 {
+				draw_line(
+					segment_points5[i - 1].x() as f32,
+					-segment_points5[i - 1].y() as f32,
+					segment_points5[i].x() as f32,
+					-segment_points5[i].y() as f32,
+					3.0,
+					GREEN,
+				);
+			}
+		}
+		// Draw a tracer.
+		for i in 0..segment_points6.len() {
+			// Each time we encounter a point with an odd index, we can add a
+			//	new line segment.
+			if i % 2 != 0 {
+				draw_line(
+					segment_points6[i - 1].x() as f32,
+					-segment_points6[i - 1].y() as f32,
+					segment_points6[i].x() as f32,
+					-segment_points6[i].y() as f32,
+					3.0,
+					GOLD,
 				);
 			}
 		}
