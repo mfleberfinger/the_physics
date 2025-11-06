@@ -526,9 +526,13 @@ Colliders:
 		collisions between three or more particles occur.
 		- Requires to changes to the physics engine (in addition to implementing
 			the Field):
-			+ Add a get_tick_duration() method.
+			+ Add a get_tick_duration() method.	[done]
 			+ Add support for applying field effects when two fields overlap,
 				not just when a particle is within a field.
+				-> Write unit tests before implementing this change. ****************************
+					- simulation_field_affects_others_fields_overlap()
+					- simulation_field_does_not_double_trigger()
+					- simulation_particle_with_two_fields_does_not_self_trigger()
 				-> Add two new Field methods (probably returning bools): one to
 					indicate whether a field effect triggers when overlapping a
 					field and one to indicate whether a field effect triggers

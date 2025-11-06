@@ -485,6 +485,20 @@ mod tests {
 	}
 
 	#[test]
+	fn simulation_gets_tick_duration() {
+		let actual_duration = physical_quantities::Time::new(1234.4321);
+		let simulation = Simulation::new(
+			actual_duration,
+			None,
+			None,
+		);
+
+		let returned_duration = simulation.get_tick_duration();
+
+		assert_eq!(actual_duration, returned_duration);
+	}
+
+	#[test]
 	fn simulation_gets_elapsed_ticks() {
 		let simulation = Simulation::new(
 			physical_quantities::Time::new(1.0),
@@ -552,10 +566,11 @@ mod tests {
 		}
 	}
 
-	// Verifies that a field attached to a particle will be called and passed a
-	//	list of all particles within its radius when a tick (step()) occurs.
+	// Verifies that, when configured to do so, a field attached to a particle
+	//	will be called and passed a list of all particles within its radius when
+	//	a tick (step()) occurs.
 	#[test]
-	fn simulation_field_affects_others() {
+	fn simulation_field_affects_others_particle_in_field() {
 		let simulation = Simulation::new(physical_quantities::Time::new(1.0), None, None);
 		let field = DeletionField {
 			radius: 10.0,
@@ -606,6 +621,31 @@ mod tests {
 			simulation.particles.borrow().contains_key(&survivor),
 			"The survivor particle should still exist.",
 		);
+	}
+
+	// TODO: Implement test.
+	// Verifies that, when configured to do so, a field attached to a particle
+	//	will be called and passed a list of all particles that have fields with
+	//	which its field overlaps when a tick (step()) occurs.
+	#[test]
+	fn simulation_field_affects_others_fields_overlap() {
+	}
+
+	// TODO: Implement test.
+	// Verifies that a field configured to affect both particles within it and
+	//	particles whose fields it overlaps is not passed two copies of the
+	//	same particle's ID when that particle is within the field and has its
+	//	own field.
+	#[test]
+	fn simulation_field_does_not_double_trigger() {
+	}
+
+	// TODO: Implement test.
+	// Verifies that a particle with two fields set to trigger on field overlap
+	//	does not affect itself when not configured to do so. I.e., verifies that
+	//	two fields attached to the same particle do not trigger each other.
+	#[test]
+	fn simulation_particle_with_two_fields_does_not_self_trigger() {
 	}
 
 	// Verifies that a field meant to affect itself will be passed its own
@@ -2008,9 +2048,14 @@ impl Simulation {
 		*self.elapsed_ticks.borrow()
 	}
 
-	/// Returns the returns the amount of simulated time (e.g., seconds) since
-	/// the start of the simulation.
+	/// Returns the amount of simulated time (e.g., seconds) since the start of
+	///	the simulation.
 	pub fn get_elapsed_time(&self) -> physical_quantities::Time {
 		self.tick_duration * self.elapsed_ticks.borrow().get_number() as f64
+	}
+
+	/// Returns the amount of simulated time that passes in a single tick.
+	pub fn get_tick_duration(&self) -> physical_quantities::Time {
+		self.tick_duration
 	}
 }
