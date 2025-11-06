@@ -1,5 +1,7 @@
 TODO:
 
+	See "Colliders" below.
+
 	Implement comparison operators (partialOrd, others?) for Ticks.
 	
 	Write unit tests for:
@@ -66,7 +68,7 @@ Development process (not necessarily in order)
 	- Implement the library.
 		+ Don't forget about the design notes below, particularly the simulation
 			notes and the tick() method's notes.
-		+ Make sure the tests pass. ****************************************************************
+		+ Make sure the tests pass.
 	- Write the demo.
 
 Testing
@@ -479,6 +481,82 @@ Graphics
 		better.
 	- It might be convenient and fun to try the graphics library out by using it
 		to create visuals for the "trajectory_calculator" program.
+
+Colliders:
+
+	Velocities after a 1D collision between particle a and particle b:
+		v_a = (C_R * m_b * (u_b - u_a) + m_a * u_a + m_b * u_b) / (m_a + m_b)
+		v_b = (C_R * m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
+	Where
+		v_a is the final velocity of the first object after impact
+		v_b is the final velocity of the second object after impact
+		u_a is the initial velocity of the first object before impact
+		u_b is the initial velocity of the second object before impact
+		m_a is the mass of the first object
+		m_b is the mass of the second object
+		C_R is the coefficient of restitution
+	
+	For two and three-dimensional collisions, all velocities in these formulas
+		are the components perpendicular to the tangent line or plane at the
+		point of contact. Remember that this applies to both the initial
+		velocities, u, and the final velocities, v. This means that the total
+		velocity of a particle should almost never be set to v_a or v_b. Think
+		about how two objects would behave in a glancing collision, rather than
+		a perfectly head-on collision.
+	
+	It's very unlikely that the "tangent" will actually be a tangent in a
+		simulated collision. There will almost always be an overlap between two
+		collider fields in the tick where the collision is detected. The
+		"tangent" will actually be a secant defined by the two points where the
+		two fields overlap. It probably makes sense to never even check for a
+		real tangent, opting to instead wait until a secant exists to consider
+		a collision to have occurred. Checking for overlap between two circles
+		is just done by checking for the condition where distance between the
+		circles' centers is less than the sum of the circles' radii. Checking
+		for the existence of a secant (not finding the actual secant) just
+		requires us to check for strict inequality, '<'. An actual tangent
+		would only exist in the case where the distance between centers equals
+		the sum of the radii.
+	
+	Probably make a collider field that only interacts with other particles with
+		collider fields and calculates the force that would set the other
+		(for consistency with UniversalGravitationField) particle's velocity
+		component perpendicular to the tangent to 0 within a single tick, then
+		apply that force to the other particle. This should still work when
+		collisions between three or more particles occur.
+		- Requires to changes to the physics engine (in addition to implementing
+			the Field):
+			+ Add a get_tick_duration() method.
+			+ Add support for applying field effects when two fields overlap,
+				not just when a particle is within a field.
+				-> Add two new Field methods (probably returning bools): one to
+					indicate whether a field effect triggers when overlapping a
+					field and one to indicate whether a field effect triggers
+					when that field contains a particle.
+					- An option to do both might make sense. When two particles
+						have fields with equal radii, both fields overlapping
+						both particles is a special case of both fields
+						overlapping. However, if only one of the two particles
+						has a field, or if the particles have fields with
+						different radii, it's possible for one particle's field
+						to overlap the other particle without the second
+						particle's field overlapping the first particle or its
+						field.
+				-> Add code to tick() to handle overlapping fields similarly to
+					how it handles particles within fields.
+					- Remember that it will be necessary to avoid double-adding
+						the same particle to the collection of particles
+						affected by a field if that field's effect triggers on
+						both field/field overlap and field/particle overlap.
+	- It is probably necessary to avoid applying any forces if the colliding
+		particles' velocities are such that the particles are already
+		separating, so we don't apply collision forces repeatedly after the
+		collision has already occurred. I.e., the particles' relative velocities
+		must be towards each other.
+		+ There may be some kind of challenge in determining which direction is
+			"separating" the particles. Consider the overlap between two fields
+			and the relative velocities of the corresponding particles one tick
+			after a glancing collision.
 
 
 ________________________________________________________________________________
