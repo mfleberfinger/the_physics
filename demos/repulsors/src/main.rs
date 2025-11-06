@@ -37,14 +37,14 @@ async fn main() {
 	}
 
 	// Make a floor.
-	for i in 1..50 {
+	for i in 1..3 {
 		let p_id = sim.create_particle(
-			Mass::new(3.5e16),
-			Displacement::new(300.0 + ((i * 10) as f64), -900.0),
+			Mass::new(3.5e20),
+			Displacement::new(250.0 + ((i * 250) as f64), -900.0),
 			vec! [
 				Box::new(UniversalGravitationField::new(
-					10.0,
-					Some(-1e-12),
+					100.0,
+					Some(-1e-15),
 					None,
 				)),
 			],
