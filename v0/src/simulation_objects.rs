@@ -81,6 +81,15 @@ pub trait Field {
 	/// particles other than the particle to which it's attached.
 	fn affects_others(&self) -> bool;
 
+	/// Called by the simulation to determine whether this field should affect
+	/// other particles when it overlaps with fields attached to those
+	/// particles.
+	fn triggers_on_fields(&self) -> bool;
+
+	/// Called by the simulation to determine whether this field should affect
+	/// other particles when those particles are contained within this field.
+	fn triggers_on_particles(&self) -> bool;
+
 	/// Called by the simulation to get a name that identifies this field, which
 	/// it will then make available to user-defined code through
 	/// `simulation.get_field_info()`. One application of this may be to have
@@ -93,6 +102,7 @@ pub trait Field {
 }
 
 #[cfg(test)]
+#[derive(Clone)]
 pub struct DummyField {
 	pub radius: f64,
 	pub affects_self: bool,
@@ -122,6 +132,14 @@ impl Field for DummyField {
 
 	fn affects_others(&self) -> bool {
 		self.affects_others
+	}
+
+	fn triggers_on_fields(&self) -> bool {
+		false
+	}
+
+	fn triggers_on_particles(&self) -> bool {
+		false
 	}
 
 	fn get_name(&self) -> &String {
@@ -185,6 +203,14 @@ impl Field for SimpleSelfGravityField {
 	}
 
 	fn affects_others(&self) -> bool {
+		false
+	}
+
+	fn triggers_on_fields(&self) -> bool {
+		false
+	}
+
+	fn triggers_on_particles(&self) -> bool {
 		false
 	}
 
@@ -284,6 +310,14 @@ impl Field for UniversalGravitationField {
 	}
 
 	fn affects_others(&self) -> bool {
+		true
+	}
+
+	fn triggers_on_fields(&self) -> bool {
+		false
+	}
+
+	fn triggers_on_particles(&self) -> bool {
 		true
 	}
 

@@ -2,6 +2,12 @@ TODO:
 
 	See "Colliders" below.
 
+	Field::effect() accepts a list of particle IDs to affect and the ID of the
+		particle to which the field is attached. Verify that the simulation
+		passes the field owner's ID in the list of IDs when it should be
+		affected and add a warning to the documentation not to double up effects
+		on the field owner if a field affects both self and others.
+
 	Implement comparison operators (partialOrd, others?) for Ticks.
 	
 	Write unit tests for:
@@ -33,6 +39,9 @@ TODO:
 	
 	Use Rust's pub(restricted) feature (probably pub(crate)) to hide things that
 		need to be public within the library from users of the library.
+
+	Consider removing affects_others() from the Field trait. It may be redundant
+		now that triggers_on_fields() and triggers_on_particles() exist.
 
 	Clean up warnings that appear when running cargo check or cargo test.
 

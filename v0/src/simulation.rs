@@ -1,5 +1,5 @@
 use crate::{physical_quantities, simulation_objects, utilities};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::cell::RefCell;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
@@ -533,6 +533,8 @@ mod tests {
 		radius: f64,
 		affects_self: bool,
 		affects_others: bool,
+		triggers_on_fields: bool,
+		triggers_on_particles: bool,
 		name: String,
 	}
 
@@ -561,6 +563,14 @@ mod tests {
 			self.affects_others
 		}
 
+		fn triggers_on_fields(&self) -> bool {
+			self.triggers_on_fields
+		}
+
+		fn triggers_on_particles(&self) -> bool {
+			self.triggers_on_particles
+		}
+
 		fn get_name(&self) -> &String {
 			&self.name
 		}
@@ -576,6 +586,8 @@ mod tests {
 			radius: 10.0,
 			affects_self: false,
 			affects_others: true,
+			triggers_on_fields: false,
+			triggers_on_particles: true,
 			name: String::from("The Destructor"),
 		};
 		let destroyer = simulation.create_particle(
@@ -623,21 +635,193 @@ mod tests {
 		);
 	}
 
-	// TODO: Implement test.
 	// Verifies that, when configured to do so, a field attached to a particle
 	//	will be called and passed a list of all particles that have fields with
 	//	which its field overlaps when a tick (step()) occurs.
 	#[test]
 	fn simulation_field_affects_others_fields_overlap() {
+		// Create a particle that that deletes other particles when their fields
+		//	overlap with its field. Verify that it deletes another particle when
+		//	the fields overlap but the other particle is not contained within
+		//	the field.
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		let deletion_field = DeletionField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: true,
+			triggers_on_fields: true,
+			triggers_on_particles: false,
+			name: String::from("The Destructor"),
+		};
+		let dummy_field = simulation_objects::DummyField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("dummy"),
+		};
+		let destroyer = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(deletion_field)),
+		);
+		let victim_1 = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(15.0, 0.0),
+			vec!(Box::new(dummy_field.clone())),
+		);
+		let victim_2 = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 15.0),
+			vec!(Box::new(dummy_field.clone())),
+		);
+		// The boundaries of the survivor's field and the deletion field should
+		//	share a single point in this setup. We do not want this to count as
+		//	overlapping fields because it would require us to consider both
+		//	tangents and secants when trying to find the normal vector of the
+		//	line of overlap (e.g., when calculating the force/velocity vector
+		//	to apply after a collision).
+		let survivor = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(20.0, 0.0),
+			Vec::new(),
+		);
+
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
+		// Advance the simulation again to allow the new particles to be
+		//	affected by the field.
+		simulation.step();
+
+		assert!(
+			!simulation.particles.borrow().contains_key(&victim_1),
+			"The victim_1 particle should have been deleted.",
+		);
+		assert!(
+			!simulation.particles.borrow().contains_key(&victim_2),
+			"The victim_2 particle should have been deleted.",
+		);
+		assert!(
+			simulation.particles.borrow().contains_key(&destroyer),
+			"The destroyer particle should still exist.",
+		);
+		assert!(
+			simulation.particles.borrow().contains_key(&survivor),
+			"The survivor particle should still exist.",
+		);
 	}
 
-	// TODO: Implement test.
+
+	struct DoubleTriggerPanicField {
+		radius: f64,
+		affects_self: bool,
+		affects_others: bool,
+		triggers_on_fields: bool,
+		triggers_on_particles: bool,
+		name: String,
+	}
+
+	impl simulation_objects::Field for DoubleTriggerPanicField {
+		fn effect(
+			&self,
+			simulation: &Simulation,
+			position: physical_quantities::Displacement,
+			particle_ids: Vec<Uuid>,
+			_particle_owner_id: Uuid,
+		) {
+			let mut ids = HashSet::new();
+			for p in particle_ids {
+				// Add IDs to a collection and panic if they already exist.
+				if !ids.insert(p) {
+					panic!(
+						"Encountered a duplicate ID in \
+							DoubleTriggerPanicField's effect()."
+					);
+				}
+			}
+		}
+
+		fn get_radius(&self) -> f64 {
+			self.radius
+		}
+
+		fn affects_self(&self) -> bool {
+			self.affects_self
+		}
+
+		fn affects_others(&self) -> bool {
+			self.affects_others
+		}
+
+		fn triggers_on_fields(&self) -> bool {
+			self.triggers_on_fields
+		}
+
+		fn triggers_on_particles(&self) -> bool {
+			self.triggers_on_particles
+		}
+
+		fn get_name(&self) -> &String {
+			&self.name
+		}
+	}
+
 	// Verifies that a field configured to affect both particles within it and
 	//	particles whose fields it overlaps is not passed two copies of the
 	//	same particle's ID when that particle is within the field and has its
 	//	own field.
 	#[test]
 	fn simulation_field_does_not_double_trigger() {
+		// Create a particle with a field that checks the IDs passed to it and
+		//	panics if any ID appears more than once. Make that field trigger on
+		//	field overlap and when a particle is within it. Place a particle
+		//	with a dummy field inside that field. Place a different particle
+		//	with two dummy fields outside of that field, such that both dummy
+		//	fields overlap that field.
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		let panic_field = DoubleTriggerPanicField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: true,
+			triggers_on_fields: true,
+			triggers_on_particles: true,
+			name: String::from("Panic Field"),
+		};
+		let dummy_field = simulation_objects::DummyField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("dummy"),
+		};
+		let panicker = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(panic_field)),
+		);
+		let dummy_with_one_field = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(dummy_field.clone())),
+		);
+		let dummy_with_two_fields = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(15.0, 0.0),
+			vec!(Box::new(dummy_field.clone()), Box::new(dummy_field.clone())),
+		);
+
+		// Step twice: Once to create the particles and a second time to let the
+		//	simulation process the fields.
+		simulation.step();
+		// If this step does not cause DoubleTriggerPanicField to panic, this
+		//	test will pass.
+		simulation.step();
 	}
 
 	// TODO: Implement test.
@@ -646,6 +830,18 @@ mod tests {
 	//	two fields attached to the same particle do not trigger each other.
 	#[test]
 	fn simulation_particle_with_two_fields_does_not_self_trigger() {
+		// Create a particle with two deletion fields that trigger on field
+		//	overlap but do not affect self. Verify that it doesn't trigger.
+	}
+
+	// TODO: Implement test.
+	// Verifies that a field set to only trigger on overlap with another field
+	//	does not trigger when encountering a particle with no field.
+	#[test]
+	fn simulation_overlap_field_does_not_trigger_on_particle_without_field() {
+		// Create a particle with a deletion field that triggers on field
+		//	overlap and put a particle with no field within that field's radius.
+		//	Verify that the second particle does not get deleted.
 	}
 
 	// Verifies that a field meant to affect itself will be passed its own
@@ -661,6 +857,8 @@ mod tests {
 			radius: 10.0,
 			affects_self: true,
 			affects_others: false,
+			triggers_on_fields: false,
+			triggers_on_particles: false,
 			name: String::from("Self Destructor"),
 		};
 		let suicide_particle = simulation.create_particle(
