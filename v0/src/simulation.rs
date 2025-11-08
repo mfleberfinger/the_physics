@@ -529,6 +529,7 @@ mod tests {
 		assert_eq!(physical_quantities::Time::new(1.0), elapsed_time);
 	}
 
+	#[derive(Clone)]
 	struct DeletionField {
 		radius: f64,
 		affects_self: bool,
@@ -824,7 +825,6 @@ mod tests {
 		simulation.step();
 	}
 
-	// TODO: Implement test.
 	// Verifies that a particle with two fields set to trigger on field overlap
 	//	does not affect itself when not configured to do so. I.e., verifies that
 	//	two fields attached to the same particle do not trigger each other.
@@ -832,9 +832,40 @@ mod tests {
 	fn simulation_particle_with_two_fields_does_not_self_trigger() {
 		// Create a particle with two deletion fields that trigger on field
 		//	overlap but do not affect self. Verify that it doesn't trigger.
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		let deletion_field = DeletionField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: true,
+			triggers_on_fields: true,
+			triggers_on_particles: false,
+			name: String::from("The Destructor"),
+		};
+		let destroyer = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(
+				Box::new(deletion_field.clone()),
+				Box::new(deletion_field.clone()),
+			)
+		);
+
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
+		// Advance the simulation again to allow the field's effect to be
+		//	processed.
+		simulation.step();
+
+		assert!(
+			simulation.particles.borrow().contains_key(&destroyer),
+			"The particle should not have been deleted.",
+		);
 	}
 
-	// TODO: Implement test.
 	// Verifies that a field set to only trigger on overlap with another field
 	//	does not trigger when encountering a particle with no field.
 	#[test]
@@ -842,6 +873,39 @@ mod tests {
 		// Create a particle with a deletion field that triggers on field
 		//	overlap and put a particle with no field within that field's radius.
 		//	Verify that the second particle does not get deleted.
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		let deletion_field = DeletionField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: true,
+			triggers_on_fields: true,
+			triggers_on_particles: false,
+			name: String::from("The Destructor"),
+		};
+		let destroyer = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(deletion_field)),
+		);
+		let survivor = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(5.0, 0.0),
+			Vec::new(),
+		);
+
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
+		// Advance the simulation again to allow field effects to be processed.
+		simulation.step();
+
+		assert!(
+			simulation.particles.borrow().contains_key(&survivor),
+			"The survivor particle should still exist.",
+		);
 	}
 
 	// Verifies that a field meant to affect itself will be passed its own
