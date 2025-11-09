@@ -380,6 +380,8 @@ mod tests {
 		assert_eq!(field_info[0].get_radius(), 1.0);
 		assert!(field_info[0].get_affects_self());
 		assert!(field_info[0].get_affects_others());
+		assert!(!field_info[0].get_triggers_on_fields());
+		assert!(!field_info[0].get_triggers_on_particles());
 		assert_eq!(field_info[0].get_name(), &String::from("dummy"));
 	}
 
@@ -1903,8 +1905,8 @@ impl Simulation {
 			None => (),
 		}
 
-		// For each field, find all particles within that field and apply the
-		//	field's effect to each of those particles.
+		// For each field, find all particles affected by that field and apply
+		//	the field's effect to each of those particles.
 		// TODO (for v1): There are algorithms and data structures to more
 		//	efficiently find things based on spatial relationships (e.g.,
 		//	distance). Do some research and optimize this so searching for
@@ -1921,23 +1923,48 @@ impl Simulation {
 				}
 
 				// Add all particles, other than the field owner, that are
-				//	within the field, if this field affects particles other than
-				//	the particle to which it's attached.
+				//	affected by the field, if this field affects particles other
+				//	than the particle to which it's attached.
 				if field.affects_others() {
 					for particle in self.particles.borrow().values() {
+						// Skip the field owner.
+						if field_owner.get_id() != particle.get_id() {
+							let mut is_affected = false;
 
-						let is_in_field =
-							utilities::is_within_radius(
-								particle.get_position(),
-								field.get_radius(),
-								field_owner.get_position(),
-							);
+							// If the particle is within this field and this
+							//	field affects particles within it.
+							if field.triggers_on_particles() {
+								is_affected =
+									utilities::is_within_radius(
+										particle.get_position(),
+										field.get_radius(),
+										field_owner.get_position(),
+										true,
+									);
+							}
 
-						let is_not_owner =
-								field_owner.get_id() != particle.get_id();
-
-						if is_in_field && is_not_owner {
-							affected_particle_ids.push(particle.get_id());
+							// Check whether this field affects the owners of
+							//	overlapping fields and whether the particle has
+							//	a field that overlaps with this field. Skip this
+							//	check if we've already determined that the
+							//	effect triggers for the current particle.
+							if !is_affected {
+								let info = particle.get_field_info();
+								let mut i = 0;
+								while !is_affected && i < info.len() {
+									is_affected = utilities::is_within_radius(
+										particle.get_position(),
+										field.get_radius() + info[i].get_radius(),
+										field_owner.get_position(),
+										true,
+									);
+									i += 1;
+								}
+							}
+							
+							if is_affected {
+								affected_particle_ids.push(particle.get_id());
+							}
 						}
 					}
 				}

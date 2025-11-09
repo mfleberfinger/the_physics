@@ -31,14 +31,6 @@ mod tests {
 
 }
 
-
-// TODO: Implement a "rigid body" (or "basic collider") collider Field as part of the library. It
-//	could expose parameters (e.g. coefficient of friction, coefficient of
-//	restitution) as fields of the struct.
-// 2025-08-05: Implementing a rigid body collider might be hacky without changing
-//	my design at least a little. The intent was never to treat individual
-//	particles as rigid bodies. A "rigid body" might emerge as a result of
-//	interactions between multiple particles, but probably won't be its own field.
 /// Defines a field. A field is a struct implementing a method that is called by
 /// the physics engine on each tick in which a particle is within a radius
 /// specified by the field, centered on a particle to which the field is
@@ -221,6 +213,16 @@ impl Field for SimpleSelfGravityField {
 
 /// Makes a particle apply a gravitational pull to other particles within the
 /// field's radius.
+/// #Notes
+///	In order to apply realistic gravitational forces, all particles affected by
+/// this field must have their own gravity fields with equal radius. Otherwise,
+/// it will be possible for one particle to be within the gravity of another
+///	particle, but not have that other particle within its own gravity field.
+/// This would lead to the law of "equal and opposite reactions" being ignored
+/// (i.e. one particle would experience a force while the other would not).
+// TODO: This Field's effect should probably only apply forces to particles
+//	containing a field of the same name as this field. Otherwise, all particles
+//	in a simulation with a UniversalGravitationField would be affected by it.
 pub struct UniversalGravitationField {
 	radius: f64,
 	gravitational_constant: f64,
@@ -331,6 +333,8 @@ pub struct FieldInfo {
 	radius: f64,
 	affects_self: bool,
 	affects_others: bool,
+	triggers_on_fields: bool,
+	triggers_on_particles: bool,
 	name: String,
 }
 
@@ -339,12 +343,16 @@ impl FieldInfo {
 		radius: f64,
 		affects_self: bool,
 		affects_others: bool,
+		triggers_on_fields: bool,
+		triggers_on_particles: bool,
 		name: String,
 	) -> Self {
 		Self {
 			radius: radius,
 			affects_self: affects_self,
 			affects_others: affects_others,
+			triggers_on_fields: triggers_on_fields,
+			triggers_on_particles: triggers_on_particles,
 			name: name,
 		}
 	}
@@ -359,6 +367,14 @@ impl FieldInfo {
 
 	pub fn get_affects_others(&self) -> bool {
 		self.affects_others
+	}
+
+	pub fn get_triggers_on_fields(&self) -> bool {
+		self.triggers_on_fields
+	}
+
+	pub fn get_triggers_on_particles(&self) -> bool {
+		self.triggers_on_particles
 	}
 
 	pub fn get_name(&self) -> &String {
@@ -424,6 +440,8 @@ impl Particle {
 				field.get_radius(),
 				field.affects_self(),
 				field.affects_others(),
+				field.triggers_on_fields(),
+				field.triggers_on_particles(),
 				field.get_name().to_string(),
 			);
 			field_info_vec.push(field_info);
