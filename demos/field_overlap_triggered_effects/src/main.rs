@@ -1,8 +1,9 @@
 use macroquad::prelude::*;
+use std::collections::HashMap;
+use uuid::Uuid;
 use v0::physical_quantities::*;
 use v0::simulation::Simulation;
 use v0::simulation_objects::*;
-use uuid::Uuid;
 
 #[macroquad::main("Physics Demo")]
 async fn main() {
@@ -47,7 +48,7 @@ async fn main() {
 			vec! [
 				Box::new(FloorAndWallField::new(
 					Force::new(0.0, 2000.0),
-					5.0,
+					10.0,
 					"Floor".to_string(),
 				)),
 			],
@@ -160,13 +161,13 @@ impl Field for FloorAndWallField {
 		&self,
 		simulation: &Simulation,
 		_position: Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		_field_owner_id: Uuid,
 	) {
-		for id in particle_ids {
+		for id in triggered_by.keys() {
 			// Only apply a force if the detected particle isn't part of the
 			//	wall.
-			let info = simulation.get_field_info(id);
+			let info = simulation.get_field_info(*id);
 			let mut is_wall = false;
 			for i in info {
 				if i.get_name() == self.get_name() {
@@ -174,7 +175,7 @@ impl Field for FloorAndWallField {
 				}
 			}
 			if !is_wall {
-				simulation.apply_force(id, self.force);
+				simulation.apply_force(*id, self.force);
 			}
 		}
 	}
@@ -225,7 +226,7 @@ impl Field for MarkerField {
 		&self,
 		simulation: &Simulation,
 		_position: Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		_field_owner_id: Uuid,
 	) {
 		// No-op
