@@ -1,5 +1,5 @@
 use crate::{physical_quantities, simulation_objects, utilities};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::cell::RefCell;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 #[cfg(test)]
 mod tests {
+	use std::collections::HashSet;
     use super::*;
 
 	/********************* Simulation ********************/
@@ -546,11 +547,11 @@ mod tests {
 			&self,
 			simulation: &Simulation,
 			position: physical_quantities::Displacement,
-			particle_ids: Vec<Uuid>,
+			triggered_by: HashMap<Uuid, Vec<Option<simulation_objects::FieldInfo>>>,
 			_particle_owner_id: Uuid,
 		) {
-			for p in particle_ids {
-				simulation.delete_particle(p);
+			for p in triggered_by.keys() {
+				simulation.delete_particle(*p);
 			}
 		}
 
@@ -732,13 +733,13 @@ mod tests {
 			&self,
 			simulation: &Simulation,
 			position: physical_quantities::Displacement,
-			particle_ids: Vec<Uuid>,
+			triggered_by: HashMap<Uuid, Vec<Option<simulation_objects::FieldInfo>>>,
 			_particle_owner_id: Uuid,
 		) {
 			let mut ids = HashSet::new();
-			for p in particle_ids {
+			for p in triggered_by.keys() {
 				// Add IDs to a collection and panic if they already exist.
-				if !ids.insert(p) {
+				if !ids.insert(*p) {
 					panic!(
 						"Encountered a duplicate ID in \
 							DoubleTriggerPanicField's effect()."
@@ -908,6 +909,15 @@ mod tests {
 			simulation.particles.borrow().contains_key(&survivor),
 			"The survivor particle should still exist.",
 		);
+	}
+
+
+	// TODO: Implement this.
+	// Verifies that, when a field's effect is triggered by overlapping fields,
+	//	information about those fields is passed into the effect method.
+	#[test]
+	fn simulation_field_effect_gets_triggering_field_info() {
+		panic!("TODO: Implement this.");
 	}
 
 	// Verifies that a field meant to affect itself will be passed its own
@@ -1934,12 +1944,14 @@ impl Simulation {
 		// Vec of (field owner, field, affected particles).
 		for field_owner in self.particles.borrow().values() {
 			for field in field_owner.get_fields().iter() {
-
-				let mut affected_particle_ids = Vec::new();
+				let owner_id = field_owner.get_id();
+				let mut triggered_by = HashMap::new();
 
 				// Add the field owner if the field affects it.
 				if field.affects_self() {
-					affected_particle_ids.push(field_owner.get_id());
+					// The field owner's fields should never trigger each other.
+					// Insert an empty Vec of fields.
+					triggered_by.insert(owner_id, vec![None]);
 				}
 
 				// Add all particles, other than the field owner, that are
@@ -1947,43 +1959,48 @@ impl Simulation {
 				//	than the particle to which it's attached.
 				if field.affects_others() {
 					for particle in self.particles.borrow().values() {
+						let particle_id = particle.get_id();
 						// Skip the field owner.
-						if field_owner.get_id() != particle.get_id() {
-							let mut is_affected = false;
+						if owner_id != particle_id {
 
 							// If the particle is within this field and this
 							//	field affects particles within it.
-							if field.triggers_on_particles() {
-								is_affected =
-									utilities::is_within_radius(
-										particle.get_position(),
-										field.get_radius(),
-										field_owner.get_position(),
-										true,
-									);
+							if field.triggers_on_particles()
+								&& utilities::is_within_radius(
+									particle.get_position(),
+									field.get_radius(),
+									field_owner.get_position(),
+									true,
+								) {
+								// If this field is trigered by a particle,
+								//	insert the particle with a vector containing
+								//	None to denote that it wasn't added by field
+								//	overlap.
+								triggered_by.insert(particle_id, vec![None]);
 							}
 
 							// Check whether this field affects the owners of
 							//	overlapping fields and whether the particle has
-							//	a field that overlaps with this field. Skip this
-							//	check if we've already determined that the
-							//	effect triggers for the current particle.
-							if !is_affected {
-								let info = particle.get_field_info();
-								let mut i = 0;
-								while !is_affected && i < info.len() {
-									is_affected = utilities::is_within_radius(
+							//	fields that overlap with this field. Record any
+							//	overlapping fields to send to the effect method.
+							if field.triggers_on_fields() {
+								for info in particle.get_field_info() {
+									if utilities::is_within_radius(
 										particle.get_position(),
-										field.get_radius() + info[i].get_radius(),
+										field.get_radius() + info.get_radius(),
 										field_owner.get_position(),
 										true,
-									);
-									i += 1;
+									) {
+										if let Some(v) = triggered_by.get_mut(&particle_id) {
+												v.push(Some(info));
+										} else {
+											triggered_by.insert(
+												particle_id,
+												vec![Some(info)],
+											);
+										}
+									}
 								}
-							}
-							
-							if is_affected {
-								affected_particle_ids.push(particle.get_id());
 							}
 						}
 					}
@@ -1993,7 +2010,7 @@ impl Simulation {
 				field.effect(
 					self,
 					field_owner.get_position(),
-					affected_particle_ids,
+					triggered_by,
 					field_owner.get_id(),
 				);
 			}

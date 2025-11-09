@@ -1,8 +1,6 @@
 TODO:
-	
-	There is at least one warning when running/checking the library. Fix it.
 
-	There is a problem with my implementation of support for effects triggering ************************
+	There is a problem with my implementation of support for effects triggering
 		on overlapping fields. There is currently no way for a field's effect()
 		method to know which field triggered it. If a particle has two fields,
 		a and b, of differing sizes and the triggered field only wants to
@@ -10,19 +8,12 @@ TODO:
 		allow it to choose to ignore field a. For example, we don't want a
 		collider with radius 5.0 to to run collision logic when encountering a
 		gravity field with redius 1000.0.
-		- Remember to implement a failing unit test for this before making the
-			change.
-		- One (bad) solution is to make no changes to how tick() handles field
-			overlap effect triggering and just expect the effect() methods to
-			figure out which fields they're overlapping with by calling
-			get_field_info() and iterating through all of the fields, checking
-			their radii, the triggered field's radius, and the involved
-			particles' positions.
-			+ This is an extremely bad solution... It should be trivial to
-				know what an effect() method should apply to from within that
-				method. I don't even want to try writing an effect that needs
-				to go through the trouble of finding the relevant field. It
-				just shouldn't work this way.
+		- Remember to implement a unit test to determine whether a list of *******************************
+			overlapped fields is successfully provided to the effect() method.
+		- How to inform each effect of all fields with which its field overlaps
+			for each particle it's affecting?
+			+ Instead of passing a Vec of particle IDs, pass a Hashmap of Vecs
+				of FieldInfo, keyed by particle ID.
 
 	See "Colliders" below.
 

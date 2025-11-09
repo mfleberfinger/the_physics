@@ -1,4 +1,5 @@
 use crate::{physical_quantities, simulation, utilities};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 
@@ -41,30 +42,31 @@ pub trait Field {
 	/// * `simulation` - The Simulation that called the effect function.
 	/// * `position` - The position of the particle to which this field is
 	///		attached. The center of the field.
-	/// * `particle_ids` - IDs of all particles affected by the field. Determined
-	///		by the simulation.
+	/// * `triggered_by` - A HashMap containing the IDs of all particles that
+	///		should be affected by the field, as well as information about any of
+	///		those particles' fields that overlap with this field, if this
+	///		field's effect triggers on fields. The HashMap is keyed by particle
+	///		ID and contains vectors of `Option<FieldInfo>` as its values.
+	///		If a vector contains a `None` value, there are two possibilities:
+	///		Either the field is set to affect itself and the particle is in the
+	///		HashMap because it is the field owner (in this case, the vector
+	///		will only have one element) OR the field triggers on particles and
+	///		the particle is inside the field (in this case, the collection may
+	///		also contain Some(FieldInfo) values if the field is triggered by
+	///		field overlap).
 	/// * `field_owner_id` - The ID of the particle to which this field is
 	///		attached.
 	fn effect(
 		&self,
 		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		field_owner_id: Uuid,
 	);
 
 	/// Called by the simulation to get the field's radius.
 	fn get_radius(&self) -> f64;
 
-	// TODO: It would probably be better to give effect() a parameter to
-	//	accept the ID of the particle to which it's attached. Then effect() could decide
-	//	whether or not to affect that particle and would be able to take
-	//	different actions for the particle to which it's attached than for any
-	//	other particles it might effect. For example, maybe effect() could
-	//	delete any other particles that enter the field and increase the mass
-	//	of the particle to which the field is attached for each particle deleted
-	//	to simulate it "absorbing" other particles. Maybe save this change for
-	//	a later version. It doesn't seem important.
 	/// Called by the simulation to determine whether this field affects the
 	///	particle to which it's attached.
 	fn affects_self(&self) -> bool;
@@ -108,7 +110,7 @@ impl Field for DummyField {
 		&self,
 		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		field_owner_id: Uuid,
 	) {
 		// Does nothing.
@@ -175,14 +177,14 @@ impl Field for SimpleSelfGravityField {
 		&self,
 		simulation: &simulation::Simulation,
 		_position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		_field_owner_id: Uuid,
 	) {
 		// There should only ever be one thing in the Vec (the particle to
 		//  which this field is attached).
-		for id in particle_ids {
-			let force = simulation.get_mass(id) * self.acceleration;
-			simulation.apply_force(id, force);
+		for id in triggered_by.keys() {
+			let force = simulation.get_mass(*id) * self.acceleration;
+			simulation.apply_force(*id, force);
 		}
 	}
 
@@ -267,15 +269,15 @@ impl Field for UniversalGravitationField {
 		&self,
 		simulation: &simulation::Simulation,
 		position: physical_quantities::Displacement,
-		particle_ids: Vec<Uuid>,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		field_owner_id: Uuid,
 	) {
-		for id in particle_ids {
+		for id in triggered_by.keys() {
 			// We want to calculate
 			// F = G * ((m_1 * m_2) / |r_12|^2) * ru_12
 			// Where r_12 is the vector from the other particle to this field's
 			//	owner particle and ru_12 is the unit vector derived from r_12.
-			let other_position = simulation.get_position(id);
+			let other_position = simulation.get_position(*id);
 			let displacement_vector = utilities::get_displacement_vector(
 				other_position,
 				position,
@@ -292,13 +294,13 @@ impl Field for UniversalGravitationField {
 				let force_vector =
 					self.gravitational_constant
 					* (
-					(simulation.get_mass(field_owner_id).get_number() * simulation.get_mass(id).get_number())
+					(simulation.get_mass(field_owner_id).get_number() * simulation.get_mass(*id).get_number())
 					/ magnitude_squared) * unit_vector;
 
 				let force =
 					physical_quantities::Force::new(force_vector.x(), force_vector.y());
 
-				simulation.apply_force(id, force);
+				simulation.apply_force(*id, force);
 			}
 		}
 	}
