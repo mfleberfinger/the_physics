@@ -1,0 +1,9 @@
+[package]
+name = "field_overlap_triggered_effects"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4.14"
+v0 = { path = "../../v0" }
+uuid = { version = "1.17.0", features = ["v4"] }

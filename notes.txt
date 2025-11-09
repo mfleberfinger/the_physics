@@ -1,4 +1,28 @@
 TODO:
+	
+	There is at least one warning when running/checking the library. Fix it.
+
+	There is a problem with my implementation of support for effects triggering ************************
+		on overlapping fields. There is currently no way for a field's effect()
+		method to know which field triggered it. If a particle has two fields,
+		a and b, of differing sizes and the triggered field only wants to
+		affect the particle when field b is encountered, we need some way to
+		allow it to choose to ignore field a. For example, we don't want a
+		collider with radius 5.0 to to run collision logic when encountering a
+		gravity field with redius 1000.0.
+		- Remember to implement a failing unit test for this before making the
+			change.
+		- One (bad) solution is to make no changes to how tick() handles field
+			overlap effect triggering and just expect the effect() methods to
+			figure out which fields they're overlapping with by calling
+			get_field_info() and iterating through all of the fields, checking
+			their radii, the triggered field's radius, and the involved
+			particles' positions.
+			+ This is an extremely bad solution... It should be trivial to
+				know what an effect() method should apply to from within that
+				method. I don't even want to try writing an effect that needs
+				to go through the trouble of finding the relevant field. It
+				just shouldn't work this way.
 
 	See "Colliders" below.
 
@@ -493,6 +517,9 @@ Graphics
 
 Colliders:
 
+	Before implementing a collider field, implement the "functional_collision" ****************
+		test in simulation.rs.
+
 	Velocities after a 1D collision between particle a and particle b:
 		v_a = (C_R * m_b * (u_b - u_a) + m_a * u_a + m_b * u_b) / (m_a + m_b)
 		v_b = (C_R * m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
@@ -530,10 +557,11 @@ Colliders:
 	Probably make a collider field that only interacts with other particles with
 		collider fields and calculates the force that would set the other
 		(for consistency with UniversalGravitationField) particle's velocity
-		component perpendicular to the tangent to 0 within a single tick, then
-		apply that force to the other particle. This should still work when
-		collisions between three or more particles occur.
-		- Requires to changes to the physics engine (in addition to implementing
+		component perpendicular to the tangent (actually the secant defined by
+		two overlapping circles) to 0 within a single tick, then apply that
+		force to the other particle. This should still work when collisions
+		between three or more particles occur.
+		- Requires to changes to the physics engine (in addition to implementing	[done]
 			the Field):
 			+ Add a get_tick_duration() method.										[done]
 			+ Add support for applying field effects when two fields overlap,
@@ -555,21 +583,32 @@ Colliders:
 						to overlap the other particle without the second
 						particle's field overlapping the first particle or its
 						field.
-				-> Add code to tick() to handle overlapping fields similarly to ****************************
+				-> Add code to tick() to handle overlapping fields similarly to		[done]
 					how it handles particles within fields.
 					- Remember that it will be necessary to avoid double-adding
 						the same particle to the collection of particles
 						affected by a field if that field's effect triggers on
 						both field/field overlap and field/particle overlap.
-	- It is probably necessary to avoid applying any forces if the colliding
-		particles' velocities are such that the particles are already
-		separating, so we don't apply collision forces repeatedly after the
-		collision has already occurred. I.e., the particles' relative velocities
-		must be towards each other.
-		+ There may be some kind of challenge in determining which direction is
-			"separating" the particles. Consider the overlap between two fields
-			and the relative velocities of the corresponding particles one tick
-			after a glancing collision.
+		- It is probably necessary to avoid applying any forces if the colliding
+			particles' velocities are such that the particles are already
+			separating, so we don't apply collision forces repeatedly after the
+			collision has already occurred. I.e., the particles' relative
+			velocities must be towards each other.
+			+ There may be some kind of challenge in determining which direction is
+				"separating" the particles. Consider the overlap between two fields
+				and the relative velocities of the corresponding particles one tick
+				after a glancing collision.
+		- Don't forget to handle the edge case where one smaller collider is
+			completely enclosed within a larger collider.
+			+ Remember to write a test for this.
+		- Don't forget to handle the corner case where two colliders with equal
+			radius are located exactly on top of each other (i.e., their
+			particles have exactly the same position).
+			+ This may be so unlikely that it can be ignored in most cases,
+				given that position is two f64 values. However, it is possible
+				for the user to intentionally create two particles with exactly
+				equal positions.
+			+ Remember to write a test for this.
 
 
 ________________________________________________________________________________

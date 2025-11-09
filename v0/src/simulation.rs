@@ -1842,7 +1842,7 @@ mod tests {
 		);
 	}
 
-
+	// TODO: Implement this test before implementing a collider field.
 	// Creates two particles with rigid body fields. Launches one of those
 	//	particles at the other and verifies that the resulting velocities (speed
 	//	and *direction*) and kinetic energy of each particle are as expected of
@@ -1851,13 +1851,33 @@ mod tests {
 	//	due to the tick-based nature of the simulation and floating point error.
 	//	Need to decide what level of error is acceptable for a given tick length
 	//	and number of ticks.
-	// This might not be worth doing. The design of the physics engine didn't
-	//	really intend for individual particles to act as rigid bodies. Similar
-	//	interactions to rigid body collisions are expected to emerge from
-	//	particles pushing and pulling each other via fields.
-//	#[test]
-//	fn functional_collision() {
-//	}
+	#[test]
+	fn functional_collision() {
+		panic!("TODO: Implement the \"functional_collision\" test.");
+	}
+
+	
+	// TODO: Implement this test before implementing a collider field.
+	// Tests the edge case where a smaller collider is completely enclosed in
+	//	a larger collider.
+	#[test]
+	fn functional_collision_enclosed_collider() {
+		panic!("TODO: Implement the \"functional_collision\" test.");
+	}
+
+	// TODO: Implement this test before implementing a collider field.
+	// Tests the corner case where two or more colliders have exactly the same
+	//	radius and position. Extremely unlikely to occur unless the user
+	//	intentionally causes it by creating two particles with the same
+	//	position.
+	#[test]
+	fn functional_collision_colocated_colliders() {
+		panic!("TODO: Implement the \"functional_collision\" test.");
+	}
+
+
+	// TODO: Should probably implement a test for the universal gravitation
+	//	field.
 }
 
 
