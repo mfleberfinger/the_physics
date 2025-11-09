@@ -17,6 +17,16 @@ TODO:
 
 	See "Colliders" below.
 
+	Implement scalar multiplication of Velocity.
+		- Don't forget the unit test.
+	
+	Implement division of Velocity by Time to get Acceleration.
+		- Don't forget the unit test.
+
+	Implement multiplication of mass by acceleration (and vice-versa) to get
+		force.
+		- Don't forget the unit test.
+
 	Field::effect() accepts a list of particle IDs to affect and the ID of the
 		particle to which the field is attached. Verify that the simulation
 		passes the field owner's ID in the list of IDs when it should be

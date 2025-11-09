@@ -16,20 +16,20 @@ async fn main() {
 
 	let mut particles = Vec::new();
 
-	for i in 1..5 {
-		for j in 1..5 {
+	for i in 1..6 {
+		for j in 1..2 {
 			let p_id = sim.create_particle(
 				Mass::new(3.5),
 				Displacement::new(
-					300.0 + ((j * 50) as f64),
-					-300.0 - ((i * 50) as f64)
+					500.0 + ((i * 15) as f64),
+					-300.0 - (((j * 15) + (i * 0)) as f64)
 				),
 				vec! [
 					Box::new(SimpleSelfGravityField::new(
 						Acceleration::new(0.0, -9.81),
 						None,
 					)),
-					Box::new(MarkerField::new(
+					Box::new(StickyField::new(
 						15.0,
 						"Faller".to_string(),
 					)),
@@ -44,10 +44,10 @@ async fn main() {
 	for i in 1..21 {
 		let p_id = sim.create_particle(
 			Mass::new(3.5),
-			Displacement::new(300.0 + ((i * 10) as f64), -900.0),
+			Displacement::new(300.0 + ((i * 10) as f64), -700.0),
 			vec! [
 				Box::new(FloorAndWallField::new(
-					Force::new(0.0, 2000.0),
+					Force::new(500.0, 500.0),
 					10.0,
 					"Floor".to_string(),
 				)),
@@ -230,6 +230,103 @@ impl Field for MarkerField {
 		_field_owner_id: Uuid,
 	) {
 		// No-op
+	}
+
+	fn get_radius(&self) -> f64 {
+		self.radius
+	}
+
+	fn affects_self(&self) -> bool {
+		false
+	}
+
+	fn affects_others(&self) -> bool {
+		true
+	}
+
+	fn triggers_on_fields(&self) -> bool {
+		true
+	}
+
+	fn triggers_on_particles(&self) -> bool {
+		false
+	}
+
+	fn get_name(&self) -> &String {
+		&self.name
+	}
+}
+
+struct StickyField {
+	radius: f64,
+	name: String,
+}
+
+impl StickyField {
+	fn new(radius: f64, name: String) -> Self {
+		Self {
+			radius: radius,
+			name: name,
+		}
+	}
+}
+
+impl Field for StickyField {
+	fn effect(
+		&self,
+		simulation: &Simulation,
+		position: Displacement,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
+		field_owner_id: Uuid,
+	) {
+		// Attempt to get particles with this field to stick to each other.
+		// Don't bother trying to calculate or reason too much about how to
+		//	make this work properly. Just do something naive and see what
+		//	happens. It should be entertaining.
+		for (particle_id, field_info_vec) in triggered_by.iter() {
+			for field_info in field_info_vec {
+				if let Some(info) = field_info {
+					if info.get_name() == self.get_name() {
+						// Stick.
+						let my_velocity = simulation.get_velocity(field_owner_id);
+						let other_velocity =
+							simulation.get_velocity(*particle_id);
+						// Naively assume that each particle can just apply half of
+						//	the required velocity change to set their relative
+						//	velocity to 0. What happens if three particles act on
+						//	each other? Doesn't matter.
+						let double_velocity =
+							 Velocity::new(
+								(my_velocity.x() - other_velocity.x()),
+								(my_velocity.y() - other_velocity.y()),
+							);
+
+						let half_magnitude =
+							0.5 * (
+								double_velocity.x().powf(2.0) 
+								+ double_velocity.y().powf(2.0)
+							).sqrt();
+
+						let other_delta_velocity =
+							Velocity::new(
+								(double_velocity.x() * 0.5),
+								(double_velocity.y() * 0.5),
+							);
+						// a = m/s/s => a = delta_v / t
+						let one_over_time =
+							(1.0 / simulation.get_tick_duration().get_number());
+						let other_acceleration =
+							Acceleration::new(
+								other_delta_velocity.x() * one_over_time,
+								other_delta_velocity.y() * one_over_time);
+						// f = ma
+						let force =
+							 simulation.get_mass(*particle_id) * other_acceleration;
+						simulation.apply_force(*particle_id, force);
+					}
+				}
+			}
+		}
 	}
 
 	fn get_radius(&self) -> f64 {
