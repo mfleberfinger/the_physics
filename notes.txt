@@ -628,6 +628,9 @@ To remember for future iterations:
 		+ There are definitely data structures and algorithms for finding items
 			within a radius or within a grid cell. Do some research to find
 			something useful.
+			-> Once I decide on an option, see if there's a good rust crate
+				that implements the desired data structure or algorithms. If
+				not, implement it as its own crate and publish it to crates.io.
 			-> Possible Options:
 				- Quadtree
 				- R-tree
