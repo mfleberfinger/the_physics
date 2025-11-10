@@ -1,20 +1,5 @@
 TODO:
 
-	There is a problem with my implementation of support for effects triggering
-		on overlapping fields. There is currently no way for a field's effect()
-		method to know which field triggered it. If a particle has two fields,
-		a and b, of differing sizes and the triggered field only wants to
-		affect the particle when field b is encountered, we need some way to
-		allow it to choose to ignore field a. For example, we don't want a
-		collider with radius 5.0 to to run collision logic when encountering a
-		gravity field with redius 1000.0.
-		- Remember to implement a unit test to determine whether a list of *******************************
-			overlapped fields is successfully provided to the effect() method.
-		- How to inform each effect of all fields with which its field overlaps
-			for each particle it's affecting?
-			+ Instead of passing a Vec of particle IDs, pass a Hashmap of Vecs
-				of FieldInfo, keyed by particle ID.
-
 	See "Colliders" below.
 
 	Implement scalar multiplication of Velocity.
@@ -716,3 +701,18 @@ DONE:
 						it (by checking Simulation.get_elapsed_ticks() or
 						whatever I called it) or avoid making such calls from
 						outside the simulation (outside on_tick and effect()).
+
+	There is a problem with my implementation of support for effects triggering
+		on overlapping fields. There is currently no way for a field's effect()
+		method to know which field triggered it. If a particle has two fields,
+		a and b, of differing sizes and the triggered field only wants to
+		affect the particle when field b is encountered, we need some way to
+		allow it to choose to ignore field a. For example, we don't want a
+		collider with radius 5.0 to to run collision logic when encountering a
+		gravity field with radius 1000.0.
+		- Remember to implement a unit test to determine whether a list of 			[done]
+			overlapped fields is successfully provided to the effect() method.
+		- How to inform each effect of all fields with which its field overlaps
+			for each particle it's affecting?
+			+ Instead of passing a Vec of particle IDs, pass a Hashmap of Vecs
+				of FieldInfo, keyed by particle ID.

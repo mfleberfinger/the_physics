@@ -777,6 +777,10 @@ mod tests {
 	//	particles whose fields it overlaps is not passed two copies of the
 	//	same particle's ID when that particle is within the field and has its
 	//	own field.
+	// This was implemented when a Vec of particle_id was being passed to
+	//	Field.effect() methods. Now a HashMap is used, which might make this
+	//	test obsolete, but there's no reason to get rid of it... Maybe it
+	//	incidentally tests something else.
 	#[test]
 	fn simulation_field_does_not_double_trigger() {
 		// Create a particle with a field that checks the IDs passed to it and
@@ -911,13 +915,152 @@ mod tests {
 		);
 	}
 
+	struct WrongInfoPanicField {
+		radius: f64,
+		name: String,
+	}
 
-	// TODO: Implement this.
+	impl simulation_objects::Field for WrongInfoPanicField {
+		fn effect(
+			&self,
+			simulation: &Simulation,
+			position: physical_quantities::Displacement,
+			triggered_by: HashMap<Uuid, Vec<Option<simulation_objects::FieldInfo>>>,
+			_particle_owner_id: Uuid,
+		) {
+			// Only one particle should be affected.
+			assert_eq!(1, triggered_by.len());
+
+			// Only these fields should be involved.
+			let expected_names =
+				HashSet::from([
+					String::from("overlap1"),
+					String::from("overlap2"),
+					String::from("overlap3"),
+				]);
+			let mut actual_names = HashSet::new();
+			for (id, info) in triggered_by {
+				for option in info {
+					let i = option.expect(
+						"None encountered. Did we trigger on a particle without \
+							a field?"
+					);
+					// Only accept field names that we expect.
+					assert!(
+						expected_names.contains(i.get_name()),
+						"Field \"{}\" should not overlap the panic \
+							field.",
+						i.get_name(),
+					);
+					// Add names to a collection and panic if they already exist.
+					assert!(
+						actual_names.insert(i.get_name().clone()),
+						"Field \"{}\" appeared twice in the panic field's \
+							triggered_by.",
+						i.get_name(),
+					);
+				}
+			}
+		}
+
+		fn get_radius(&self) -> f64 {
+			self.radius
+		}
+
+		fn affects_self(&self) -> bool {
+			false
+		}
+
+		fn affects_others(&self) -> bool {
+			true
+		}
+
+		fn triggers_on_fields(&self) -> bool {
+			true
+		}
+
+		fn triggers_on_particles(&self) -> bool {
+			false
+		}
+
+		fn get_name(&self) -> &String {
+			&self.name
+		}
+	}
+
 	// Verifies that, when a field's effect is triggered by overlapping fields,
 	//	information about those fields is passed into the effect method.
 	#[test]
-	fn simulation_field_effect_gets_triggering_field_info() {
-		panic!("TODO: Implement this.");
+	fn simulation_field_effect_gets_triggering_field_info_only() {
+		// Create a particle with several fields of different radii and a
+		//	particle with a field that triggers on overlap and panics if it's
+		//	passed anything other than a predetermined list of FieldInfo. Place
+		//	these two particles at a distance that causes only the fields on
+		//	the panicker's list to overlap with its field.
+		let simulation = Simulation::new(
+			physical_quantities::Time::new(1.0),
+			None,
+			None,
+		);
+		let panic_field = WrongInfoPanicField {
+			radius: 10.0,
+			name: String::from("panic field"),
+		};
+		// Outside panic field.
+		let dummy_field1 = simulation_objects::DummyField {
+			radius: 1.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("outside"),
+		};
+		// Overlaps panic field.
+		let dummy_field2 = simulation_objects::DummyField {
+			radius: 10.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("overlap1"),
+		};
+		// Overlaps panic field.
+		let dummy_field3 = simulation_objects::DummyField {
+			radius: 15.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("overlap2"),
+		};
+		// Overlaps panic field.
+		let dummy_field4 = simulation_objects::DummyField {
+			radius: 40.0,
+			affects_self: false,
+			affects_others: false,
+			name: String::from("overlap3"),
+		};
+		let panicker = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(panic_field)),
+		);
+		let dummy_with_fields = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(14.0, 0.0),
+			vec!(
+					Box::new(dummy_field1.clone()),
+					Box::new(dummy_field2.clone()),
+					Box::new(dummy_field3.clone()),
+					Box::new(dummy_field4.clone()),
+				),
+		);
+		let dummy_with_no_fields = simulation.create_particle(
+			physical_quantities::Mass::new(1.0),
+			physical_quantities::Displacement::new(1.0, 0.0),
+			Vec::new(),
+		);
+
+		// Step twice: Once to create the particles and a second time to let the
+		//	simulation process the fields.
+		simulation.step();
+		// If this step does not cause the panicker to panic, this test will
+		//	pass.
+		simulation.step();
 	}
 
 	// Verifies that a field meant to affect itself will be passed its own
@@ -1872,7 +2015,7 @@ mod tests {
 	//	a larger collider.
 	#[test]
 	fn functional_collision_enclosed_collider() {
-		panic!("TODO: Implement the \"functional_collision\" test.");
+		panic!("TODO: Implement the \"functional_collision_enclosed_collider\" test.");
 	}
 
 	// TODO: Implement this test before implementing a collider field.
@@ -1882,7 +2025,7 @@ mod tests {
 	//	position.
 	#[test]
 	fn functional_collision_colocated_colliders() {
-		panic!("TODO: Implement the \"functional_collision\" test.");
+		panic!("TODO: Implement the \"functional_collision_colocated_colliders\" test.");
 	}
 
 
