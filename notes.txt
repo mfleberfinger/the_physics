@@ -625,8 +625,16 @@ To remember for future iterations:
 		simulation to determine whether each of those particles falls within the
 		field's radius. This will need to be done for each of the fields in the
 		simulation.
-		+ There are definitely algorithms for finding items within a radius or
-			within a grid cell. Do some research to find something useful.
+		+ There are definitely data structures and algorithms for finding items
+			within a radius or within a grid cell. Do some research to find
+			something useful.
+			-> Possible Options:
+				- Quadtree
+				- R-tree
+				- Spatial hash map
+				- K-d tree
+				- Bounding volume hierarchy (BVH)
+				- Others?
 	- It may be necessary to shrink HashMaps from time to time to avoid wasting
 		memory and unnecessarily slowing down operations that need to iterate
 		over all particles. When items are added to a HashMap, it eventually
