@@ -1604,6 +1604,15 @@ mod tests {
 		diff.get_number().abs() <= error
 	}
 
+	fn numbers_are_almost_equal(
+		n1: f64,
+		n2: f64,
+		error: f64
+	) -> bool {
+		let diff = n1 - n2;
+		diff.abs() <= error
+	}
+
 
 	// Apply several forces in several directions, over a few seconds. Check the
 	//	displacement after each second.
@@ -1995,24 +2004,186 @@ mod tests {
 		);
 	}
 
-	// TODO: Implement this test before implementing a collider field.
-	// Creates two particles with rigid body fields. Launches one of those
-	//	particles at the other and verifies that the resulting velocities (speed
-	//	and *direction*) and kinetic energy of each particle are as expected of
-	//	an elastic collision.
-	// Resulting values may not be precisely the same as calculated values
-	//	due to the tick-based nature of the simulation and floating point error.
-	//	Need to decide what level of error is acceptable for a given tick length
-	//	and number of ticks.
+	// Creates two particles with collider fields. Launches one of those
+	//	particles at the other and verifies that the resulting velocity of each
+	//	particle is as expected of an elastic collision, within some acceptable
+	//	tolerances. Verify that the total kinetic energy of the particles is
+	//	equal before and after the collision.
+	// NOTE: As of 2025-11-11, this will only test a one-dimensional, perfectly
+	//	elastic collision.
 	#[test]
 	fn functional_collision() {
-		panic!("TODO: Implement the \"functional_collision\" test.");
+		let permissible_error = 0.0;
+		let force = physical_quantities::Force::new(1000.0, 0.0);
+		let mass_a = physical_quantities::Mass::new(1.0);
+		let mass_b = physical_quantities::Mass::new(2.0);
+		let tick_duration = physical_quantities::Time::new(0.001);
+		let original_velocity_a;
+		let original_velocity_b;
+		let expected_velocity_a;
+		let expected_velocity_b;
+		let final_velocity_a;
+		let final_velocity_b;
+		let original_total_energy;
+		let final_total_energy;
+		let simulation = Simulation::new(tick_duration, None, None);
+		let particle_id_a = simulation.create_particle(
+			mass_a,
+			physical_quantities::Displacement::new(0.0, 0.0),
+			vec!(Box::new(simulation_objects::Collider::new(
+				5.0,
+				1.0,
+				None,
+			))),
+		);
+		let particle_id_b = simulation.create_particle(
+			mass_b,
+			physical_quantities::Displacement::new(1.0, 0.0),
+			vec!(Box::new(simulation_objects::Collider::new(
+				5.0,
+				1.0,
+				None,
+			))),
+		);
+		
+		// Advance the simulation by a tick to allow the particles to be added.
+		simulation.step();
+		// Apply a force for a single tick to get a particle moving.
+		simulation.apply_force(particle_id_a, force);
+		simulation.step();
+
+		original_velocity_a = simulation.get_velocity(particle_id_a);
+		original_velocity_b = simulation.get_velocity(particle_id_b);
+		let distance_to_collision =
+			utilities::measure_distance(
+				simulation.get_position(particle_id_a),
+				simulation.get_position(particle_id_a),
+			);
+		let relative_velocity = (original_velocity_a - original_velocity_b);
+		let closing_speed = relative_velocity.get_magnitude();
+		assert!(closing_speed > 0.0, "Found a bug in the test?");
+		// Assuming relative_velocity is moving the particles closer together.
+		let time_to_collision = physical_quantities::Time::new(
+			distance_to_collision / closing_speed
+		);
+
+		// Run until the particles should have collided and separated. An extra
+		//	second is added to make sure their colliders are no longer
+		//	overlapping (assuming the collision caused them to separate as
+		//	expected).
+		while simulation.get_elapsed_time()
+			< time_to_collision + physical_quantities::Time::new(1.0) {
+			simulation.step();
+		}
+
+		/*
+		Velocities after a 1D elastic collision between particle a and particle b:
+			v_a = (m_b * (u_b - u_a) + m_a * u_a + m_b * u_b) / (m_a + m_b)
+			v_b = (m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
+		Where
+			v_a is the final velocity of the first object after impact
+			v_b is the final velocity of the second object after impact
+			u_a is the initial velocity of the first object before impact
+			u_b is the initial velocity of the second object before impact
+			m_a is the mass of the first object
+			m_b is the mass of the second object
+
+		Energy is conserved:
+			0.5 * m_a * u_a^2 + 0.5 * m_b * u_b^2
+				= 0.5 * m_a * v_a^2 + 0.5 * m_b * v_b^2
+		*/
+
+		final_velocity_a = simulation.get_velocity(particle_id_a);
+		final_velocity_b = simulation.get_velocity(particle_id_b);
+
+		expected_velocity_a = 
+			physical_quantities::Velocity::new(
+				(
+					mass_b.get_number()
+					* (original_velocity_b.x() - original_velocity_a.x())
+					+ mass_a.get_number() * original_velocity_a.x() + mass_b.get_number()
+					* original_velocity_b.x()
+				)
+				/ (mass_a.get_number() + mass_b.get_number()),
+				0.0,
+			);
+		expected_velocity_b = 
+			physical_quantities::Velocity::new(
+				(
+					mass_a.get_number()
+					* (original_velocity_a.x() - original_velocity_b.x())
+					+ mass_b.get_number() * original_velocity_b.x() + mass_a.get_number()
+					* original_velocity_a.x()
+				)
+				/ (mass_b.get_number() + mass_a.get_number()),
+				0.0,
+			);
+		original_total_energy = 0.5 * mass_a.get_number() * original_velocity_a.x().powf(2.0)
+			+ 0.5 * mass_b.get_number() * original_velocity_b.x().powf(2.0);
+		final_total_energy = 0.5 * mass_a.get_number() * final_velocity_a.x().powf(2.0)
+			+ 0.5 * mass_b.get_number() * final_velocity_b.x().powf(2.0);
+
+		// Verify that particle a's velocity is as expected.
+		assert!(
+			velocities_are_almost_equal(
+				expected_velocity_a,
+				final_velocity_a,
+				permissible_error,
+			),
+			"Error in particle a's velocity greater than permissible error of {:?}.\n\
+			expected_velocity_a = {:?}\n\
+			final_velocity_a = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_velocity_a,
+			final_velocity_a,
+			final_velocity_a - expected_velocity_a,
+		);
+
+		// Verify that particle b's velocity is as expected.
+		assert!(
+			velocities_are_almost_equal(
+				expected_velocity_b ,
+				final_velocity_b,
+				permissible_error,
+			),
+			"Error in particle b's velocity greater than permissible error of {:?}.\n\
+			expected_velocity_b = {:?}\n\
+			final_velocity_b = {:?}\n\
+			actual - expected = {:?}",
+			permissible_error,
+			expected_velocity_b,
+			final_velocity_b,
+			final_velocity_b - expected_velocity_b,
+		);
+
+		// Verify that the total kinetic energy of the system is as expected.
+		assert!(
+			numbers_are_almost_equal(
+				12.0,
+				1.0,
+				permissible_error,
+			),
+			"Error in total energy greater than permissible error of {:?}.\n\
+			original_total_energy = {:?}\n\
+			final_total_energy = {:?}\n\
+			final - original = {:?}",
+			permissible_error,
+			original_total_energy,
+			final_total_energy,
+			final_total_energy - original_total_energy,
+		);
 	}
 
 	
 	// TODO: Implement this test before implementing a collider field.
 	// Tests the edge case where a smaller collider is completely enclosed in
 	//	a larger collider.
+	// In this case, the relative velocity vector between the two particles
+	//	should be used to calculate where the two colliders would have
+	//	overlapped when they first encountered each other. Then the collision
+	//	forces should be applied as if the collision is occuring in that
+	//	location.
 	#[test]
 	fn functional_collision_enclosed_collider() {
 		panic!("TODO: Implement the \"functional_collision_enclosed_collider\" test.");
@@ -2023,14 +2194,26 @@ mod tests {
 	//	radius and position. Extremely unlikely to occur unless the user
 	//	intentionally causes it by creating two particles with the same
 	//	position.
+	// In this case, the relative velocity vector between the two particles
+	//	should be used to calculate where the two colliders would have
+	//	overlapped when they first encountered each other. Then the collision
+	//	forces should be applied as if the collision is occuring in that
+	//	location.
 	#[test]
 	fn functional_collision_colocated_colliders() {
 		panic!("TODO: Implement the \"functional_collision_colocated_colliders\" test.");
 	}
 
+	// TODO: Implement this test before implementing a collider field.
+	// Verifies that two particles that are already moving away from each other
+	//	will not collide, even if their colliders overlap (as may often be the
+	//	case for a few ticks after a collision).
+	#[test]
+	fn functional_post_collision_contact() {
+	}
 
 	// TODO: Should probably implement a test for the universal gravitation
-	//	field.
+	// field.
 }
 
 

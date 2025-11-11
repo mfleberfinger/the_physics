@@ -503,8 +503,9 @@ Graphics
 
 Colliders:
 
-	Before implementing a collider field, implement the "functional_collision" ****************
-		test in simulation.rs.
+	Before implementing a collider field, implement the collision tests in **********************
+		simulation.rs.
+		- Also implement the collider constructor test in simulation_objects.rs.
 
 	Velocities after a 1D collision between particle a and particle b:
 		v_a = (C_R * m_b * (u_b - u_a) + m_a * u_a + m_b * u_b) / (m_a + m_b)
@@ -609,6 +610,13 @@ Make a small game?
 		be performant.
 
 To remember for future iterations:
+	- Consider making Vector2 a trait, instead of a struct. This would allow it
+		to provide default implementations for common vector operations, like
+		magnitude (and maybe std::ops?) instead of having to implement a method
+		for each operation in each type that relies on Vector2. This would also
+		allow functions to accept any Vector2, instead of being limited to just
+		Velocity or just Displacement (like the "almost_equal" functions), for
+		example.
 	- To eliminate floating point errors, do all calculations in integer
 		multiples of a "Planck length" or use fixed point numbers. Look into
 		using GMP (see bookmarks in browser).

@@ -746,6 +746,22 @@ impl ops::Sub for Time {
 	}
 }
 
+impl ops::Mul<Velocity> for Time {
+	type Output = Displacement;
+
+	fn mul(self, rhs: Velocity) -> Self::Output {
+		Displacement(self.0 * rhs.0)
+	}
+}
+
+impl ops::Mul<Acceleration> for Time {
+	type Output = Velocity;
+
+	fn mul(self, rhs: Acceleration) -> Self::Output {
+		Velocity(self.0 * rhs.0)
+	}
+}
+
 impl Time {
 	pub fn new(t: f64) -> Self {
 		Self(t)
@@ -913,6 +929,10 @@ impl Displacement {
 	pub fn get_vector(&self) -> Vector2 {
 		self.0
 	}
+
+	pub fn get_magnitude(self) -> f64 {
+		self.0.get_magnitude()
+	}
 }
 
 impl ops::Add for Displacement {
@@ -943,7 +963,6 @@ impl ops::SubAssign for Displacement {
 	}
 }
 
-
 /// Velocity.
 /// Wraps `Vector2` and provides functionality specific to velocity.
 #[derive(PartialEq)]
@@ -963,6 +982,10 @@ impl Velocity {
 	pub fn y(&self) -> f64 {
 		self.0.y
 	}
+
+	pub fn get_magnitude(self) -> f64 {
+		self.0.get_magnitude()
+	}
 }
 
 // Multiplication of velocity by time.
@@ -970,13 +993,6 @@ impl ops::Mul<Time> for Velocity {
 	type Output = Displacement;
 
 	fn mul(self, rhs: Time) -> Self::Output {
-		Displacement(self.0 * rhs.0)
-	}
-}
-impl ops::Mul<Velocity> for Time {
-	type Output = Displacement;
-
-	fn mul(self, rhs: Velocity) -> Self::Output {
 		Displacement(self.0 * rhs.0)
 	}
 }
@@ -1028,6 +1044,10 @@ impl Acceleration {
 	pub fn y(&self) -> f64 {
 		self.0.y
 	}
+
+	pub fn get_magnitude(self) -> f64 {
+		self.0.get_magnitude()
+	}
 }
 
 // Scalar multiplication of acceleration.
@@ -1051,13 +1071,6 @@ impl ops::Mul<Time> for Acceleration {
 	type Output = Velocity;
 
 	fn mul(self, rhs: Time) -> Self::Output {
-		Velocity(self.0 * rhs.0)
-	}
-}
-impl ops::Mul<Acceleration> for Time {
-	type Output = Velocity;
-
-	fn mul(self, rhs: Acceleration) -> Self::Output {
 		Velocity(self.0 * rhs.0)
 	}
 }
@@ -1096,6 +1109,10 @@ impl Force {
 
 	pub fn y(&self) -> f64 {
 		self.0.y
+	}
+
+	pub fn get_magnitude(self) -> f64 {
+		self.0.get_magnitude()
 	}
 }
 

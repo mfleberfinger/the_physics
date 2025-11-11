@@ -7,6 +7,16 @@ use uuid::Uuid;
 mod tests {
     use super::*;
 
+	
+	/********************* Collider ********************/
+
+	// TODO: Implement this test.
+	#[test]
+	fn new_creates_collider() {
+		panic!("TODO");
+	}
+
+
 	/********************* Particle ********************/
 
 	#[test]
@@ -29,7 +39,6 @@ mod tests {
 		assert_eq!(particle.velocity, physical_quantities::Velocity::new(0.0, 0.0));
 		assert_eq!(particle.fields.len(), 1);
 	}
-
 }
 
 /// Defines a field. A field is a struct implementing a method that is called by
@@ -323,6 +332,84 @@ impl Field for UniversalGravitationField {
 
 	fn triggers_on_particles(&self) -> bool {
 		true
+	}
+
+	fn get_name(&self) -> &String {
+		&self.name
+	}
+}
+
+/// Allows collisions between two or more particles to be simulated, instead of
+///		letting particles pass through each other. Each particle involved in a
+///		collision must have colliders with the same name in order to be affected.
+pub struct Collider {
+	radius: f64,
+	coefficient_of_restitution: f64,
+	name: String,
+}
+
+impl Collider {
+
+	/// Creates an instance of `Collider`.
+	///
+	/// # Arguments
+	/// * `coefficient_of_restitution` - How "bouncy" the particle will be. In
+	///		a collision between two objects, the coefficient of restitution of
+	///		the collision will be the product of those two objects'
+	///		`coefficient_of_restitution` values. A collision where this product
+	///		is 1 will be perfectly elastic. A collision where this product is
+	///		0 will be perfectly inelastic. Values outside of this range are
+	///		allowed and will result in unrealistic behavior.
+	/// * `name` - The field name. Defaults to "Collider" if `None`. Only
+	///		particles with colliders having the same `name` will collide.
+	pub fn new(
+		radius: f64,
+		coefficient_of_restitution: f64,
+		name: Option<String>)
+		-> Collider
+	{
+		let field_name = match name {
+			Some(s) => s,
+			None => String::from("Collider"),
+		};
+
+		Collider {
+			radius: radius,
+			coefficient_of_restitution: coefficient_of_restitution,
+			name: field_name,
+		}
+	}
+}
+
+impl Field for Collider {
+	fn effect(
+		&self,
+		simulation: &simulation::Simulation,
+		position: physical_quantities::Displacement,
+		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
+		field_owner_id: Uuid,
+	) {
+			// TODO: Implement collisions.
+	}
+
+	fn get_radius(&self) -> f64 {
+		self.radius
+	}
+
+	fn affects_self(&self) -> bool {
+		false
+	}
+
+	fn affects_others(&self) -> bool {
+		true
+	}
+
+	fn triggers_on_fields(&self) -> bool {
+		true
+	}
+
+	fn triggers_on_particles(&self) -> bool {
+		false
 	}
 
 	fn get_name(&self) -> &String {
