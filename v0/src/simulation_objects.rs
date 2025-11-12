@@ -10,7 +10,6 @@ mod tests {
 	
 	/********************* Collider ********************/
 
-	// TODO: Implement this test.
 	#[test]
 	fn new_creates_collider() {
 		let collider1 = Collider::new(
@@ -399,6 +398,13 @@ impl Collider {
 }
 
 impl Field for Collider {
+	// NOTE: It may be necessary to add some (user configurable) threshold
+	//	value that a velocity must be greater than to allow a collision to
+	//	occur. Otherwise, floating point errors will probably make
+	//	collisions between particles that should be stationary happen
+	//	constantly. If this "vibration" is small enough, it may not matter,
+	//	but it's also possible that it could cause random motion or somehow
+	//	increase in magnitude if not damped out or ignored in some way.
 	fn effect(
 		&self,
 		simulation: &simulation::Simulation,
@@ -406,13 +412,44 @@ impl Field for Collider {
 		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		field_owner_id: Uuid,
 	) {
-			// TODO: Implement collisions.
-			// Make the wrong thing happen so unit tests (even those expecting
-			//	nothing to happen) will fail.
-			simulation.apply_force(
-				field_owner_id,
-				physical_quantities::Force::new(10.0, 5.0)
-			);
+
+		// TODO: Implement collisions.
+
+		// For each triggering field with the same name as this field, find the
+		//	secant defined by the overlapping circles. If it is not possible to
+		//	find the secant because the circles have identical radius and share
+		//	a center, do nothing and skip all remaining logic. If it is not
+		//	possible to find the secant because one of the two circles is
+		//	completely within the other, calculate where the two circles would
+		//	have first overlapped based on the particles' relative velocities.
+
+		// Find the component of this particle's velocity and the component of
+		//	the triggering particle's velocity normal to the secant. Be careful
+		//	to be consistent with which direction positive and negative velocity
+		//	represent. Is there a convention I should follow (look it up)?
+
+		// If the relative velocities of the two particles along the normal are
+		//	already (approximately?) zero or away from each other, skip all
+		//	remaining logic. No forces should be applied.
+
+		// Using the components of velocity along the normal, calculate the
+		//	other particle's new velocity along the normal. If we call this
+		//	particle v_a and the other particle v_b, the new velocity along the
+		//	normal will be calculated as follows:
+		//		v_b = (C_R * m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
+		//	Where
+		//		v_a is the final velocity of the first object after impact
+		//		v_b is the final velocity of the second object after impact
+		//		u_a is the initial velocity of the first object before impact
+		//		u_b is the initial velocity of the second object before impact
+		//		m_a is the mass of the first object
+		//		m_b is the mass of the second object
+		//		C_R is the coefficient of restitution
+
+		// Calculate a force that will set the other particle's velocity along
+		//	the normal to the new velocity in a single tick. Apply that force to
+		//	the other particle. Do nothing to this particle, assuming that the
+		//	field attached to the other particle will handle that.
 	}
 
 	fn get_radius(&self) -> f64 {

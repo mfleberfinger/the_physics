@@ -503,10 +503,6 @@ Graphics
 
 Colliders:
 
-	Before implementing a collider field, implement the collision tests in **********************
-		simulation.rs.
-		- Also implement the collider constructor test in simulation_objects.rs.
-
 	Velocities after a 1D collision between particle a and particle b:
 		v_a = (C_R * m_b * (u_b - u_a) + m_a * u_a + m_b * u_b) / (m_a + m_b)
 		v_b = (C_R * m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
@@ -548,7 +544,7 @@ Colliders:
 		two overlapping circles) to 0 within a single tick, then apply that
 		force to the other particle. This should still work when collisions
 		between three or more particles occur.
-		- Requires to changes to the physics engine (in addition to implementing	[done]
+		- Requires two changes to the physics engine (in addition to implementing	[done]
 			the Field):
 			+ Add a get_tick_duration() method.										[done]
 			+ Add support for applying field effects when two fields overlap,
@@ -585,6 +581,12 @@ Colliders:
 				"separating" the particles. Consider the overlap between two fields
 				and the relative velocities of the corresponding particles one tick
 				after a glancing collision.
+				-> Possible logic: If the component of the particle's velocity
+					normal to the secant is zero or negative (if positive
+					velocity is in the direction of the other particle), don't
+					run the collision logic. The component normal to the secant
+					doesn't need to be thought of as a vector. It will be a
+					one-dimensional velocity found by trigonometry.
 		- Don't forget to handle the edge case where one smaller collider is
 			completely enclosed within a larger collider.
 			+ Remember to write a test for this.
