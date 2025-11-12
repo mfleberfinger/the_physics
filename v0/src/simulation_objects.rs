@@ -13,7 +13,24 @@ mod tests {
 	// TODO: Implement this test.
 	#[test]
 	fn new_creates_collider() {
-		panic!("TODO");
+		let collider1 = Collider::new(
+			100.0,
+			50.0,
+			Some(String::from("SomeName")),
+		);
+		let collider2 = Collider::new(
+			50.0,
+			100.0,
+			None,
+		);
+
+		assert_eq!(100.0, collider1.get_radius());
+		assert_eq!(50.0, collider1.coefficient_of_restitution);
+		assert_eq!(&String::from("SomeName"), collider1.get_name());
+
+		assert_eq!(50.0, collider2.get_radius());
+		assert_eq!(100.0, collider2.coefficient_of_restitution);
+		assert_eq!(&String::from("Collider"), collider2.get_name());
 	}
 
 
@@ -390,6 +407,12 @@ impl Field for Collider {
 		field_owner_id: Uuid,
 	) {
 			// TODO: Implement collisions.
+			// Make the wrong thing happen so unit tests (even those expecting
+			//	nothing to happen) will fail.
+			simulation.apply_force(
+				field_owner_id,
+				physical_quantities::Force::new(10.0, 5.0)
+			);
 	}
 
 	fn get_radius(&self) -> f64 {
