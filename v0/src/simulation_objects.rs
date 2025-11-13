@@ -415,6 +415,17 @@ impl Field for Collider {
 
 		// TODO: Implement collisions.
 
+		// TODO: Finding the secant is probably done by finding the two points
+		//	where the circles overlap. To find these points, I need to find the
+		//	two (x, y) pairs that satisfy the equations of both circles:
+		//		(x − x_1)^2 + (y − y_1)^2 = r_1^2
+		//		(x − x_2)^2 + (y − y_2)^2 = r_2^2
+		//	Where
+		//		(x_1, y_1) is the center of the first circle
+		//		r_1 is the radius of the first circle
+		//		(x_2, y_2) is the center of the second circle
+		//		r_2 is the radius of the second circle
+
 		// For each triggering field with the same name as this field, find the
 		//	secant defined by the overlapping circles. If it is not possible to
 		//	find the secant because the circles have identical radius and share
