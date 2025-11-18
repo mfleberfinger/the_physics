@@ -536,6 +536,22 @@ Colliders:
 		requires us to check for strict inequality, '<'. An actual tangent
 		would only exist in the case where the distance between centers equals
 		the sum of the radii.
+		- It turns out that finding a general formula for the two points where
+			two circles overlap is not easy. However, it may not be necessary.
+			See https://www.plasmaphysics.org.uk/collision2d.htm and pay
+			attention to the part about "impact angle".
+			+ This same website also has a page explaining how to find the
+				needed angles for three-dimensional collisions:
+				https://www.plasmaphysics.org.uk/collision3d.htm
+			+ If I use the formulas from this webpage, I'll need to calculate
+				angles and run trigonometric functions (e.g. arcsin). The f64
+				type has built in support for trig functions, with inputs given
+				in radians. The f64 type also has a PI constant. If I need to
+				convert between degrees and radians (if I can't just get my
+				angles in radians from the start) I should precompute PI/180 at
+				the start of the program to get the conversion factor between
+				degrees and radians with high precsion without wasting time
+				computing it during tick().
 	
 	Probably make a collider field that only interacts with other particles with
 		collider fields and calculates the force that would set the other
