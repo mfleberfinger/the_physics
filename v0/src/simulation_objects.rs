@@ -404,7 +404,9 @@ impl Field for Collider {
 	//	collisions between particles that should be stationary happen
 	//	constantly. If this "vibration" is small enough, it may not matter,
 	//	but it's also possible that it could cause random motion or somehow
-	//	increase in magnitude if not damped out or ignored in some way.
+	//	increase in magnitude if not damped out or ignored in some way. Don't
+	//	implement this unless it is definitely necessary. It definitely seems
+	//	like a hack and would itself be unrealistic behavior.
 	fn effect(
 		&self,
 		simulation: &simulation::Simulation,
@@ -425,6 +427,11 @@ impl Field for Collider {
 		//		r_1 is the radius of the first circle
 		//		(x_2, y_2) is the center of the second circle
 		//		r_2 is the radius of the second circle
+		// See the section of notes.txt about the plasmaphysics.org.uk webpage.
+		//	I don't need to find secants. The method presented on that page also
+		//	seems to make it easier to assume that particles' surfaces are
+		//	colliding (not passing through each other to get two points of
+		//	overlap).
 
 		// For each triggering field with the same name as this field, find the
 		//	secant defined by the overlapping circles. If it is not possible to
