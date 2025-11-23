@@ -2575,6 +2575,10 @@ impl Simulation {
 										particle.get_position(),
 										field.get_radius() + info.get_radius(),
 										field_owner.get_position(),
+ 										// TODO: It probably makes more sense for
+										//	this to be false. I.e., consider
+										//	fields that just touch to be
+										//	overlapping.
 										true,
 									) {
 										if let Some(v) = triggered_by.get_mut(&particle_id) {

@@ -552,6 +552,7 @@ Colliders:
 				the start of the program to get the conversion factor between
 				degrees and radians with high precsion without wasting time
 				computing it during tick().
+				-> https://doc.rust-lang.org/std/primitive.f64.html
 	
 	Probably make a collider field that only interacts with other particles with
 		collider fields and calculates the force that would set the other

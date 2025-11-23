@@ -406,7 +406,7 @@ impl Field for Collider {
 	//	but it's also possible that it could cause random motion or somehow
 	//	increase in magnitude if not damped out or ignored in some way. Don't
 	//	implement this unless it is definitely necessary. It definitely seems
-	//	like a hack and would itself be unrealistic behavior.
+	//	like a hack and would, itself, be unrealistic behavior.
 	fn effect(
 		&self,
 		simulation: &simulation::Simulation,
@@ -417,57 +417,41 @@ impl Field for Collider {
 
 		// TODO: Implement collisions.
 
-		// TODO: Finding the secant is probably done by finding the two points
-		//	where the circles overlap. To find these points, I need to find the
-		//	two (x, y) pairs that satisfy the equations of both circles:
-		//		(x − x_1)^2 + (y − y_1)^2 = r_1^2
-		//		(x − x_2)^2 + (y − y_2)^2 = r_2^2
-		//	Where
-		//		(x_1, y_1) is the center of the first circle
-		//		r_1 is the radius of the first circle
-		//		(x_2, y_2) is the center of the second circle
-		//		r_2 is the radius of the second circle
-		// See the section of notes.txt about the plasmaphysics.org.uk webpage.
-		//	I don't need to find secants. The method presented on that page also
-		//	seems to make it easier to assume that particles' surfaces are
-		//	colliding (not passing through each other to get two points of
-		//	overlap).
+		// If the other particles don't have any fields with the same name as
+		//	this one, skip all of the collision logic.
 
-		// For each triggering field with the same name as this field, find the
-		//	secant defined by the overlapping circles. If it is not possible to
-		//	find the secant because the circles have identical radius and share
-		//	a center, do nothing and skip all remaining logic. If it is not
-		//	possible to find the secant because one of the two circles is
-		//	completely within the other, calculate where the two circles would
-		//	have first overlapped based on the particles' relative velocities.
+		// If the particles are stationary relative to each other or are already
+		//	moving away from each other, skip all of the collision logic.
 
-		// Find the component of this particle's velocity and the component of
-		//	the triggering particle's velocity normal to the secant. Be careful
-		//	to be consistent with which direction positive and negative velocity
-		//	represent. Is there a convention I should follow (look it up)?
+		// We will need the particles' positions at the time of the collision.
+		//	Perform calculations as if the collision happened at the surface of
+		//	the colliders, not where the particles are actually overlapping on
+		//	the current tick. Use the relative velocity of the particles and
+		//	the radii of the colliders to determine where they first came into
+		//	contact.
 
-		// If the relative velocities of the two particles along the normal are
-		//	already (approximately?) zero or away from each other, skip all
-		//	remaining logic. No forces should be applied.
+		// Calculate the change in velocity of the other particle (Δvx,2' and
+		//	Δvy,2') by applying equations (7), (8), (9), (11), (14), (16), (22),
+		//	(23), (26), and (27)
+		//	from https://www.plasmaphysics.org.uk/collision2d.htm.
+		//	(7)		γv = arctan [(vy,1 - vy,2) / (vx,1 - vx,2)] 
+		//	(8)		Δvx,2' = 2[vx,1 - vx,2 + a * (vy,1 - vy,2)] / [(1 + a2) * (1 + m2 / m1)]
+		//	(9)		a = tan(θ) = tan(γv + α)
+		//	(11)	vy,2' = vy,2 + a * Δvx,2'
+		//			-> I.e. Δvy,2' = a * Δvx,2'
+		//	(14)	α = arcsin [d * sin(γx,y - γv) / (r1 + r2)]
+		//	(16)	γx,y = arctan [(y2 - y1) / (x2 - x1)]
+		//	(22)	vx,cm = ( m1 * vx,1 + m2 * vx,2)/(m1 + m2)
+		//	(23)	vy,cm = ( m1 * vy,1 + m2 * vy,2)/(m1 + m2)
+		//	(26)	vx,2'' = (vx,2' - vx,cm) * R + vx,cm
+		//	(27)	vy,2'' = (vy,2' - vy,cm) * R + vy,cm
+		//	Where v'' is velocity after the collision, v is velocity prior to
+		//	the collision, and R is the coefficient of restitution.
 
-		// Using the components of velocity along the normal, calculate the
-		//	other particle's new velocity along the normal. If we call this
-		//	particle v_a and the other particle v_b, the new velocity along the
-		//	normal will be calculated as follows:
-		//		v_b = (C_R * m_a * (u_a - u_b) + m_b * u_b + m_a * u_b) / (m_b + m_a)
-		//	Where
-		//		v_a is the final velocity of the first object after impact
-		//		v_b is the final velocity of the second object after impact
-		//		u_a is the initial velocity of the first object before impact
-		//		u_b is the initial velocity of the second object before impact
-		//		m_a is the mass of the first object
-		//		m_b is the mass of the second object
-		//		C_R is the coefficient of restitution
-
-		// Calculate a force that will set the other particle's velocity along
-		//	the normal to the new velocity in a single tick. Apply that force to
-		//	the other particle. Do nothing to this particle, assuming that the
-		//	field attached to the other particle will handle that.
+		// Calculate a force that will cause the calculated change in the other
+		//	particle's velocity in a single tick. Apply that force to the other
+		//	particle. Do nothing to this particle, assuming that the field
+		//	attached to the other particle will handle that.
 	}
 
 	fn get_radius(&self) -> f64 {

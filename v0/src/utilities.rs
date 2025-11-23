@@ -14,7 +14,7 @@ use crate::{physical_quantities};
 /// * The absolute value of `radius` will be used for all comparisons. I.e., a
 ///		negative radius will return results identical to a positive radius of
 ///		the same magnitude.
-/// * If `use_strict_equality` is `false` a point that falls on the border of the
+/// * If `use_strict_inequality` is `false` a point that falls on the border of the
 ///		radius will be considered to be within the radius. E.g., if `point` =
 ///		(0.0, 10.0), `radius` = 10.0, and `center_of_radius` = (0.0, 0.0), then
 ///		`point` will be considered within the radius and the function will
@@ -26,11 +26,11 @@ pub fn is_within_radius(
 	point: physical_quantities::Displacement,
 	radius: f64,
 	center_of_radius: physical_quantities::Displacement,
-	use_strict_equality: bool,
+	use_strict_inequality: bool,
 ) -> bool {
 	// distance = sqrt((x2 - x1)^2 + (y2 - y1)^2)
 	let distance = measure_distance(point, center_of_radius);
-	if use_strict_equality {
+	if use_strict_inequality {
 		return distance < radius.abs()
 	} else {
 		return distance <= radius.abs()
