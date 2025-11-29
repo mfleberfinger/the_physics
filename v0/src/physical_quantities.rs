@@ -773,6 +773,10 @@ impl Time {
 	}
 }
 
+// TODO: Vector2 should probably be a Trait, implemented by every vector
+//	quantity. Then I could provide default implementations for things like
+//	get_magnitude (and maybe for operators?) instead of having to implement them
+//	separately for each vector quantity.
 /// A two-dimensional vector (not to be confused with `Vec<T>`).
 /// Supports basic vector math.
 #[derive(PartialEq)]

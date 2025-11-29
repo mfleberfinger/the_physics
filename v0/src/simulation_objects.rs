@@ -417,41 +417,84 @@ impl Field for Collider {
 
 		// TODO: Implement collisions.
 
-		// If the other particles don't have any fields with the same name as
-		//	this one, skip all of the collision logic.
+		let mut other_collider;
+		let mut other_radius;
+		let mut owner_velocity;
+		let mut other_velocity;
+		let mut relative_velocity;
+		for (other_id, field_infos) in triggered_by {
+			// Find the other collider, if one exists.
+			// If the other particle doesn't have any fields with the same name
+			//	as this one, skip all of the collision logic.
+			// If multiple colliders on the other particle triggered this
+			//	effect, ignore all but the collider with the largest radius.
+			other_collider = None;
+			for option in field_infos {
+				let mut current_radius = None;
+				let mut new_radius;
+				if let Some(info) = option {
+					// Treat negative and positive radii the same way.
+					new_radius = info.get_radius().abs();
+					if (
+						other_collider.is_none() || new_radius > current_radius
+						.expect("Should set current_radius with other_collider.")
+						)
+						&& info.get_name() == self.get_name()
+					{
+						other_collider = Some(info);
+						current_radius = Some(new_radius);
+					}
+				}
+			}
+			if let Some(other) = other_collider {
+				other_radius = other.get_radius();
+			}
 
-		// If the particles are stationary relative to each other or are already
-		//	moving away from each other, skip all of the collision logic.
+			owner_velocity = simulation.get_velocity(field_owner_id);
+			other_velocity = simulation.get_velocity(other_id);
+			// To calculate relative velocity, we'll consider this particle
+			//	to be stationary and the other particle to be moving with
+			//	respect to this one. I.e., relative_velocity is the velocity
+			//	vector this particle would see when observing the other particle.
+			relative_velocity = other_velocity - owner_velocity;
+			// If the particles are not moving towards each other, skip all of
+			//	the collision logic for the current particle.
+			// TODO: What does "towards" mean, precisely?
+			//	Do I even need to make this check? Find out if the equations I'm
+			//	using to calculate post-collision velocity will just result in
+			//	negligible forces being applied if the equations are applied in
+			//	the ticks following a collision.
 
-		// We will need the particles' positions at the time of the collision.
-		//	Perform calculations as if the collision happened at the surface of
-		//	the colliders, not where the particles are actually overlapping on
-		//	the current tick. Use the relative velocity of the particles and
-		//	the radii of the colliders to determine where they first came into
-		//	contact.
+			// We will need the particles' positions at the time of the
+			//	collision. Perform calculations as if the collision happened at
+			//	the surface of the colliders, not where the particles are
+			//	actually overlapping on the current tick. Use the relative
+			//	velocity of the particles and the radii of the colliders to
+			//	determine where they first came into contact.
 
-		// Calculate the change in velocity of the other particle (Δvx,2' and
-		//	Δvy,2') by applying equations (7), (8), (9), (11), (14), (16), (22),
-		//	(23), (26), and (27)
-		//	from https://www.plasmaphysics.org.uk/collision2d.htm.
-		//	(7)		γv = arctan [(vy,1 - vy,2) / (vx,1 - vx,2)] 
-		//	(8)		Δvx,2' = 2[vx,1 - vx,2 + a * (vy,1 - vy,2)] / [(1 + a2) * (1 + m2 / m1)]
-		//	(9)		a = tan(θ) = tan(γv + α)
-		//	(11)	vy,2' = vy,2 + a * Δvx,2'
-		//			-> I.e. Δvy,2' = a * Δvx,2'
-		//	(14)	α = arcsin [d * sin(γx,y - γv) / (r1 + r2)]
-		//	(16)	γx,y = arctan [(y2 - y1) / (x2 - x1)]
-		//	(22)	vx,cm = ( m1 * vx,1 + m2 * vx,2)/(m1 + m2)
-		//	(23)	vy,cm = ( m1 * vy,1 + m2 * vy,2)/(m1 + m2)
-		//	(26)	vx,2'' = (vx,2' - vx,cm) * R + vx,cm
-		//	(27)	vy,2'' = (vy,2' - vy,cm) * R + vy,cm
-		//	Where v'' is velocity after the collision, v is velocity prior to
-		//	the collision, and R is the coefficient of restitution.
+			// Calculate the change in velocity of the other particle (Δvx,2'
+			//	and Δvy,2') by applying equations (7), (8), (9), (11), (14),
+			//	(16), (22), (23), (26), and (27)
+			//	from https://www.plasmaphysics.org.uk/collision2d.htm.
+			//	(7)		γv = arctan [(vy,1 - vy,2) / (vx,1 - vx,2)] 
+			//	(8)		Δvx,2' = 2[vx,1 - vx,2 + a * (vy,1 - vy,2)] / [(1 + a2) * (1 + m2 / m1)]
+			//	(9)		a = tan(θ) = tan(γv + α)
+			//	(11)	vy,2' = vy,2 + a * Δvx,2'
+			//			-> I.e. Δvy,2' = a * Δvx,2'
+			//	(14)	α = arcsin [d * sin(γx,y - γv) / (r1 + r2)]
+			//	(16)	γx,y = arctan [(y2 - y1) / (x2 - x1)]
+			//	(22)	vx,cm = ( m1 * vx,1 + m2 * vx,2)/(m1 + m2)
+			//	(23)	vy,cm = ( m1 * vy,1 + m2 * vy,2)/(m1 + m2)
+			//	(26)	vx,2'' = (vx,2' - vx,cm) * R + vx,cm
+			//	(27)	vy,2'' = (vy,2' - vy,cm) * R + vy,cm
+			//	Where v'' is velocity after the collision, v is velocity prior
+			//	to the collision, and R is the coefficient of restitution.
 
-		// Calculate a force that will cause the calculated change in the other
-		//	particle's velocity in a single tick. Apply that force to the other
-		//	particle. Do nothing to this particle, assuming that the field
-		//	attached to the other particle will handle that.
+			// Calculate a force that will cause the calculated change in the
+			//	other particle's velocity in a single tick. Apply that force to
+			//	the other particle. Do nothing to this particle, assuming that
+			//	the field attached to the other particle will handle that.
+		}
 	}
 
 	fn get_radius(&self) -> f64 {
