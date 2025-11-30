@@ -604,6 +604,25 @@ Colliders:
 					run the collision logic. The component normal to the secant
 					doesn't need to be thought of as a vector. It will be a
 					one-dimensional velocity found by trigonometry.
+				-> Do I even need to make this check? Find out if the equations
+					I'm using to calculate post-collision velocity will just
+					result in negligible forces being applied if the equations
+					are applied in the ticks following a collision.
+					- It seems like the equations from
+						plasmaphysics.org.uk/collision2d.htm should handle this
+						implicitly. For example, equation (8) shows that the
+						change in particle 2's x-velocity will be 0 if particle
+						1 and particle 2 have equal velocity, although it's
+						harder to tell what happens if the particles have
+						velocities directly opposite each other. It's probably
+						easiest to just write the code to apply the equations,
+						see what happens, and worry about trying to avoid
+						applying the collision logic multiple times if it turns
+						out to be necessary.
+						(7) γv = arctan [ (vy,1-vy,2)/(vx,1-vx,2) ] 
+						(8)	Δvx,2' = 2[vx,1 - vx,2 + a * (vy,1 - vy,2)] / [(1 + a^2) * (1 + m2 / m1)]
+						(9) a = tan(θ) = tan(γv+α)
+						(14) α = arcsin [ d * sin(γx,y-γv) / (r1+r2) ]
 		- Don't forget to handle the edge case where one smaller collider is
 			completely enclosed within a larger collider.
 			+ Remember to write a test for this.

@@ -421,7 +421,6 @@ impl Field for Collider {
 		let mut other_radius;
 		let mut owner_velocity;
 		let mut other_velocity;
-		let mut relative_velocity;
 		for (other_id, field_infos) in triggered_by {
 			// Find the other collider, if one exists.
 			// If the other particle doesn't have any fields with the same name
@@ -448,6 +447,9 @@ impl Field for Collider {
 			}
 			if let Some(other) = other_collider {
 				other_radius = other.get_radius();
+			} else {
+				// Skip the current particle if we didn't find a collider.
+				continue;
 			}
 
 			owner_velocity = simulation.get_velocity(field_owner_id);
@@ -457,20 +459,28 @@ impl Field for Collider {
 			//	respect to this one. I.e., relative_velocity is the velocity
 			//	vector this particle would see when observing the other particle.
 			relative_velocity = other_velocity - owner_velocity;
-			// If the particles are not moving towards each other, skip all of
-			//	the collision logic for the current particle.
-			// TODO: What does "towards" mean, precisely?
-			//	Do I even need to make this check? Find out if the equations I'm
-			//	using to calculate post-collision velocity will just result in
-			//	negligible forces being applied if the equations are applied in
-			//	the ticks following a collision.
+
+			// If, based on the relative velocity and the particles' positions,
+			//	the particles have already passed each other, skip the collision
+			//	logic. This means that, if the particles have already collided
+			//	or were moving fast enough for the colliders to pass halfway
+			//	through each other prior to a collision being detected, no
+			//	collision will occur. We will consider the latter case to just
+			//	be a resolution issue and on the user to handle.
+			// We need to find a line passing through the field owner at a right
+			//	angle to the relative velocity vector. If the other particle is
+			//	moving away from that line, we will say the particles have
+			//	already passed each other.
+
 
 			// We will need the particles' positions at the time of the
 			//	collision. Perform calculations as if the collision happened at
 			//	the surface of the colliders, not where the particles are
 			//	actually overlapping on the current tick. Use the relative
 			//	velocity of the particles and the radii of the colliders to
-			//	determine where they first came into contact.
+			//	determine where they first came into contact. We need to
+			//	account for the fact that colliders will overlap for more than
+			//	one tick after colliding. 
 
 			// Calculate the change in velocity of the other particle (Δvx,2'
 			//	and Δvy,2') by applying equations (7), (8), (9), (11), (14),
