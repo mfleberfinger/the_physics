@@ -414,13 +414,11 @@ impl Field for Collider {
 		triggered_by: HashMap<Uuid, Vec<Option<FieldInfo>>>,
 		field_owner_id: Uuid,
 	) {
-
-		// TODO: Implement collisions.
-
 		let mut other_collider;
 		let mut other_radius;
 		let mut owner_velocity;
 		let mut other_velocity;
+		let mut relative_velocity;
 		for (other_id, field_infos) in triggered_by {
 			// Find the other collider, if one exists.
 			// If the other particle doesn't have any fields with the same name
@@ -472,6 +470,40 @@ impl Field for Collider {
 			//	moving away from that line, we will say the particles have
 			//	already passed each other.
 			// TODO: Working on this part. See math on paper. ******************************
+
+			// Find the line, passing through the other particle, collinear with
+			//	its velocity vector. Call it l_B.
+			// Vector equation for l_B:
+			//	l_B = (x_B, y_B) + t * (v_B / |v_B|)
+			//	where l_B is a vector pointing to locations on the line,
+			//	(x_B, y_B) is the position vector of the other particle, t is an
+			//	arbitrary scalar that varies over all reals, and v_B is the
+			//	relative velocity vector.
+			/* No code needed for this step? */
+
+			// Use the formula of l_B to find the slope, m_B, of l_B.
+			//	m_B = (y_1 - y_2) / (x_1 - x_2)
+			//	where (x_1, y_1) and (x_2, y_2) are arbitrary points on l_B.
+			// Just use the position of the other particle (particle B) as
+			//	(x_1, y_1). To get (x_2, y_2), plug an arbitrary value into t in
+			//	the equation of l_B.
+
+			// Find the line, passing through this particle, perpendicular to
+			//	l_B. Call it l_A.
+
+			// Find the point where the lines intersect.
+
+			// Find the vector (v_AB) pointing from the point where the two
+			//	lines (l_A and l_B) intersect to the other particle (particle B).
+
+			// Determine whether v_AB and v_B (the other particle's velocity
+			//	vector) are parallel, anti-parallel, or something else (should
+			//	only be possible if the particles have identical position or
+			//	have zero relative velocity). If the vectors are anti-parallel,
+			//	the particles have not yet passed each other and should collide.
+			//	If the vectors are parallel or something else, then there should
+			//	be no collision.
+
 
 
 			// We will need the particles' positions at the time of the
