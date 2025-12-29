@@ -436,7 +436,7 @@ impl Field for Collider {
 					new_radius = info.get_radius().abs();
 					if (
 						other_collider.is_none() || new_radius > current_radius
-						.expect("Should set current_radius with other_collider.")
+							.expect("Should set current_radius with other_collider.")
 						)
 						&& info.get_name() == self.get_name()
 					{
@@ -471,6 +471,7 @@ impl Field for Collider {
 			//	angle to the relative velocity vector. If the other particle is
 			//	moving away from that line, we will say the particles have
 			//	already passed each other.
+			// TODO: Working on this part. See math on paper. ******************************
 
 
 			// We will need the particles' positions at the time of the
