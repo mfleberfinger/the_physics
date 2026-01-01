@@ -1,6 +1,10 @@
 TODO:
 
 	See "Colliders" below.
+		- Apparently, dot products can be used to handle collision angles.
+			Probably more efficient than what I'm doing. Probably try it after
+			implementing my way.
+			+ https://youtu.be/nXrEX6j-Mws?si=TEn7-iqtCY0DpgD2
 
 	Implement scalar multiplication of Velocity.
 		- Don't forget the unit test.
