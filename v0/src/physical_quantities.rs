@@ -422,6 +422,34 @@ mod tests {
 		);
 	}
 
+	#[test]
+	fn velocity_supports_scalar_multiplication() {
+		assert_eq!(
+			Velocity::new(-4.0, -6.0),
+			Velocity::new(-2.0, -3.0) * 2.0,
+		);
+		assert_eq!(
+			Velocity::new(-4.0, -6.0),
+			2.0 * Velocity::new(-2.0, -3.0),
+		);
+		assert_eq!(
+			Velocity::new(4.0, 6.0),
+			-2.0 * Velocity::new(-2.0, -3.0),
+		);
+		assert_eq!(
+			Velocity::new(4.0, 6.0),
+			2.0 * Velocity::new(2.0, 3.0),
+		);
+		assert_eq!(
+			Velocity::new(0.0, 0.0),
+			2.0 * Velocity::new(0.0, 0.0),
+		);
+		assert_eq!(
+			Velocity::new(0.0, 0.0),
+			0.0 * Velocity::new(2.0, 3.0),
+		);
+	}
+
 	/********************* Acceleration ********************/
 
 	#[test]
@@ -714,7 +742,7 @@ mod tests {
 // The PartialEq trait is automatically implemented using "derive" here. The
 //	derived implementation will report equality between two structs if all
 //	fields are equal, and non-equality otherwise.
-/// Represents a length of time. Could be though of as milliseconds, seconds,
+/// Represents a length of time. Could be thought of as milliseconds, seconds,
 /// minutes, etc.
 #[derive(PartialEq, PartialOrd)]
 #[derive(Debug)]
@@ -998,6 +1026,23 @@ impl ops::Mul<Time> for Velocity {
 
 	fn mul(self, rhs: Time) -> Self::Output {
 		Displacement(self.0 * rhs.0)
+	}
+}
+
+// Scalar multiplication of velocity.
+impl ops::Mul<f64> for Velocity {
+	type Output = Velocity;
+
+	fn mul(self, rhs: f64) -> Self::Output {
+		Velocity(self.0 * rhs)
+	}
+}
+
+impl ops::Mul<Velocity> for f64 {
+	type Output = Velocity;
+
+	fn mul(self, rhs: Velocity) -> Self::Output {
+		Velocity(self * rhs.0)
 	}
 }
 
