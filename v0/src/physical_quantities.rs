@@ -371,6 +371,18 @@ mod tests {
 	}
 
 	#[test]
+	fn velocity_supports_division_by_time() {
+		assert_eq!(
+			Velocity::new(5.0, 10.0) / Time(5.0),
+			Acceleration::new(1.0, 2.0)
+		);
+		assert_eq!(
+			Velocity::new(5.0, 10.0) / Time(-5.0),
+			Acceleration::new(-1.0, -2.0)
+		);
+	}
+
+	#[test]
 	fn velocity_supports_addition() {
 		assert_eq!(
 			Velocity::new(0.0, 0.0),
@@ -530,6 +542,26 @@ mod tests {
 		assert_eq!(
 			Time(-5.0) * Acceleration::new(1.0, 2.0),
 			Velocity::new(-5.0, -10.0)
+		);
+	}
+
+	#[test]
+	fn acceleration_supports_multiplication_by_mass() {
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * Mass(5.0),
+			Force::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Mass(5.0) * Acceleration::new(1.0, 2.0),
+			Force::new(5.0, 10.0)
+		);
+		assert_eq!(
+			Acceleration::new(1.0, 2.0) * Mass(-5.0),
+			Force::new(-5.0, -10.0)
+		);
+		assert_eq!(
+			Mass(-5.0) * Acceleration::new(1.0, 2.0),
+			Force::new(-5.0, -10.0)
 		);
 	}
 
@@ -926,17 +958,6 @@ impl Mass {
 	}
 }
 
-impl ops::Mul<Acceleration> for Mass {
-	type Output = Force;
-
-	fn mul(self, rhs: Acceleration) -> Self::Output {
-		Self::Output::new(
-			rhs.x() * self.0,
-			rhs.y() * self.0,
-		)
-	}
-}
-
 /// Position in space (displacement from the origin), displacement relative to
 /// some starting location, or distance from some arbitrary position.
 /// Wraps `Vector2` and provides functionality specific to displacement.
@@ -1028,6 +1049,16 @@ impl ops::Mul<Time> for Velocity {
 		Displacement(self.0 * rhs.0)
 	}
 }
+
+// Division of velocity by time = acceleration.
+impl ops::Div<Time> for Velocity {
+	type Output = Acceleration;
+
+	fn div(self, rhs: Time) -> Self::Output {
+		Acceleration(self.0 / rhs.0)
+	}
+}
+
 
 // Scalar multiplication of velocity.
 impl ops::Mul<f64> for Velocity {
@@ -1121,6 +1152,22 @@ impl ops::Mul<Time> for Acceleration {
 
 	fn mul(self, rhs: Time) -> Self::Output {
 		Velocity(self.0 * rhs.0)
+	}
+}
+
+// Multiplication of acceleration by mass (and vice-versa).
+impl ops::Mul<Mass> for Acceleration {
+	type Output = Force;
+
+	fn mul(self, rhs: Mass) -> Self::Output {
+		Force(self.0 * rhs.0)
+	}
+}
+impl ops::Mul<Acceleration> for Mass {
+	type Output = Force;
+
+	fn mul(self, rhs: Acceleration) -> Self::Output {
+		Force(self.0 * rhs.0)
 	}
 }
 
